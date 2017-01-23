@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="11.0"
+         DefaultTargets="BaseWin2016_Build_Image_Packer_Run"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <!-- Defines whether the current script file has been loaded / imported or not -->
+        <ExistsBuilImagePacker>true</ExistsBuilImagePacker>
+    </PropertyGroup>
+
+    <Import Project="$(DirNBuildKitMsBuildShared)\shared.importbuildsharedsettings.props"
+            Condition="Exists('$(DirNBuildKitMsBuildShared)\shared.importbuildsharedsettings.props') AND '$(ExistsSharedImportBuildSharedSettings)' != 'true' " />
+
+    <Import Project="$(DirNBuildKitMsBuild)\shared.templatetokens.msbuild"
+            Condition="Exists('$(DirNBuildKitMsBuild)\shared.templatetokens.msbuild') AND '$(ExistsSharedTemplateTokens)' != 'true' " />
+
+    <Import Project="$(DirNBuildKitMsBuildExtensions)\NuGetRestore.msbuild"
+            Condition="Exists('$(DirNBuildKitMsBuildExtensions)\NuGetRestore.msbuild') AND '$(ExistsExtensionsNuGetRestore)' != 'true' "/>
+    <Import Project="$(DirNBuildKitMsBuildExtensions)\SearchPackagesDirectoryForToolDirectory.msbuild"
+            Condition="Exists('$(DirNBuildKitMsBuildExtensions)\SearchPackagesDirectoryForToolDirectory.msbuild') AND '$(ExistsExtensionsSearchPackagesDirectoryForToolDirectory)' != 'true' " />
+    <Import Project="$(DirNBuildKitMsBuildExtensions)\TemplateText.msbuild"
+            Condition="Exists('$(DirNBuildKitMsBuildExtensions)\TemplateText.msbuild') AND '$(ExistsExtensionsTemplateText)' != 'true' " />
+
+    <Target Name="BaseWin2016_Build_Image_Packer_Run">
+        <CallTarget Targets="_BaseWin2016_Build_Image_Packer_RestoreDependencies" />
+        <CallTarget Targets="_BaseWin2016_Build_Image_Packer_Execute" />
+    </Target>
+
+    <Target Name="_BaseWin2016_Build_Image_Packer_RestoreDependencies">
+        <SearchPackagesDirectoryForToolDirectory
+            FileToLocate="ops.tools.baseimage.windows.nuspec"
+            PackagesDirectory="$(DirPackages)">
+            <Output
+                PropertyName="DirPackagesBaseImageWindows"
+                TaskParameter="Path" />
+        </SearchPackagesDirectoryForToolDirectory>
+
+        <!--
+            Steps:
+
+            * Restore the dependencies for the cookbooks: 'cd cookbooks/<COOKBOOKNAME>; berks vendor ../../vendor/cookbooks''
+        -->
+        <Exec
+            Command="&quot;$(ToolsExternalBerksPath)&quot; vendor $(DirBuildTempCookbooks)"
+            WorkingDirectory="$(DirPackagesBaseImageWindows)\cookbooks" />
+    </Target>
+
+    <Target Name="_BaseWin2016_Build_Image_Packer_Execute"
+            DependsOnTargets="nBuildKit_Shared_TemplateTokens_Initialize"
+            Condition=" '@(PackerImagesToBuild)' != '' "
+            Outputs="%(PackerImagesToBuild.Identity)">
+        <TemplateText Template="%(PackerImagesToBuild.FullPath)"
+                      Tokens="@(TemplateTokens)">
+            <Output TaskParameter="Result" PropertyName="FilePackerConfiguration" />
+        </TemplateText>
+
+        <Error Text="Expected $(FilePackerConfiguration) to point to a valid path but it does not."
+               Condition="!Exists('$(FilePackerConfiguration)') AND  '$(ShouldExecute)' == 'true' " />
+
+        <Message Text="Building $(FilePackerConfiguration) ..."
+                 Importance="normal"/>
+
+        <Exec Command="&quot;$(ToolsExternalPackerPath)&quot; build -var-file=&quot;$(DirBuildTemp)\packer_variables.json&quot; &quot;$(FilePackerConfiguration)&quot;" />
+    </Target>
+</Project>
