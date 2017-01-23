@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+    <!--
+        This file describes the different configuration phases for a windows machine.
+
+        For more information about the different stages see: https://technet.microsoft.com/en-us/library/hh824982.aspx
+    -->
+
+    <!--
+         Many aspects of the installation process can be automated during the windowsPE configuration pass. In this pass you can configure:
+         * Windows PE options: These options can include specifying the location of the Windows PE log file, which enables networking or a
+           Windows PE page file.
+
+         * Windows Setup options: These options can include specifying the Windows image to install and configuring a disk on the destination computer.
+
+        During this configuration pass, the Windows image is copied to the destination computer after the settings in the windowsPE configuration pass
+        are processed.
+
+        If your installation of Windows PE requires boot-critical drivers to access the local hard disk drive or a network, use this configuration pass
+        to add drivers to the Windows PE driver store and to reflect the required boot-critical drivers
+    -->
+    <settings pass="windowsPE">
+        <component name="Microsoft-Windows-Setup"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <DiskConfiguration>
+                <Disk wcm:action="add">
+                    <CreatePartitions>
+                        <CreatePartition wcm:action="add">
+                            <Type>Primary</Type>
+                            <Order>1</Order>
+                            <Size>350</Size>
+                        </CreatePartition>
+                        <CreatePartition wcm:action="add">
+                            <Order>2</Order>
+                            <Type>Primary</Type>
+                            <Extend>true</Extend>
+                        </CreatePartition>
+                    </CreatePartitions>
+                    <ModifyPartitions>
+                        <ModifyPartition wcm:action="add">
+                            <Active>true</Active>
+                            <Format>NTFS</Format>
+                            <Label>boot</Label>
+                            <Order>1</Order>
+                            <PartitionID>1</PartitionID>
+                        </ModifyPartition>
+                        <ModifyPartition wcm:action="add">
+                            <Format>NTFS</Format>
+                            <Label>Windows 2016</Label>
+                            <Letter>C</Letter>
+                            <Order>2</Order>
+                            <PartitionID>2</PartitionID>
+                        </ModifyPartition>
+                    </ModifyPartitions>
+                    <DiskID>0</DiskID>
+                    <WillWipeDisk>true</WillWipeDisk>
+                </Disk>
+            </DiskConfiguration>
+            <ImageInstall>
+                <OSImage>
+                    <InstallFrom>
+                        <MetaData wcm:action="add">
+                            <Key>/IMAGE/NAME </Key>
+                            <Value>Windows Server 2016 SERVERDATACENTER</Value>
+                        </MetaData>
+                    </InstallFrom>
+                    <InstallTo>
+                        <DiskID>0</DiskID>
+                        <PartitionID>2</PartitionID>
+                    </InstallTo>
+                </OSImage>
+            </ImageInstall>
+            <UserData>
+                <ProductKey>
+                    <WillShowUI>OnError</WillShowUI>
+                </ProductKey>
+                <AcceptEula>true</AcceptEula>
+                <FullName>Vagrant</FullName>
+                <Organization>Vagrant</Organization>
+            </UserData>
+        </component>
+    </settings>
+
+    <!--
+         During this configuration pass, computer-specific information is removed from the Windows installation enabling you to
+         capture and reapply the Windows image to different computers. For example, during this pass, the unique security ID (SID),
+         unique device drivers, and other hardware-specific settings are removed from the image.
+
+        This configuration pass enables you to minimally configure the sysprep /generalize command, in addition to configuring other Windows
+        settings that must persist on your master image.
+
+        After the generalize pass finishes, the next time that Windows image boots, the specialize configuration pass runs. If you want to
+        retain the unique device drivers that are installed to your Windows installation, you can use the
+        Microsoft-Windows-PnpSysprep | PersistAllDeviceInstalls setting. If this setting is configured, unique device drivers are not
+        removed from the installation.
+    -->
+    <settings pass="generalize">
+        <component name="Microsoft-Windows-PnpSysprep"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <PersistAllDeviceInstalls>true</PersistAllDeviceInstalls>
+        </component>
+    </settings>
+
+    <!--
+         This configuration pass is used to create and configure information in the Windows image, and is specific to the hardware that the
+         Windows image is installing to.
+
+        After the Windows image boots for the first time, the specialize configuration pass runs. During this pass, unique security IDs (SIDs)
+        are created. Additionally, you can configure many Windows features, including network settings, international settings, and domain information.
+        The answer file settings for the specialize pass appear in audit mode. When a computer boots to audit mode, the auditSystem pass runs, and
+        the computer processes the auditUser settings.
+    -->
+    <settings pass="specialize">
+
+        <!--
+            Turns off Windows Error Reporting
+        -->
+        <component name="Microsoft-Windows-ErrorReportingCore"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <DisableWER>1</DisableWER>
+        </component>
+
+        <!--
+            Set the Powershell ExecutionPolicy to be remote signed
+        -->
+        <component name="Microsoft-Windows-Deployment"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <RunSynchronous>
+                <RunSynchronousCommand wcm:action="add">
+                    <Order>1</Order>
+                    <Path>cmd /c reg add &quot;HKLM\SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell&quot; /v ExecutionPolicy /t REG_SZ /d RemoteSigned /f</Path>
+                    <Description>Configure Powershell security settings</Description>
+                </RunSynchronousCommand>
+            </RunSynchronous>
+        </component>
+
+        <!--
+            Set the computer name and the owner
+        -->
+        <component name="Microsoft-Windows-Shell-Setup"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <RegisteredOwner>${RegisteredOwner}</RegisteredOwner>
+            <ComputerName>${MachineName}</ComputerName>
+
+            <!--
+                Set the generic AVMA key so that the VM is automatically activated against
+                the Hyper-V host server license.
+                See here: https://technet.microsoft.com/en-nz/library/dn303421.aspx
+                and here: http://terrytlslau.tls1.cc/2014/02/automatic-virtual-machine-activation.html
+            -->
+            <ProductKey>TMJ3Y-NTRTM-FJYXT-T22BY-CWG3J</ProductKey>
+        </component>
+
+        <!--
+            Open the firewall ports for Remote Desktop
+        -->
+        <component name="Networking-MPSSVC-Svc"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <FirewallGroups>
+                <FirewallGroup wcm:action="add"
+                               wcm:keyValue="RemoteDesktop">
+                    <Active>true</Active>
+                    <Group>Remote Desktop</Group>
+                    <Profile>all</Profile>
+                </FirewallGroup>
+            </FirewallGroups>
+        </component>
+
+        <!--
+            Set the TCP/IP configuration for the network interface
+        -->
+        <component name="Microsoft-Windows-TCPIP"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Interfaces>
+                <Interface wcm:action="add">
+                    <Ipv4Settings>
+                        <DhcpEnabled>true</DhcpEnabled>
+                        <RouterDiscoveryEnabled>true</RouterDiscoveryEnabled>
+                    </Ipv4Settings>
+                    <Ipv6Settings>
+                        <DhcpEnabled>false</DhcpEnabled>
+                        <RouterDiscoveryEnabled>true</RouterDiscoveryEnabled>
+                    </Ipv6Settings>
+                    <Identifier>Ethernet</Identifier>
+                </Interface>
+            </Interfaces>
+        </component>
+
+        <!--
+            Set the primairy DNS to point to the domain DNS server
+        -->
+        <component name="Microsoft-Windows-DNS-Client"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <Interfaces>
+                <Interface wcm:action="add">
+                    <DNSServerSearchOrder>
+${DnsIPAddresses}
+                    </DNSServerSearchOrder>
+                    <Identifier>Ethernet</Identifier>
+                </Interface>
+            </Interfaces>
+        </component>
+
+        <!--
+            Set the Server Manager to not automatically open on user log in
+        -->
+        <component name="Microsoft-Windows-ServerManager-SvrMgrNc"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <DoNotOpenServerManagerAtLogon>true</DoNotOpenServerManagerAtLogon>
+        </component>
+
+        <!--
+            Enable remote desktop
+        -->
+        <component name="Microsoft-Windows-TerminalServices-LocalSessionManager"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <fDenyTSConnections>false</fDenyTSConnections>
+        </component>
+    </settings>
+
+
+    <!--
+        During this configuration pass, settings are applied to Windows before Windows Welcome starts.
+        This pass is typically used to configure Windows Shell options, create user accounts, and specify language and
+        locale settings. The answer file settings for the oobeSystem pass appear in Windows Welcome, also known as OOBE.
+    -->
+    <settings pass="oobeSystem">
+        <component name="Microsoft-Windows-Shell-Setup"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <!--
+                Set the local Administrator account password and
+                add domain users to the administrators group
+            -->
+            <UserAccounts>
+                <AdministratorPassword>
+                    <Value>${LocalAdminPassword}</Value>
+                    <PlainText>true</PlainText>
+                </AdministratorPassword>
+            </UserAccounts>
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <ProtectYourPC>3</ProtectYourPC>
+                <NetworkLocation>Home</NetworkLocation>
+            </OOBE>
+            <WindowsFeatures>
+                <ShowMediaCenter>false</ShowMediaCenter>
+                <ShowWindowsMediaPlayer>false</ShowWindowsMediaPlayer>
+                <ShowInternetExplorer>true</ShowInternetExplorer>
+            </WindowsFeatures>
+            <TimeZone>New Zealand Standard Time</TimeZone>
+            <CopyProfile>true</CopyProfile>
+        </component>
+
+        <!--
+            Set the locale's
+        -->
+        <component name="Microsoft-Windows-International-Core"
+                   processorArchitecture="amd64"
+                   publicKeyToken="31bf3856ad364e35"
+                   language="neutral"
+                   versionScope="nonSxS"
+                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <InputLocale>1409:00000409</InputLocale>
+            <SystemLocale>en-NZ</SystemLocale>
+            <UILanguage>en-NZ</UILanguage>
+            <UserLocale>en-NZ</UserLocale>
+            <UILanguageFallback>en-US</UILanguageFallback>
+        </component>
+    </settings>
+</unattend>

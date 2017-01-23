@@ -1,0 +1,16 @@
+{
+    "iso_checksum": "${}",
+    "iso_url": "${}",
+
+    "vm_ram_size_in_mb": 2048,
+    "vm_name": "${}",
+    "vm_switch_name": "${}",
+
+    "admin_username": "${}",
+    "admin_password": "${}",
+
+    "dir_scripts_user": "${}",
+    "dir_cookbooks_user": "${}",
+
+    "dir_cookbooks_vendor": "${DirTemp}\\cookbooks\\vendor"
+}
