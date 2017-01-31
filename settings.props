@@ -283,7 +283,8 @@
 
         <!-- The directory that will contain all the temporary files needed during the build process -->
         <DirBuildTemp Condition=" '$(DirBuildTemp)' == '' ">$(DirBuild)\temp</DirBuildTemp>
-        <DirBuildTempCookbooks>$(DirBuildTemp)\cookbooks\vendor</DirBuildTempCookbooks>
+        <DirBuildTempCookbooks>$(DirBuildTemp)\cookbooks</DirBuildTempCookbooks>
+        <DirBuildTempScripts>$(DirBuildTemp)\scripts</DirBuildTempScripts>
 
         <!-- The directory that will contain all the test files generated during the test process -->
         <!-- <DirBuildTest Condition=" '$(DirBuildTest)' == '' ">$(DirBuild)\tests</DirBuildTest> -->
@@ -564,11 +565,18 @@
         The default template parameters, as indicated at the top of this file, are always available.
     -->
     <ItemGroup>
-        <!--
-        <TemplateTokens Include="">
-            <ReplacementValue></ReplacementValue>
+        <TemplateTokens Include="DirTempJsonEscaped">
+            <ReplacementValue>$(DirBuildTemp.Replace('\', '\\'))</ReplacementValue>
         </TemplateTokens>
-        -->
+        <TemplateTokens Include="IsoFileEscaped">
+            <ReplacementValue>$(IsoFile.Replace('\', '\\'))</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="VmName">
+            <ReplacementValue>Win2016.BaseImage</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="VmSwitch">
+            <ReplacementValue>External switch</ReplacementValue>
+        </TemplateTokens>
     </ItemGroup>
 
     <!-- Additional generated files -->

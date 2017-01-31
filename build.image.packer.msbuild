@@ -27,21 +27,33 @@
 
     <Target Name="_BaseWin2016_Build_Image_Packer_RestoreDependencies">
         <SearchPackagesDirectoryForToolDirectory
-            FileToLocate="ops.tools.baseimage.windows.nuspec"
-            PackagesDirectory="$(DirPackages)">
+            FileToLocate="Ops.Tools.BaseImage.Windows.0.1.0.nupkg"
+            PackagesDir="$(DirPackages)">
             <Output
                 PropertyName="DirPackagesBaseImageWindows"
                 TaskParameter="Path" />
         </SearchPackagesDirectoryForToolDirectory>
+        <Message
+            Condition="Exists('$(DirPackagesBaseImageWindows)')"
+            Text="DirPackagesBaseImageWindows: $(DirPackagesBaseImageWindows)" />
+        <Error
+            Condition="!Exists('$(DirPackagesBaseImageWindows)')"
+            Text="DirPackagesBaseImageWindows: $(DirPackagesBaseImageWindows)" />
 
-        <!--
-            Steps:
+        <ItemGroup>
+            <CookbookFiles Include="$(DirPackagesBaseImageWindows)\cookbooks\**\*" />
+            <ScriptFiles Include="$(DirPackagesBaseImageWindows)\scripts\**\*" />
+        </ItemGroup>
 
-            * Restore the dependencies for the cookbooks: 'cd cookbooks/<COOKBOOKNAME>; berks vendor ../../vendor/cookbooks''
-        -->
+        <Copy SourceFiles="@(ScriptFiles)"
+              DestinationFiles="@(ScriptFiles->'$(DirBuildTempCookbooks)\%(RecursiveDir)%(Filename)%(Extension)')" />
+
+        <Copy SourceFiles="@(CookbookFiles)"
+              DestinationFiles="@(CookbookFiles->'$(DirBuildTempCookbooks)\%(RecursiveDir)%(Filename)%(Extension)')" />
+
         <Exec
-            Command="&quot;$(ToolsExternalBerksPath)&quot; vendor $(DirBuildTempCookbooks)"
-            WorkingDirectory="$(DirPackagesBaseImageWindows)\cookbooks" />
+            Command="$(ToolsExternalBerksPath) vendor ..\."
+            WorkingDirectory="$(DirBuildTempCookbooks)\ops-tools-baseimage-windows" />
     </Target>
 
     <Target Name="_BaseWin2016_Build_Image_Packer_Execute"

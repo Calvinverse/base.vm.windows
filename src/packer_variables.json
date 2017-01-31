@@ -1,16 +1,14 @@
 {
-    "iso_checksum": "${}",
-    "iso_url": "${}",
+    "iso_checksum": "1CE702A578A3CB1AC3D14873980838590F06D5B7101C5DAACCBAC9D73F1FB50F",
+    "iso_url": "${IsoFileEscaped}",
 
     "vm_ram_size_in_mb": 2048,
-    "vm_name": "${}",
-    "vm_switch_name": "${}",
+    "vm_name": "${VmName}",
+    "vm_switch_name": "${VmSwitch}",
 
-    "admin_username": "${}",
-    "admin_password": "${}",
+    "admin_username": "TheBigKahuna",
+    "admin_password": "TheB1gK@huna",
 
-    "dir_scripts_user": "${}",
-    "dir_cookbooks_user": "${}",
-
-    "dir_cookbooks_vendor": "${DirTemp}\\cookbooks\\vendor"
+    "dir_scripts_user": "${DirTempJsonEscaped}\\scripts",
+    "dir_cookbooks_user": "${DirTempJsonEscaped}\\cookbooks"
 }

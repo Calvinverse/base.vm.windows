@@ -11,9 +11,7 @@
     "admin_password": "admin",
 
     "dir_scripts_user": null,
-    "dir_cookbooks_user": null,
-
-    "dir_cookbooks_vendor": null
+    "dir_cookbooks_user": null
   },
   "builders": [
     {
@@ -21,7 +19,7 @@
       "guest_additions_mode": "disable",
       "iso_url": "{{ user `iso_url` }}",
       "iso_checksum": "{{ user `iso_checksum` }}",
-      "iso_checksum_type": "md5",
+      "iso_checksum_type": "sha256",
       "ram_size_mb": "{{ user `vm_ram_size_in_mb` }}",
       "vm_name": "{{ user `vm_name` }}",
       "communicator": "winrm",
@@ -40,7 +38,7 @@
   "provisioners": [
     {
       "type": "chef-solo",
-      "cookbook_paths": ["{{ user 'dir_cookbooks_user' }}/cookbooks", "{{ user 'dir_cookbooks_vendor' }}/vendor/cookbooks"],
+      "cookbook_paths": ["{{ user 'dir_cookbooks_user' }}/cookbooks"],
       "guest_os_type": "windows",
       "run_list": [
         "wsus-client::configure",
