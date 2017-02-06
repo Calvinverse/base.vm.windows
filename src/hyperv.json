@@ -3,94 +3,49 @@
     "iso_checksum": null,
     "iso_url": null,
 
-    "vm_ram_size_in_mb": 2048,
+    "vm_ram_size_in_mb": "2048",
     "vm_name": null,
     "vm_switch_name": "internal_switch",
 
     "admin_username": "admin",
     "admin_password": "admin",
 
+    "dir_config_user": null,
     "dir_scripts_user": null,
     "dir_cookbooks_user": null
   },
   "builders": [
     {
-      "type": "hyperv-iso",
+      "communicator": "winrm",
+      "floppy_files": [],
+      "generation": 2,
       "guest_additions_mode": "disable",
-      "iso_url": "{{ user `iso_url` }}",
       "iso_checksum": "{{ user `iso_checksum` }}",
       "iso_checksum_type": "sha256",
-      "ram_size_mb": "{{ user `vm_ram_size_in_mb` }}",
-      "vm_name": "{{ user `vm_name` }}",
-      "communicator": "winrm",
-      "winrm_username": "{{ user `admin_username` }}",
-      "winrm_password": "{{ user `admin_password` }}",
-      "winrm_timeout": "12h",
+      "iso_url": "{{ user `iso_url` }}",
+      "ram_size": "{{ user `vm_ram_size_in_mb` }}",
+      "secondary_iso_images": [
+          "{{ user `dir_config_user` }}/unattend.iso"
+      ],
       "shutdown_command": "C:/Windows/Panther/Unattend/packer_shutdown.bat",
       "shutdown_timeout": "15m",
       "switch_name": "{{ user `vm_switch_name` }}",
-      "floppy_files": [
-        "Autounattend.xml",
-        "{{ user 'dir_scripts_user' }}/scripts/Set-UnsafeConnectionModeForWinRm.ps1"
-      ]
+      "type": "hyperv-iso",
+      "vm_name": "{{ user `vm_name` }}",
+      "winrm_password": "{{ user `admin_password` }}",
+      "winrm_timeout": "12h",
+      "winrm_username": "{{ user `admin_username` }}"
     }
   ],
   "provisioners": [
     {
-      "type": "chef-solo",
-      "cookbook_paths": ["{{ user 'dir_cookbooks_user' }}/cookbooks"],
-      "guest_os_type": "windows",
-      "run_list": [
-        "wsus-client::configure",
-        "ops-tools-baseimage-windows::preupdates_uninstall_powershell_ise",
-        "ops-tools-baseimage-windows::preupdates_install_ps_modules",
-        "ops-tools-baseimage-windows::preupdates_delete_pagefile"
+      "type": "powershell",
+      "elevated_user": "{{user `admin_username`}}",
+      "elevated_password": "{{user `admin_password`}}",
+      "scripts": [
+        "{{ user `dir_scripts_user` }}/Prepare-DotnetAssemblies.ps1",
+        "{{ user `dir_scripts_user` }}/PrepareFor-DiskOptimization.ps1"
       ]
-    },
-    {
-      "type": "powershell",
-      "script": "{{ user 'dir_scripts_user' }}/scripts/Invoke-WindowsUpdate.ps1",
-      "elevated_user": "{{ user `admin_username` }}",
-      "elevated_password": "{{ user `admin_password` }}"
-    },
-    {
-      "type": "windows-restart",
-      "restart_timeout": "15m"
-    },
-    {
-      "type": "powershell",
-      "script": "{{ user 'dir_scripts_user' }}/scripts/Invoke-WindowsUpdate.ps1",
-      "elevated_user": "{{ user `admin_username` }}",
-      "elevated_password": "{{ user `admin_password` }}"
-    },
-    {
-      "type": "windows-restart",
-      "restart_timeout": "15m"
-    },
-    {
-      "type": "chef-solo",
-      "remote_cookbook_paths": [
-        "c:/windows/temp/packer-chef-client/cookbooks-0",
-        "c:/windows/temp/packer-chef-client/cookbooks-1"
-      ],
-      "guest_os_type": "windows",
-      "skip_install": "true",
-      "run_list": [
-        "ops-tools-baseimage-windows::postupdates_clean_sxs",
-        "ops-tools-baseimage-windows::postupdates_delete_uncessary_directories",
-        "ops-tools-baseimage-windows::postupdates_enable_file_sharing",
-        "ops-tools-baseimage-windows::postupdates_enable_remote_desktop",
-        "ops-tools-baseimage-windows::postupdates_set_local_account_token_filter_policy",
-        "ops-tools-baseimage-windows::postupdates_add_pagefile",
-        "ops-tools-baseimage-windows::postupdates_add_config_unattend",
-        "ops-tools-baseimage-windows::postupdates_add_script_activatewinrmfirewallrules"
-      ]
-    },
-    {
-      "type": "powershell",
-      "script": "{{ user 'dir_scripts_user' }}/scripts/cleanup.ps1",
-      "elevated_user": "{{ user `admin_username` }}",
-      "elevated_password": "{{ user `admin_password` }}"
     }
   ]
 }
