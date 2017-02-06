@@ -20,6 +20,23 @@
         to add drivers to the Windows PE driver store and to reflect the required boot-critical drivers
     -->
     <settings pass="windowsPE">
+        <component
+            name="Microsoft-Windows-International-Core-WinPE"
+            publicKeyToken="31bf3856ad364e35"
+            language="neutral"
+            versionScope="nonSxS"
+            processorArchitecture="amd64"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">>
+            <SetupUILanguage>
+                <UILanguage>en-us</UILanguage>
+            </SetupUILanguage>
+            <InputLocale>en-us</InputLocale>
+            <SystemLocale>en-us</SystemLocale>
+            <UILanguage>en-us</UILanguage>
+            <UserLocale>en-us</UserLocale>
+        </component>
+
         <component name="Microsoft-Windows-Setup"
                    processorArchitecture="amd64"
                    publicKeyToken="31bf3856ad364e35"
@@ -76,12 +93,9 @@
                 </OSImage>
             </ImageInstall>
             <UserData>
-                <ProductKey>
-                    <WillShowUI>OnError</WillShowUI>
-                </ProductKey>
                 <AcceptEula>true</AcceptEula>
-                <FullName>Vagrant</FullName>
-                <Organization>Vagrant</Organization>
+                <FullName>${CompanyName}</FullName>
+                <Organization>${CompanyName}</Organization>
             </UserData>
         </component>
     </settings>
@@ -164,8 +178,8 @@
                    versionScope="nonSxS"
                    xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <RegisteredOwner>${RegisteredOwner}</RegisteredOwner>
-            <ComputerName>${MachineName}</ComputerName>
+            <RegisteredOwner>${CompanyName}</RegisteredOwner>
+            <ComputerName>${VmName}</ComputerName>
 
             <!--
                 Set the generic AVMA key so that the VM is automatically activated against
@@ -173,7 +187,7 @@
                 See here: https://technet.microsoft.com/en-nz/library/dn303421.aspx
                 and here: http://terrytlslau.tls1.cc/2014/02/automatic-virtual-machine-activation.html
             -->
-            <ProductKey>TMJ3Y-NTRTM-FJYXT-T22BY-CWG3J</ProductKey>
+            <ProductKey>${ProductKey}</ProductKey>
         </component>
 
         <!--
@@ -288,7 +302,7 @@ ${DnsIPAddresses}
             -->
             <UserAccounts>
                 <AdministratorPassword>
-                    <Value>${LocalAdminPassword}</Value>
+                    <Value>${LocalAdministratorPassword}</Value>
                     <PlainText>true</PlainText>
                 </AdministratorPassword>
             </UserAccounts>
