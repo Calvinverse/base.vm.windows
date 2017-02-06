@@ -6,13 +6,35 @@
         The following ItemGroup defines which steps are taken during the test process. The order of the items in the item group
         determines in which order the test steps are executed.
 
-        The following default steps are always executed:
-        - Clearing the existing build artifacts from the workspace and creation of the required directories. Clearing the
-          existing build artifacts is only executed if the $(ShouldClean) property is set to 'true'.
-        - Restoring the NuGet packages as specified in the '$(DirWorkspace)\packages.config' file. Additionally also restores the
-          NuGet packages as specified in the nBuildKit specific 'packages.config' files.
+        Each test step can define the following items:
+        - Properties                                     - The semi-colon separated set of properties that should be passed to the script.
+                                                           Properties are written as 'key=value'.
+        - Groups                                         - All the groups that a given step belongs to. The user can elect to only run test steps for a given group.
+        - PreSteps                                       - A semi-colon separated list of all additional scripts and their targets that should be executed before
+                                                           the selected test step.
+        - PostSteps                                      - A semi-colon separated list of all additional scripts and their targets that should be executed after
+                                                           the selected test step.
+
+        The metadata to the script that is about to be executed is passed to each pre-step under the following properties:
+
+        - StepDescription : The full description of the step to be executed.
+        - StepId          : The ID of the step. In general the name of the property that references the step file.
+        - StepName        : The name of the step.
+        - StepPath        : The full path to the script file for the step.
+
+        Additionally all the standard properties as seen below and the properties for the given test step are passed in.
+
+        The following ItemGroup defines which steps are taken during the test process. The order of the items in the item group
+        determines in which order the test steps are executed.
 
         The following test steps are by default provided through the given properties:
+        $(TestStepsPrepareWorkspace)     - Clears the existing build artifacts from the workspace and creates the required directories. Clearing the
+                                           existing build artifacts is only executed if the $(ShouldClean) property is set to 'true'.
+        $(TestStepsBuildTargetsAssembly) - Builds Visual Studio projects that contain MsBuild Tasks. Separate from building the standard Visual Studio
+                                           solutions so that it is possible to build MsBuild tasks that will be used in the build process.
+        $(TestStepsGenerateTargetsFile)  - Generates a targets file for use with an MsBuild tasks assembly.
+        $(TestStepsPrepareRestoreNuGet)  - Restores the NuGet packages as specified in the '$(DirWorkspace)\packages.config' file. Additionally
+                                           also restores the NuGet packages as specified in the nBuildKit specific 'packages.config' files.
         $(TestStepsPrepareVcsBranch)     - When building from a GIT repository on Jenkins ensures that the current checkout has the same branch
                                            name as the remote tracking branch.
         $(TestStepsPrepareGetVersion)    - Gathers version information and stores it in a temporary file for use by the rest of the test process.
@@ -44,13 +66,13 @@
         $(TestStepsPrepareVcsInfo)       - Stores the Version Control System (VCS) information in a file for later use.
                                            Currently supported version control systems is GIT
         $(TestStepsPrepareGenerateFiles) - Generates one or more files from a set of template files.
+        $(TestStepsIntegrationPester)    - Runs Pester on a specified test script file.
 
         Additional test steps can be defined by providing the path to the MsBuild script that should be executed
         for that step, e.g. adding a test step that points to the 'c:\stuff\MyCoolScript.msbuild' will execute
         that script.
 
         Each script has the following properties passed to it:
-        $(SharedPropertyFile)              - The full path to the settings.props file (i.e. this file).
         $(ShouldDisplayDebugLog)          - A flag indicating whether or not to display debug log information, usually at the start of the script execution.
         $(NBuildKitVersion)               - The full version of the nBuildKit library that is executing the build.
         $(DirNBuildKitMsBuild)            - The full path to the directory that contains the nBuildKit scripts.
@@ -59,33 +81,72 @@
         $(DirNBuildKitMsBuildTemplates)   - The full path to the directory that contains the nBuildKit templates.
     -->
     <ItemGroup>
+        <TestStepsToExecute Include="$(TestStepsPrepareWorkspace)">
+            <Properties>
+            </Properties>
+            <Groups>
+                Clean;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
+
+        <!--
+        <TestStepsToExecute Include="$(TestStepsBuildTargetsAssembly)">
+            <Properties>
+            </Properties>
+            <Groups>
+                Bootstrap;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
+        <TestStepsToExecute Include="$(TestStepsGenerateTargetsFile)">
+            <Properties>
+            </Properties>
+            <Groups>
+                Bootstrap;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
+        -->
+
+        <TestStepsToExecute Include="$(TestStepsPrepareRestoreNuGet)">
+            <Properties>
+                StageSpecificNuGetPackageFilesToRestore=$(DirNBuildKitMsBuild)\test\packages.config
+            </Properties>
+            <Groups>
+                NuGet;
+                Prepare;
+                Restore;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
+
+        <!--
+            The following steps need to be executed on the original branch (i.e. the branch we are interested in
+            building.
+        -->
         <TestStepsToExecute Include="$(TestStepsPrepareVcsBranch)">
             <Properties>
             </Properties>
             <Groups>
                 Prepare;
             </Groups>
-        </TestStepsToExecute>
-        <TestStepsToExecute Include="$(TestStepsPrepareGetVersion)">
-            <Properties>
-            </Properties>
-            <Groups>
-                Prepare;
-            </Groups>
-        </TestStepsToExecute>
-        <TestStepsToExecute Include="$(TestStepsPrepareGetIssueIds)">
-            <Properties>
-            </Properties>
-            <Groups>
-                Prepare;
-            </Groups>
-        </TestStepsToExecute>
-        <TestStepsToExecute Include="$(TestStepsPrepareReleaseNotes)">
-            <Properties>
-            </Properties>
-            <Groups>
-                Prepare;
-            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
         </TestStepsToExecute>
         <TestStepsToExecute Include="$(TestStepsPrepareVcsInfo)">
             <Properties>
@@ -93,6 +154,48 @@
             <Groups>
                 Prepare;
             </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
+        <TestStepsToExecute Include="$(TestStepsPrepareGetIssueIds)">
+            <Properties>
+            </Properties>
+            <Groups>
+                Prepare;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
+
+        <!--
+            All steps from here on may be executed on a different branch than the orginal branch we we started the
+            build on because we might have done some merging.
+        -->
+        <TestStepsToExecute Include="$(TestStepsPrepareGetVersion)">
+            <Properties>
+            </Properties>
+            <Groups>
+                Prepare;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
+        <TestStepsToExecute Include="$(TestStepsPrepareReleaseNotes)">
+            <Properties>
+            </Properties>
+            <Groups>
+                Prepare;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
         </TestStepsToExecute>
         <TestStepsToExecute Include="$(TestStepsPrepareGenerateFiles)">
             <Properties>
@@ -101,6 +204,22 @@
                 Generate;
                 Prepare;
             </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
+        <TestStepsToExecute Include="$(TestStepsIntegrationPester)">
+            <Properties>
+            </Properties>
+            <Groups>
+                Integration;
+                Pester;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
         </TestStepsToExecute>
     </ItemGroup>
 
@@ -128,6 +247,24 @@
             <Properties>
             </Properties>
         </TestFailureStepsToExecute>
+        -->
+    </ItemGroup>
+
+    <!--
+        The following item group stores metadata describing the custom test steps that are executed in the test process.
+        By providing this metadata it is possible for pre- and post-step actions to more clearly determine which step
+        they were attached to.
+    -->
+    <ItemGroup>
+        <!--
+        <AvailableStepMetadata Include="$([System.IO.Path]::GetFileName('$(DirWorkspace)\my.test.step.msbuild'))">
+            <Description>
+                The description for my cool test step
+            </Description>
+            <Id></Id>
+            <Name>My test step</Name>
+            <Path>$(DirWorkspace)\my.test.step.msbuild</Path>
+        </AvailableStepMetadata>
         -->
     </ItemGroup>
 
@@ -175,21 +312,46 @@
         The list of all files that should be generated and their template files.
 
         The template file may contain zero or more template parameters as indicated at the top of this
-        file. Template parameters must be enclosed in '${}'.
+        file. By default template parameters must be enclosed in '${}'. By providing a value for
+        'Expression' it is possible to use a custom regular expression to search for elements to replace,
+        e.g. $TOKEN$. Note that elements in the regular expession might need to be converted in a suitable
+        format because XML doesn't like < and > and MsBuild doesn't like $ (%24), * (%2A), ? (%3F).
+
+        Only the 'Template' value is required.
 
         Additional parameters can be provided through the 'TemplateTokens' ItemGroup below.
     -->
     <ItemGroup>
-        <!--<TestFilesToGenerate Include="$(DirBuildTemp)\MyFile.txt">
-            <Template>$(DirTemplates)\MyTemplatefile.txt</Template>
-            <Encoding>UTF-8</Encoding>
-        </TestFilesToGenerate>
-        <TestFilesToGenerate Include="$(DirBuildTemp)\MyOtherFile.txt">
+        <!--
+        <TestFilesToGenerate Include="$(DirBuildTemp)\MyFile.txt">
+            <<Encoding>UTF-8</Encoding>
+            <Expression>(MyRegex)</Expression>
+            <ReplacementValue>MyAdditionalTemplateValue</ReplacementValue>
             <Template>$(DirTemplates)\MyOtherTemplatefile.txt</Template>
             <Token>MyAdditionalTemplateParameter</Token>
-            <ReplacementValue>MyAdditionalTemplateValue</ReplacementValue>
-            <Encoding>UTF-8</Encoding>
-        </TestFilesToGenerate>-->
+        </TestFilesToGenerate>
+        -->
+    </ItemGroup>
+
+
+    <!--
+        **** INTEGRATION - PESTER ****
+    -->
+    <PropertyGroup>
+        <!--
+            The full path to the file into which Pester will write the test results.
+        -->
+        <!-- <FileTestReport>$(DirBuildLogs)\pester.integration.xml</FileTestReport> -->
+    </PropertyGroup>
+    <!--
+        The list of all arguments that should be passed to the Pester test.
+    -->
+    <ItemGroup>
+        <!--
+        <PesterTestArguments Include="">
+            <Value></Value>
+        </PesterTestArguments>
+        -->
     </ItemGroup>
 
 
@@ -197,32 +359,14 @@
 
 
     <!--
-        *************************************
-        *                                   *
-        *     SHARED TOOLS                  *
-        *                                   *
-        *************************************
-    -->
-
-    <!-- Overrides for the tools paths -->
-    <PropertyGroup>
-        <!-- Currently there are no test specific tools -->
-    </PropertyGroup>
-
-
-
-
-
-    <!--
         *****************************************
         *                                       *
-        *     NBUILDKIT SPECIFIC SETTINGS       *
+        *   TOOLS-OPS SPECIFIC SETTINGS    *
         *                                       *
         *****************************************
     -->
 
     <PropertyGroup>
-        <!-- Defines whether the current script file has been loaded / imported or not -->
-        <ExistsTestSettings>true</ExistsTestSettings>
+        <OpsVersion>0.1</OpsVersion>
     </PropertyGroup>
 </Project>
