@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<iso>
+    <name>unattend</name>
+    <files>
+        <file src="${DirBuildTempIso}\Set-UnsafeConnectionModeForWinRm.ps1" target="" />
+        <file src="${DirBuildTempIso}\Invoke-WindowsUpdate.ps1" target="" />
+        <file src="${DirBuildTempIso}\autounattend.xml" target="" />
+    </files>
+</iso>

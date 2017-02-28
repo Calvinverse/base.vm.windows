@@ -11,6 +11,7 @@
     "admin_password": "admin",
 
     "dir_config_user": null,
+    "dir_deploy": null,
     "dir_scripts_user": null,
     "dir_cookbooks_user": null
   },
@@ -25,7 +26,7 @@
       "iso_url": "{{ user `iso_url` }}",
       "ram_size": "{{ user `vm_ram_size_in_mb` }}",
       "secondary_iso_images": [
-          "{{ user `dir_config_user` }}/unattend.iso"
+          "{{ user `dir_deploy` }}/unattend.iso"
       ],
       "shutdown_command": "C:/Windows/Panther/Unattend/packer_shutdown.bat",
       "shutdown_timeout": "15m",
@@ -43,7 +44,6 @@
       "elevated_user": "{{user `admin_username`}}",
       "elevated_password": "{{user `admin_password`}}",
       "scripts": [
-        "{{ user `dir_scripts_user` }}/Prepare-DotnetAssemblies.ps1",
         "{{ user `dir_scripts_user` }}/PrepareFor-DiskOptimization.ps1"
       ]
     }

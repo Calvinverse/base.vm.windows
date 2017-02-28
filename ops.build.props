@@ -89,6 +89,7 @@
                                                            currently allows gathering release notes from GitHub, Jira and YouTrack
         $(BuildStepsPrepareRestoreNpm)                   - Restores all the NPM packages for the project.
         $(BuildStepsPrepareRestoreBower)                 - Restores all the Bower packages for the project.
+        $(BuildStepsPrepareCopyFiles)                    - Copies one or more files from the file system or from a NuGet package.
         $(BuildStepsPrepareAssemblyInfo)                 - Updates all existing AssemblyInfo.cs and AssemblyInfo.vb files with the version numbers, company information,
                                                            copyright information and optionally build time and build information.
         $(BuildStepsPrepareGenerateFiles)                - Generates one or more files from a set of template files.
@@ -148,7 +149,6 @@
 
         <BuildStepsToExecute Include="$(BuildStepsPrepareRestoreNuGet)">
             <Properties>
-                StageSpecificNuGetPackageFilesToRestore=$(DirNBuildKitMsBuild)\build\packages.config
             </Properties>
             <Groups>
                 NuGet;
@@ -285,6 +285,19 @@
         </BuildStepsToExecute>
         -->
 
+        <BuildStepsToExecute Include="$(BuildStepsPrepareCopyFiles)">
+            <Properties>
+            </Properties>
+            <Groups>
+                CopyFiles;
+                Prepare;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </BuildStepsToExecute>
+
         <BuildStepsToExecute Include="$(BuildStepsPrepareAssemblyInfo)">
             <Properties>
             </Properties>
@@ -336,14 +349,6 @@
         </BuildStepsToExecute>
         -->
 
-        <BuildStepsToExecute Include="$(DirWorkspace)\build.image.packer.msbuild">
-            <Properties>
-            </Properties>
-            <Groups>
-                Compile;
-            </Groups>
-        </BuildStepsToExecute>
-
         <!--
         <BuildStepsToExecute Include="$(BuildStepsUnitTestNUnit)">
             <Properties>
@@ -386,14 +391,6 @@
         </BuildStepsToExecute>
         -->
 
-        <BuildStepsToExecute Include="$(DirWorkspace)\test.image.msbuild">
-            <Properties>
-            </Properties>
-            <Groups>
-                Compile;
-            </Groups>
-        </BuildStepsToExecute>
-
         <!--
         <BuildStepsToExecute Include="$(BuildStepsAnalyzeBinariesFxCop)">
             <Properties>
@@ -409,6 +406,27 @@
             </PostSteps>
         </BuildStepsToExecute>
         -->
+
+        <BuildStepsToExecute Include="$(BuildStepsPackIso)">
+            <Properties>
+                Configuration=$(ProductionConfiguration);
+                Platform=$(Platform)
+            </Properties>
+            <Groups>
+                Package;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </BuildStepsToExecute>
+        <BuildStepsToExecute Include="$(DirWorkspace)\build.image.packer.msbuild">
+            <Properties>
+            </Properties>
+            <Groups>
+                Compile;
+            </Groups>
+        </BuildStepsToExecute>
 
         <!--
         <BuildStepsToExecute Include="$(BuildStepsPackNuGet)">
@@ -498,7 +516,7 @@
     -->
     <ItemGroup>
         <!--
-        <BuildFilesToDelete Include="" />
+        <FilesToDelete Include="" />
         -->
     </ItemGroup>
 
@@ -510,8 +528,32 @@
     -->
     <ItemGroup>
         <!--
-        <BuildDirectoriesToDelete Include="" />
+        <DirectoriesToDelete Include="" />
         -->
+    </ItemGroup>
+
+
+    <!--
+        **** PREPARE - COPY FILES ****
+    -->
+    <!--
+        Files that should be copied, either from the file system or from a NuGet package.
+    -->
+    <ItemGroup>
+        <!--
+        <FilesToCopy Include="">
+            <Destinations></Destinations>
+        </FilesToCopy>
+        -->
+    </ItemGroup>
+    <ItemGroup>
+        <NuGetFilesToCopy Include="Ops.Tools.BaseImage.Windows">
+            <Include>scripts\**\*</Include>
+            <Destinations>
+                $(DirBuildTempScripts);
+                $(DirBuildTempIso);
+            </Destinations>
+        </NuGetFilesToCopy>
     </ItemGroup>
 
 
@@ -810,18 +852,19 @@
         <!--
             The full path to the berks command line executable
         -->
-        <ToolsExternalBerksPath Condition=" '$(ToolsExternalBerksPath)' == '' ">berks</ToolsExternalBerksPath>
+        <ToolsExternalBerksPath>berks</ToolsExternalBerksPath>
 
         <!--
-            The full path to the mkisofs command line executable
+            The full path and version to the mkisofs command line executable. If not defined the packages directory is searched.
         -->
-        <ToolsExternalMakeIsoFsPath>$(DirWorkspace)\tools\mkisofs.exe</ToolsExternalMakeIsoFsPath>
+        <ToolsExternalMakeIsoFsPath>UNDEFINED</ToolsExternalMakeIsoFsPath>
+        <ToolsExternalMkIsoFsVersion>3.2.7.0</ToolsExternalMkIsoFsVersion>
 
         <!--
             The full path and version of the Packer command line executable. If not defined the packages directory is searched.
         -->
-        <ToolsExternalPackerPath Condition=" '$(ToolsExternalPackerPath)' == '' ">UNDEFINED</ToolsExternalPackerPath>
-        <ToolsExternalPackerVersion Condition=" '$(ToolsExternalPackerVersion)' == '' ">0.12.2.0</ToolsExternalPackerVersion>
+        <ToolsExternalPackerPath>UNDEFINED</ToolsExternalPackerPath>
+        <ToolsExternalPackerVersion>0.12.2.0</ToolsExternalPackerVersion>
     </PropertyGroup>
 
 
@@ -837,6 +880,6 @@
     -->
 
     <PropertyGroup>
-        <OpsVersion>$VersionOpsTools$</OpsVersion>
+        <OpsConfigurationVersion>0.1</OpsConfigurationVersion>
     </PropertyGroup>
 </Project>

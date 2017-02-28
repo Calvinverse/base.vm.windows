@@ -59,6 +59,7 @@
                                              - The GitHubFlowVersion tool (https://github.com/JakeGinnivan/GitHubFlowVersion)
         $(DeployStepsPrepareTagVcs)        - Tags the current commit with the version number. Currently supported version control systems are TFS and GIT.
         $(DeployStepsPrepareGetIssueIds)   - Gets the issue IDs from the commits on the current branch and stores them in a temp file for later use.
+        $(DeployStepsPrepareCopyFiles)     - Copies one or more files from the file system or from a NuGet package.
         $(DeployStepsPushToTags)           - Pushes the tags to a remote git repository
         $(DeployStepsPushToNuget)          - Pushes one or more artifacts to a NuGet feed
         $(DeployStepsPushToDirectory)      - Pushes one or more artifacts to a directory
@@ -108,7 +109,6 @@
 
         <DeployStepsToExecute Include="$(DeployStepsRestoreNuGet)">
             <Properties>
-                StageSpecificNuGetPackageFilesToRestore=$(DirNBuildKitMsBuild)\deploy\packages.config
             </Properties>
             <Groups>
                 NuGet;
@@ -179,6 +179,20 @@
             </PostSteps>
         </DeployStepsToExecute>
         -->
+
+        <DeployStepsToExecute Include="$(DeployStepsPrepareCopyFiles)">
+            <Properties>
+            </Properties>
+            <Groups>
+                CopyFiles;
+                Prepare;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </DeployStepsToExecute>
+
         <!--
         <DeployStepsToExecute Include="$(DeployStepsPushToTags)">
             <Properties>
@@ -330,6 +344,29 @@
 
 
     <!--
+        **** PREPARE - COPY FILES ****
+    -->
+    <!--
+        Files that should be copied, either from the file system or from a NuGet package.
+    -->
+    <ItemGroup>
+        <!--
+        <FilesToCopy Include="">
+            <Destinations></Destinations>
+        </FilesToCopy>
+        -->
+    </ItemGroup>
+    <ItemGroup>
+        <!--
+        <NuGetFilesToCopy Include="">
+            <PackageName></PackageName>
+            <Destinations></Destinations>
+        </NuGetFilesToCopy>
+        -->
+    </ItemGroup>
+
+
+    <!--
         **** PUSHTO - DIRECTORY / FILESERVER ****
     -->
     <!--
@@ -433,6 +470,6 @@
     -->
 
     <PropertyGroup>
-        <OpsVersion>0.1</OpsVersion>
+        <OpsConfigurationVersion>0.1</OpsConfigurationVersion>
     </PropertyGroup>
 </Project>

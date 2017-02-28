@@ -7,34 +7,20 @@
         <ExistsBuilImagePacker>true</ExistsBuilImagePacker>
     </PropertyGroup>
 
-    <Import Project="$(DirNBuildKitMsBuildShared)\shared.importbuildsharedsettings.props"
-            Condition="Exists('$(DirNBuildKitMsBuildShared)\shared.importbuildsharedsettings.props') AND '$(ExistsSharedImportBuildSharedSettings)' != 'true' " />
-
-    <Import Project="$(DirNBuildKitMsBuild)\shared.templatetokens.msbuild"
-            Condition="Exists('$(DirNBuildKitMsBuild)\shared.templatetokens.msbuild') AND '$(ExistsSharedTemplateTokens)' != 'true' " />
-
-    <Import Project="$(DirNBuildKitMsBuildExtensions)\GetToolFullPath.msbuild"
-            Condition="Exists('$(DirNBuildKitMsBuildExtensions)\GetToolFullPath.msbuild') AND '$(ExistsExtensionsGetToolFullPath)' != 'true' "/>
-    <Import Project="$(DirNBuildKitMsBuildExtensions)\NuGetInstall.msbuild"
-            Condition="Exists('$(DirNBuildKitMsBuildExtensions)\NuGetInstall.msbuild') AND '$(ExistsExtensionsNuGetInstall)' != 'true' " />
-    <Import Project="$(DirNBuildKitMsBuildExtensions)\SearchPackagesDirectoryForToolDirectory.msbuild"
-            Condition="Exists('$(DirNBuildKitMsBuildExtensions)\SearchPackagesDirectoryForToolDirectory.msbuild') AND '$(ExistsExtensionsSearchPackagesDirectoryForToolDirectory)' != 'true' " />
-    <Import Project="$(DirNBuildKitMsBuildExtensions)\SearchPackagesDirectoryForToolPath.msbuild"
-            Condition="Exists('$(DirNBuildKitMsBuildExtensions)\SearchPackagesDirectoryForToolPath.msbuild') AND '$(ExistsExtensionsSearchPackagesDirectoryForToolPath)' != 'true' " />
-    <Import Project="$(DirNBuildKitMsBuildExtensions)\TemplateText.msbuild"
-            Condition="Exists('$(DirNBuildKitMsBuildExtensions)\TemplateText.msbuild') AND '$(ExistsExtensionsTemplateText)' != 'true' " />
+    <Import
+        Condition="Exists('$(FileImports)') AND '$(ExistsFileImports)' != 'true' "
+        Project="$(FileImports)" />
 
     <Target Name="BaseWin2016_Build_Image_Packer_Run">
         <CallTarget Targets="_BaseWin2016_Build_Image_Packer_RestoreDependencies" />
         <CallTarget Targets="_BaseWin2016_Build_Image_Packer_RestoreBaseImageFiles" />
-        <CallTarget Targets="_BaseWin2016_Build_Image_Packer_CreateUnattendIso" />
         <CallTarget Targets="_BaseWin2016_Build_Image_Packer_Execute" />
     </Target>
 
     <Target Name="_BaseWin2016_Build_Image_Packer_RestoreDependencies">
         <SearchPackagesDirectoryForToolDirectory
             FileToLocate="Ops.Tools.BaseImage.Windows.0.1.0.nupkg"
-            PackagesDir="$(DirPackages)">
+            PackagesDirectory="$(DirPackages)">
             <Output
                 PropertyName="DirPackagesBaseImageWindows"
                 TaskParameter="Path" />
@@ -46,77 +32,69 @@
             Condition="!Exists('$(DirPackagesBaseImageWindows)')"
             Text="DirPackagesBaseImageWindows: $(DirPackagesBaseImageWindows)" />
 
-        <NuGetInstall NuGetPath="$(ToolsExternalNuGetPath)"
-                      PackageName="Packer.Windows.x64"
-                      PackageVersion="$(ToolsExternalPackerVersion)"
-                      PackageDirectory="$(DirPackages)"
-                      Sources="@(NuGetSources)"
-                      Condition=" '$(ToolsExternalPackerPath)' == 'UNDEFINED' AND   '$(ShouldExecute)' == 'true' "/>
-        <SearchPackagesDirectoryForToolPath PackagesDir="$(DirPackages)"
-                                            FileToLocate="packer.exe"
-                                            Condition=" '$(ToolsExternalPackerPath)' == 'UNDEFINED' AND  '$(ShouldExecute)' == 'true' ">
+        <NuGetInstall
+            NuGetExecutablePath="$(ToolsExternalNuGetPath)"
+            PackageName="Packer.Windows.x64"
+            PackageVersion="$(ToolsExternalPackerVersion)"
+            PackagesDirectory="$(DirPackages)"
+            Sources="@(NuGetSources)"
+            Condition=" '$(ToolsExternalPackerPath)' == 'UNDEFINED'"/>
+        <SearchPackagesDirectoryForToolPath
+            PackagesDirectory="$(DirPackages)"
+            FileToLocate="packer.exe"
+            Condition=" '$(ToolsExternalPackerPath)' == 'UNDEFINED' ">
             <Output TaskParameter="Path" PropertyName="ToolsExternalPackerPath" />
         </SearchPackagesDirectoryForToolPath>
-        <GetToolFullPath Tool="$(ToolsExternalPackerPath)"
-                         Condition=" '$(ToolsExternalPackerPath)' != 'UNDEFINED' ">
+        <GetToolFullPath
+            Tool="$(ToolsExternalPackerPath)"
+            Condition=" '$(ToolsExternalPackerPath)' != 'UNDEFINED' ">
             <Output TaskParameter="Path" PropertyName="ToolsExternalPackerPath" />
         </GetToolFullPath>
-        <Message Text="The Packer executable was found at: $(ToolsExternalPackerPath)"
-                 Importance="low"
-                 Condition="Exists('$(ToolsExternalPackerPath)') AND '$(ShouldExecute)' == 'true' " />
-        <Error Text="Could not locate the Packer executable path. Cannot generate an image."
-               Condition="!Exists('$(ToolsExternalPackerPath)') AND '$(ShouldExecute)' == 'true' "/>
+        <Message
+            Text="The Packer executable was found at: $(ToolsExternalPackerPath)"
+            Importance="low"
+            Condition="Exists('$(ToolsExternalPackerPath)') " />
+        <Error
+            Text="Could not locate the Packer executable path. Cannot generate an image."
+            Condition="!Exists('$(ToolsExternalPackerPath)') "/>
     </Target>
 
     <Target Name="_BaseWin2016_Build_Image_Packer_RestoreBaseImageFiles">
         <ItemGroup>
-            <CookbookFiles Include="$(DirPackagesBaseImageWindows)\cookbooks\**\*" />
-
-            <IsoFiles Include="$(DirPackagesBaseImageWindows)\scripts\Set-UnsafeConnectionModeForWinRm.ps1" />
-            <IsoFiles Include="$(DirPackagesBaseImageWindows)\scripts\Invoke-WindowsUpdate.ps1" />
-
             <ScriptFiles Include="$(DirPackagesBaseImageWindows)\scripts\**\*" />
         </ItemGroup>
 
-        <Copy SourceFiles="@(IsoFiles)"
-              DestinationFiles="@(IsoFiles->'$(DirBuildTempIso)\%(RecursiveDir)%(Filename)%(Extension)')" />
+        <Copy
+            SourceFiles="@(ScriptFiles)"
+            DestinationFiles="@(ScriptFiles->'$(DirBuildTempScripts)\%(RecursiveDir)%(Filename)%(Extension)')" />
 
-        <Copy SourceFiles="@(ScriptFiles)"
-              DestinationFiles="@(ScriptFiles->'$(DirBuildTempScripts)\%(RecursiveDir)%(Filename)%(Extension)')" />
-
-        <Copy SourceFiles="@(CookbookFiles)"
-              DestinationFiles="@(CookbookFiles->'$(DirBuildTempCookbooks)\%(RecursiveDir)%(Filename)%(Extension)')" />
-
+        <!--
         <Exec
             Command="$(ToolsExternalBerksPath) vendor ..\."
             WorkingDirectory="$(DirBuildTempCookbooks)\ops-tools-baseimage-windows" />
+        -->
     </Target>
 
-    <Target Name="_BaseWin2016_Build_Image_Packer_CreateUnattendIso">
-        <MakeDir Directories="$(DirBuildTempConfig)"
-                 Condition="!Exists('$(DirBuildTempConfig)')" />
-
-        <Exec
-            Command="&quot;$(ToolsExternalMakeIsoFsPath)&quot; -r -iso-level 4 -UDF -o &quot;$(DirBuildTempConfig)\unattend.iso&quot; &quot;$(DirBuildTempIso)&quot;"
-            WorkingDirectory="$(DirBuildTemp)" />
-    </Target>
-
-    <Target Name="_BaseWin2016_Build_Image_Packer_Execute"
-            DependsOnTargets="nBuildKit_Shared_TemplateTokens_Initialize"
-            Condition=" '@(PackerImagesToBuild)' != '' "
-            Outputs="%(PackerImagesToBuild.Identity)">
-        <TemplateText Template="%(PackerImagesToBuild.FullPath)"
-                      Tokens="@(TemplateTokens)">
+    <Target
+        Name="_BaseWin2016_Build_Image_Packer_Execute"
+        Condition=" '@(PackerImagesToBuild)' != '' "
+        Outputs="%(PackerImagesToBuild.Identity)">
+        <TemplateText
+            Template="%(PackerImagesToBuild.FullPath)"
+            Tokens="@(TemplateTokens)">
             <Output TaskParameter="Result" PropertyName="FilePackerConfiguration" />
         </TemplateText>
 
-        <Error Text="Expected $(FilePackerConfiguration) to point to a valid path but it does not."
-               Condition="!Exists('$(FilePackerConfiguration)') AND  '$(ShouldExecute)' == 'true' " />
+        <Error
+            Text="Expected $(FilePackerConfiguration) to point to a valid path but it does not."
+            Condition="!Exists('$(FilePackerConfiguration)') " />
 
-        <Message Text="Building $(FilePackerConfiguration) ..."
-                 Importance="normal"/>
+        <Message
+            Text="Building $(FilePackerConfiguration) ..."
+            Importance="normal"/>
 
-        <Exec Command="&quot;$(ToolsExternalPackerPath)&quot; build -var-file=&quot;$(DirBuildTemp)\packer_variables.json&quot; &quot;$(FilePackerConfiguration)&quot;"
-              WorkingDirectory="$(DirBuildTemp)" />
+        <Exec
+            Command="&quot;$(ToolsExternalPackerPath)&quot; build -var-file=&quot;$(DirBuildTemp)\packer_variables.json&quot; &quot;$(FilePackerConfiguration)&quot;"
+            WorkingDirectory="$(DirBuildTemp)" />
     </Target>
 </Project>

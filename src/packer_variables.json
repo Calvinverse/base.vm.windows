@@ -10,6 +10,7 @@
     "admin_password": "${LocalAdministratorPassword}",
 
     "dir_config_user": "${DirTempJsonEscaped}/config",
+    "dir_deploy": "${DirDeployJsonEscaped}",
     "dir_scripts_user": "${DirTempJsonEscaped}/scripts",
     "dir_cookbooks_user": "${DirTempJsonEscaped}/cookbooks"
 }

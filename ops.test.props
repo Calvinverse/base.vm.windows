@@ -65,6 +65,7 @@
                                            currently allows gathering release notes from GitHub, Jira and YouTrack
         $(TestStepsPrepareVcsInfo)       - Stores the Version Control System (VCS) information in a file for later use.
                                            Currently supported version control systems is GIT
+        $(TestStepsPrepareCopyFiles)     - Copies one or more files from the file system or from a NuGet package.
         $(TestStepsPrepareGenerateFiles) - Generates one or more files from a set of template files.
         $(TestStepsIntegrationPester)    - Runs Pester on a specified test script file.
 
@@ -120,7 +121,6 @@
 
         <TestStepsToExecute Include="$(TestStepsPrepareRestoreNuGet)">
             <Properties>
-                StageSpecificNuGetPackageFilesToRestore=$(DirNBuildKitMsBuild)\test\packages.config
             </Properties>
             <Groups>
                 NuGet;
@@ -190,6 +190,18 @@
             <Properties>
             </Properties>
             <Groups>
+                Prepare;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
+        <TestStepsToExecute Include="$(TestStepsPrepareCopyFiles)">
+            <Properties>
+            </Properties>
+            <Groups>
+                CopyFiles;
                 Prepare;
             </Groups>
             <PreSteps>
@@ -279,7 +291,7 @@
     -->
     <ItemGroup>
         <!--
-        <TestFilesToDelete Include="" />
+        <FilesToDelete Include="" />
         -->
     </ItemGroup>
 
@@ -291,17 +303,31 @@
     -->
     <ItemGroup>
         <!--
-        <TestDirectoriesToDelete Include="" />
+        <DirectoriesToDelete Include="" />
         -->
     </ItemGroup>
 
+
     <!--
-        The list of all files that should be copied prior to starting the tests.
+        **** PREPARE - COPY FILES ****
+    -->
+    <!--
+        Files that should be copied, either from the file system or from a NuGet package.
     -->
     <ItemGroup>
-        <!--<TestFilesToCopy Include="$(DirTest)\**\*.*">
-            <TargetDirectory>$(DirBuildTest)</TargetDirectory>
-        </TestFilesToCopy>-->
+        <!--
+        <FilesToCopy Include="">
+            <Destinations></Destinations>
+        </FilesToCopy>
+        -->
+    </ItemGroup>
+    <ItemGroup>
+        <!--
+        <NuGetFilesToCopy Include="">
+            <PackageName></PackageName>
+            <Destinations></Destinations>
+        </NuGetFilesToCopy>
+        -->
     </ItemGroup>
 
 
@@ -367,6 +393,6 @@
     -->
 
     <PropertyGroup>
-        <OpsVersion>0.1</OpsVersion>
+        <OpsConfigurationVersion>0.1</OpsConfigurationVersion>
     </PropertyGroup>
 </Project>

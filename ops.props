@@ -320,11 +320,11 @@
         The default template parameters, as indicated at the top of this file, are always available.
     -->
     <ItemGroup>
-        <TemplateTokens Include="ComputerName">
-            <ReplacementValue>Win2016.BaseImage</ReplacementValue>
-        </TemplateTokens>
         <TemplateTokens Include="DirTempJsonEscaped">
             <ReplacementValue>$(DirBuildTemp.Replace('\', '/'))</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="DirDeployJsonEscaped">
+            <ReplacementValue>$(DirBuildDeploy.Replace('\', '/'))</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="DnsIPAddresses">
             <ReplacementValue></ReplacementValue>
@@ -346,6 +346,10 @@
         </TemplateTokens>
         <TemplateTokens Include="VmSwitch">
             <ReplacementValue>External switch</ReplacementValue>
+        </TemplateTokens>
+
+        <TemplateTokens Include="DirBuildTempIso">
+            <ReplacementValue>$(DirBuildTempIso)</ReplacementValue>
         </TemplateTokens>
     </ItemGroup>
 
@@ -401,6 +405,15 @@
     -->
 
     <PropertyGroup>
-        <OpsVersion>0.1</OpsVersion>
+        <OpsConfigurationVersion>0.1</OpsConfigurationVersion>
+    </PropertyGroup>
+
+    <!--
+        Defines the minimum and maximum versions for Ops.Tools.Build which are used to grab the correct packages from
+        NuGet if no package is specified in the packages.config file.
+    -->
+    <PropertyGroup>
+        <PackageMinimumVersion Condition=" '$(PackageMinimumVersion)' == '' ">0.1.0</PackageMinimumVersion>
+        <PackageMaximumVersion Condition=" '$(PackageMaximumVersion)' == '' ">0.2.0</PackageMaximumVersion>
     </PropertyGroup>
 </Project>
