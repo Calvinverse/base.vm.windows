@@ -21,60 +21,76 @@
     -->
     <settings pass="windowsPE">
         <component
-            name="Microsoft-Windows-International-Core-WinPE"
-            publicKeyToken="31bf3856ad364e35"
             language="neutral"
-            versionScope="nonSxS"
+            name="Microsoft-Windows-International-Core-WinPE"
             processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
             xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">>
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <InputLocale>en-us</InputLocale>
             <SetupUILanguage>
                 <UILanguage>en-us</UILanguage>
             </SetupUILanguage>
-            <InputLocale>en-us</InputLocale>
             <SystemLocale>en-us</SystemLocale>
             <UILanguage>en-us</UILanguage>
             <UserLocale>en-us</UserLocale>
         </component>
 
-        <component name="Microsoft-Windows-Setup"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component
+            language="neutral"
+            name="Microsoft-Windows-Setup"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <DiskConfiguration>
                 <Disk wcm:action="add">
+                    <!--
+                        Create the partitions for an UEFI-based computer (see here: https://technet.microsoft.com/en-us/library/cc765950(v=ws.10).aspx)
+                        UEFI-based computers need the following partitions:
+
+                        - Unified Extensible Firmware Interface System partition (ESP)
+                        - Microsoft Reserved Partition (MSR) if GTP disks are used
+                        - OS partition
+                    -->
                     <CreatePartitions>
                         <CreatePartition wcm:action="add">
-                            <Type>Primary</Type>
                             <Order>1</Order>
-                            <Size>350</Size>
+                            <Size>200</Size>
+                            <Type>EFI</Type>
                         </CreatePartition>
                         <CreatePartition wcm:action="add">
                             <Order>2</Order>
-                            <Type>Primary</Type>
+                            <Size>128</Size>
+                            <Type>MSR</Type>
+                        </CreatePartition>
+                        <CreatePartition wcm:action="add">
                             <Extend>true</Extend>
+                            <Order>3</Order>
+                            <Type>Primary</Type>
                         </CreatePartition>
                     </CreatePartitions>
+                    <DiskID>0</DiskID>
                     <ModifyPartitions>
                         <ModifyPartition wcm:action="add">
-                            <Active>true</Active>
-                            <Format>NTFS</Format>
-                            <Label>boot</Label>
+                            <Format>FAT32</Format>
+                            <Label>Boot</Label>
                             <Order>1</Order>
                             <PartitionID>1</PartitionID>
                         </ModifyPartition>
                         <ModifyPartition wcm:action="add">
-                            <Format>NTFS</Format>
-                            <Label>Windows 2016</Label>
-                            <Letter>C</Letter>
                             <Order>2</Order>
                             <PartitionID>2</PartitionID>
                         </ModifyPartition>
+                        <ModifyPartition wcm:action="add">
+                            <Format>NTFS</Format>
+                            <Label>Windows</Label>
+                            <Order>3</Order>
+                            <PartitionID>3</PartitionID>
+                        </ModifyPartition>
                     </ModifyPartitions>
-                    <DiskID>0</DiskID>
                     <WillWipeDisk>true</WillWipeDisk>
                 </Disk>
             </DiskConfiguration>
@@ -88,7 +104,7 @@
                     </InstallFrom>
                     <InstallTo>
                         <DiskID>0</DiskID>
-                        <PartitionID>2</PartitionID>
+                        <PartitionID>3</PartitionID>
                     </InstallTo>
                 </OSImage>
             </ImageInstall>
@@ -96,6 +112,17 @@
                 <AcceptEula>true</AcceptEula>
                 <FullName>${CompanyName}</FullName>
                 <Organization>${CompanyName}</Organization>
+                <ProductKey>
+                    <!--
+                        Set the generic AVMA key so that the VM is automatically activated against
+                        the Hyper-V host server license.
+                        See here: https://technet.microsoft.com/en-nz/library/dn303421.aspx
+                        and here: http://terrytlslau.tls1.cc/2014/02/automatic-virtual-machine-activation.html
+                        and here: https://technet.microsoft.com/en-us/library/jj612867.aspx#Windows%20Server%202016
+                    -->
+                    <Key>${ProductKey}</Key>
+                    <WillShowUI>Never</WillShowUI>
+                </ProductKey>
             </UserData>
         </component>
     </settings>
@@ -114,13 +141,14 @@
         removed from the installation.
     -->
     <settings pass="generalize">
-        <component name="Microsoft-Windows-PnpSysprep"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component
+            language="neutral"
+            name="Microsoft-Windows-PnpSysprep"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <PersistAllDeviceInstalls>true</PersistAllDeviceInstalls>
         </component>
     </settings>
@@ -139,31 +167,33 @@
         <!--
             Turns off Windows Error Reporting
         -->
-        <component name="Microsoft-Windows-ErrorReportingCore"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component
+            language="neutral"
+            name="Microsoft-Windows-ErrorReportingCore"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <DisableWER>1</DisableWER>
         </component>
 
         <!--
             Set the Powershell ExecutionPolicy to be remote signed
         -->
-        <component name="Microsoft-Windows-Deployment"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component
+            language="neutral"
+            name="Microsoft-Windows-Deployment"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <RunSynchronous>
                 <RunSynchronousCommand wcm:action="add">
+                    <Description>Configure Powershell security settings</Description>
                     <Order>1</Order>
                     <Path>cmd /c reg add &quot;HKLM\SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell&quot; /v ExecutionPolicy /t REG_SZ /d RemoteSigned /f</Path>
-                    <Description>Configure Powershell security settings</Description>
                 </RunSynchronousCommand>
             </RunSynchronous>
         </component>
@@ -171,15 +201,15 @@
         <!--
             Set the computer name and the owner
         -->
-        <component name="Microsoft-Windows-Shell-Setup"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <RegisteredOwner>${CompanyName}</RegisteredOwner>
-            <ComputerName>${VmName}</ComputerName>
+        <component
+            language="neutral"
+            name="Microsoft-Windows-Shell-Setup"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <ComputerName>${VmMachineName}</ComputerName>
 
             <!--
                 Set the generic AVMA key so that the VM is automatically activated against
@@ -188,18 +218,20 @@
                 and here: http://terrytlslau.tls1.cc/2014/02/automatic-virtual-machine-activation.html
             -->
             <ProductKey>${ProductKey}</ProductKey>
+            <RegisteredOwner>${CompanyName}</RegisteredOwner>
         </component>
 
         <!--
             Open the firewall ports for Remote Desktop
         -->
-        <component name="Networking-MPSSVC-Svc"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component
+            language="neutral"
+            name="Networking-MPSSVC-Svc"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <FirewallGroups>
                 <FirewallGroup wcm:action="add"
                                wcm:keyValue="RemoteDesktop">
@@ -213,15 +245,17 @@
         <!--
             Set the TCP/IP configuration for the network interface
         -->
-        <component name="Microsoft-Windows-TCPIP"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component
+            language="neutral"
+            name="Microsoft-Windows-TCPIP"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <Interfaces>
                 <Interface wcm:action="add">
+                    <Identifier>Ethernet</Identifier>
                     <Ipv4Settings>
                         <DhcpEnabled>true</DhcpEnabled>
                         <RouterDiscoveryEnabled>true</RouterDiscoveryEnabled>
@@ -230,7 +264,6 @@
                         <DhcpEnabled>false</DhcpEnabled>
                         <RouterDiscoveryEnabled>true</RouterDiscoveryEnabled>
                     </Ipv6Settings>
-                    <Identifier>Ethernet</Identifier>
                 </Interface>
             </Interfaces>
         </component>
@@ -238,17 +271,18 @@
         <!--
             Set the primairy DNS to point to the domain DNS server
         -->
-        <component name="Microsoft-Windows-DNS-Client"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component
+            language="neutral"
+            name="Microsoft-Windows-DNS-Client"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <Interfaces>
                 <Interface wcm:action="add">
                     <DNSServerSearchOrder>
-${DnsIPAddresses}
+                        <IpAddress wcm:action="add" wcm:keyValue="1">${DnsIPAddresses}</IpAddress>
                     </DNSServerSearchOrder>
                     <Identifier>Ethernet</Identifier>
                 </Interface>
@@ -258,26 +292,28 @@ ${DnsIPAddresses}
         <!--
             Set the Server Manager to not automatically open on user log in
         -->
-        <component name="Microsoft-Windows-ServerManager-SvrMgrNc"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component
+            language="neutral"
+            name="Microsoft-Windows-ServerManager-SvrMgrNc"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <DoNotOpenServerManagerAtLogon>true</DoNotOpenServerManagerAtLogon>
         </component>
 
         <!--
             Enable remote desktop
         -->
-        <component name="Microsoft-Windows-TerminalServices-LocalSessionManager"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component
+            language="neutral"
+            name="Microsoft-Windows-TerminalServices-LocalSessionManager"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <fDenyTSConnections>false</fDenyTSConnections>
         </component>
     </settings>
@@ -289,13 +325,20 @@ ${DnsIPAddresses}
         locale settings. The answer file settings for the oobeSystem pass appear in Windows Welcome, also known as OOBE.
     -->
     <settings pass="oobeSystem">
-        <component name="Microsoft-Windows-Shell-Setup"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component
+            language="neutral"
+            name="Microsoft-Windows-Shell-Setup"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <CopyProfile>true</CopyProfile>
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <ProtectYourPC>3</ProtectYourPC>
+            </OOBE>
+            <TimeZone>New Zealand Standard Time</TimeZone>
             <!--
                 Set the local Administrator account password and
                 add domain users to the administrators group
@@ -306,35 +349,29 @@ ${DnsIPAddresses}
                     <PlainText>true</PlainText>
                 </AdministratorPassword>
             </UserAccounts>
-            <OOBE>
-                <HideEULAPage>true</HideEULAPage>
-                <ProtectYourPC>3</ProtectYourPC>
-                <NetworkLocation>Home</NetworkLocation>
-            </OOBE>
             <WindowsFeatures>
+                <ShowInternetExplorer>true</ShowInternetExplorer>
                 <ShowMediaCenter>false</ShowMediaCenter>
                 <ShowWindowsMediaPlayer>false</ShowWindowsMediaPlayer>
-                <ShowInternetExplorer>true</ShowInternetExplorer>
             </WindowsFeatures>
-            <TimeZone>New Zealand Standard Time</TimeZone>
-            <CopyProfile>true</CopyProfile>
         </component>
 
         <!--
             Set the locale's
         -->
-        <component name="Microsoft-Windows-International-Core"
-                   processorArchitecture="amd64"
-                   publicKeyToken="31bf3856ad364e35"
-                   language="neutral"
-                   versionScope="nonSxS"
-                   xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component
+            language="neutral"
+            name="Microsoft-Windows-International-Core"
+            processorArchitecture="amd64"
+            publicKeyToken="31bf3856ad364e35"
+            versionScope="nonSxS"
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <InputLocale>1409:00000409</InputLocale>
             <SystemLocale>en-NZ</SystemLocale>
             <UILanguage>en-NZ</UILanguage>
-            <UserLocale>en-NZ</UserLocale>
             <UILanguageFallback>en-US</UILanguageFallback>
+            <UserLocale>en-NZ</UserLocale>
         </component>
     </settings>
 </unattend>

@@ -320,18 +320,21 @@
         The default template parameters, as indicated at the top of this file, are always available.
     -->
     <ItemGroup>
+        <!-- For the unattend file -->
+        <TemplateTokens Include="DnsIPAddresses">
+            <ReplacementValue>$(DnsIpAddress)</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="IsoFileEscaped">
+            <ReplacementValue>$(IsoFile.Replace('\', '/'))</ReplacementValue>
+        </TemplateTokens>
+
         <TemplateTokens Include="DirTempJsonEscaped">
             <ReplacementValue>$(DirBuildTemp.Replace('\', '/'))</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="DirDeployJsonEscaped">
             <ReplacementValue>$(DirBuildDeploy.Replace('\', '/'))</ReplacementValue>
         </TemplateTokens>
-        <TemplateTokens Include="DnsIPAddresses">
-            <ReplacementValue></ReplacementValue>
-        </TemplateTokens>
-        <TemplateTokens Include="IsoFileEscaped">
-            <ReplacementValue>$(IsoFile.Replace('\', '/'))</ReplacementValue>
-        </TemplateTokens>
+
         <TemplateTokens Include="LocalAdministratorName">
             <ReplacementValue>Administrator</ReplacementValue>
         </TemplateTokens>
@@ -347,7 +350,11 @@
         <TemplateTokens Include="VmSwitch">
             <ReplacementValue>External switch</ReplacementValue>
         </TemplateTokens>
+        <TemplateTokens Include="VmMachineName">
+            <ReplacementValue>Win2016Base</ReplacementValue>
+        </TemplateTokens>
 
+        <!-- For the .isospec file -->
         <TemplateTokens Include="DirBuildTempIso">
             <ReplacementValue>$(DirBuildTempIso)</ReplacementValue>
         </TemplateTokens>
