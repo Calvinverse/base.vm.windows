@@ -186,6 +186,7 @@
         <DirBuildTempConfig>$(DirBuildTemp)\config</DirBuildTempConfig>
         <DirBuildTempIso>$(DirBuildTemp)\iso</DirBuildTempIso>
         <DirBuildTempScripts>$(DirBuildTemp)\scripts</DirBuildTempScripts>
+        <DirBuildTempUnattend>$(DirBuildTemp)\unattend</DirBuildTempUnattend>
 
         <!-- The directory that will contain all the test files generated during the test process -->
         <!-- <DirBuildTest>$(DirBuild)\tests</DirBuildTest> -->
@@ -336,7 +337,7 @@
         </TemplateTokens>
 
         <TemplateTokens Include="LocalAdministratorName">
-            <ReplacementValue>Administrator</ReplacementValue>
+            <ReplacementValue>TheBigKahuna</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="LocalAdministratorPassword">
             <ReplacementValue>TheB1gK@huna</ReplacementValue>
@@ -350,7 +351,7 @@
         <TemplateTokens Include="VmSwitch">
             <ReplacementValue>External switch</ReplacementValue>
         </TemplateTokens>
-        <TemplateTokens Include="VmMachineName">
+        <TemplateTokens Include="MachineName">
             <ReplacementValue>Win2016Base</ReplacementValue>
         </TemplateTokens>
 

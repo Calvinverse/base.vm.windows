@@ -122,6 +122,25 @@
     </ItemGroup>
 
 
+    <!--
+        **** PACK - PACKER ****
+    -->
+    <!--
+        The item group defining the location and contents of the Packer files that are used during the build
+        to generate the Packer images.
+
+        All file paths allow build templates, e.g. $(DirBuildDeploy)\myarchive-${VersionSemantic}.zip.
+    -->
+    <ItemGroup Condition=" '@(PackerImagesToBuild)' == '' ">
+        <PackerImagesToBuild
+            Include="$(DirSrc)\hyperv.json">
+            <Variables>
+                $(DirBuildTemp)\packer_variables.json
+            </Variables>
+        </PackerImagesToBuild>
+    </ItemGroup>
+
+
 
 
 

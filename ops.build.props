@@ -89,6 +89,7 @@
                                                            currently allows gathering release notes from GitHub, Jira and YouTrack
         $(BuildStepsPrepareRestoreNpm)                   - Restores all the NPM packages for the project.
         $(BuildStepsPrepareRestoreBower)                 - Restores all the Bower packages for the project.
+        $(BuildStepsPrepareCopyNuGet)                    - Copies one or more files from a NuGet package.
         $(BuildStepsPrepareCopyFiles)                    - Copies one or more files from the file system or from a NuGet package.
         $(BuildStepsPrepareAssemblyInfo)                 - Updates all existing AssemblyInfo.cs and AssemblyInfo.vb files with the version numbers, company information,
                                                            copyright information and optionally build time and build information.
@@ -285,6 +286,18 @@
         </BuildStepsToExecute>
         -->
 
+        <BuildStepsToExecute Include="$(BuildStepsPrepareCopyNuGet)">
+            <Properties>
+            </Properties>
+            <Groups>
+                CopyFiles;
+                Prepare;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </BuildStepsToExecute>
         <BuildStepsToExecute Include="$(BuildStepsPrepareCopyFiles)">
             <Properties>
             </Properties>
@@ -420,12 +433,18 @@
             <PostSteps>
             </PostSteps>
         </BuildStepsToExecute>
-        <BuildStepsToExecute Include="$(DirWorkspace)\build.image.packer.msbuild">
+        <BuildStepsToExecute Include="$(BuildStepsPackPacker)">
             <Properties>
+                Configuration=$(ProductionConfiguration);
+                Platform=$(Platform)
             </Properties>
             <Groups>
-                Compile;
+                Package;
             </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
         </BuildStepsToExecute>
 
         <!--
@@ -540,18 +559,23 @@
         Files that should be copied, either from the file system or from a NuGet package.
     -->
     <ItemGroup>
-        <!--
-        <FilesToCopy Include="">
-            <Destinations></Destinations>
+        <FilesToCopy
+            Exclude="$(DirBuildTempScripts)\variables.ps1"
+            Include="$(DirBuildTempScripts)\*.*">
+            <Destination>$(DirBuildTempIso)</Destination>
         </FilesToCopy>
-        -->
     </ItemGroup>
     <ItemGroup>
         <NuGetFilesToCopy Include="Ops.Tools.BaseImage.Windows">
             <Include>scripts\**\*</Include>
             <Destinations>
                 $(DirBuildTempScripts);
-                $(DirBuildTempIso);
+            </Destinations>
+        </NuGetFilesToCopy>
+        <NuGetFilesToCopy Include="Ops.Tools.BaseImage.Windows">
+            <Include>unattend\**\*</Include>
+            <Destinations>
+                $(DirBuildTempUnattend);
             </Destinations>
         </NuGetFilesToCopy>
     </ItemGroup>
@@ -594,8 +618,16 @@
             <Template>$(DirSrc)\packer_variables.json</Template>
             <Encoding></Encoding>
         </BuildFilesToGenerate>
+        <BuildFilesToGenerate Include="$(DirBuildTempIso)\variables.ps1">
+            <Template>$(DirBuildTempScripts)\variables.ps1</Template>
+            <Encoding>UTF-8</Encoding>
+        </BuildFilesToGenerate>
         <BuildFilesToGenerate Include="$(DirBuildTempIso)\autounattend.xml">
-            <Template>$(DirSrc)\config\autounattend.xml</Template>
+            <Template>$(DirBuildTempUnattend)\prepare_image_autounattend.xml</Template>
+            <Encoding>UTF-8</Encoding>
+        </BuildFilesToGenerate>
+        <BuildFilesToGenerate Include="$(DirBuildTempIso)\sysprep.xml">
+            <Template>$(DirBuildTempUnattend)\sysprep_image_autounattend.xml</Template>
             <Encoding>UTF-8</Encoding>
         </BuildFilesToGenerate>
     </ItemGroup>
@@ -707,14 +739,6 @@
         -->
         <!--<TargetFrameworkVersion>v4.5</TargetFrameworkVersion>-->
     </PropertyGroup>
-
-
-    <!--
-        **** PACKER ****
-    -->
-    <ItemGroup>
-        <PackerImagesToBuild Include="$(DirSrc)\hyperv.json" />
-    </ItemGroup>
 
 
     <!--
