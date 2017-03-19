@@ -10,26 +10,26 @@
             * Copyrights
             * API documentation
         -->
-        <ProductName>Base.Win2016</ProductName>
+        <ProductName>Base.Windows</ProductName>
 
         <!--
             The name of the product that can be used as part of a file path. This is for instance used for:
             * Deployment directory naming
         -->
-        <ProductNameInFilePath>Base.Win2016</ProductNameInFilePath>
+        <ProductNameInFilePath>Base.Windows</ProductNameInFilePath>
 
         <!--
             The namespace in which all the code for the product is placed. This is for instance used for:
             * Finding the correct assemblies and namespaces for unit testing and coverage reporting
             * Generated code files that contain namespaces
         -->
-        <ProductNamespace>Base.Win2016</ProductNamespace>
+        <ProductNamespace>Base.Windows</ProductNamespace>
 
         <!--
             The URL of the product website. This is for instance used for:
             * nuspec files
         -->
-        <ProductUrl>https://github.com/Calvinverse/base.win2016</ProductUrl>
+        <ProductUrl>https://github.com/Calvinverse/base.windows</ProductUrl>
 
         <!--
             The first year the product was available / created. This is for instance used for:
@@ -315,44 +315,53 @@
         -->
         <!-- <TemplateTokenGenerators>UNDEFINED</TemplateTokenGenerators> -->
     </PropertyGroup>
+    <PropertyGroup>
+        <WindowsImage Condition=" '$(WindowsImage)' == '' AND '$(ServerSku)' == 'Core' ">Windows Server 2016 SERVERDATACENTERCORE</WindowsImage>
+        <WindowsImage Condition=" '$(WindowsImage)' == '' ">Windows Server 2016 SERVERDATACENTER</WindowsImage>
+    </PropertyGroup>
 
     <!--
         Additional items that should be available for the template replacement.
         The default template parameters, as indicated at the top of this file, are always available.
     -->
     <ItemGroup>
-        <!-- For the unattend file -->
-        <TemplateTokens Include="DnsIPAddresses">
-            <ReplacementValue>$(DnsIpAddress)</ReplacementValue>
-        </TemplateTokens>
-        <TemplateTokens Include="IsoFileEscaped">
-            <ReplacementValue>$(IsoFile.Replace('\', '/'))</ReplacementValue>
-        </TemplateTokens>
-
-        <TemplateTokens Include="DirTempJsonEscaped">
-            <ReplacementValue>$(DirBuildTemp.Replace('\', '/'))</ReplacementValue>
-        </TemplateTokens>
-        <TemplateTokens Include="DirDeployJsonEscaped">
-            <ReplacementValue>$(DirBuildDeploy.Replace('\', '/'))</ReplacementValue>
-        </TemplateTokens>
-
+        <!-- General -->
         <TemplateTokens Include="LocalAdministratorName">
             <ReplacementValue>TheBigKahuna</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="LocalAdministratorPassword">
             <ReplacementValue>TheB1gK@huna</ReplacementValue>
         </TemplateTokens>
+        <TemplateTokens Include="ImageName">
+            <ReplacementValue>$(WindowsImage.Replace(' ', '_').ToLower())</ReplacementValue>
+        </TemplateTokens>
+
+        <!-- For the unattend file -->
         <TemplateTokens Include="ProductKey">
             <ReplacementValue>CB7KF-BWN84-R7R2Y-793K2-8XDDG</ReplacementValue>
         </TemplateTokens>
-        <TemplateTokens Include="VmName">
-            <ReplacementValue>Win2016.BaseImage</ReplacementValue>
+        <TemplateTokens Include="WindowsImage">
+            <ReplacementValue>$(WindowsImage)</ReplacementValue>
         </TemplateTokens>
-        <TemplateTokens Include="VmSwitch">
-            <ReplacementValue>External switch</ReplacementValue>
+        <TemplateTokens Include="DnsIPAddresses">
+            <ReplacementValue>$(DnsIpAddress)</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="MachineName">
             <ReplacementValue>Win2016Base</ReplacementValue>
+        </TemplateTokens>
+
+        <!-- For the Packer config -->
+        <TemplateTokens Include="IsoFileEscaped">
+            <ReplacementValue>$(IsoFile.Replace('\', '/'))</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="DirTempJsonEscaped">
+            <ReplacementValue>$(DirBuildTemp.Replace('\', '/'))</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="DirDeployJsonEscaped">
+            <ReplacementValue>$(DirBuildDeploy.Replace('\', '/'))</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="VmSwitch">
+            <ReplacementValue>External switch</ReplacementValue>
         </TemplateTokens>
 
         <!-- For the .isospec file -->

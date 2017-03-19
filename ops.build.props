@@ -461,6 +461,7 @@
             <PostSteps>
             </PostSteps>
         </BuildStepsToExecute>
+        -->
         <BuildStepsToExecute Include="$(BuildStepsPackZip)">
             <Properties>
                 Configuration=$(ProductionConfiguration);
@@ -474,7 +475,6 @@
             <PostSteps>
             </PostSteps>
         </BuildStepsToExecute>
-        -->
     </ItemGroup>
 
     <!--
@@ -560,20 +560,14 @@
     -->
     <ItemGroup>
         <FilesToCopy
-            Exclude="$(DirBuildTempScripts)\variables.ps1"
-            Include="$(DirBuildTempScripts)\*.*">
+            Exclude="$(DirBuildTempUnattend)\scripts\variables.ps1"
+            Include="$(DirBuildTempUnattend)\scripts\*.*">
             <Destination>$(DirBuildTempIso)</Destination>
         </FilesToCopy>
     </ItemGroup>
     <ItemGroup>
         <NuGetFilesToCopy Include="Ops.Tools.BaseImage.Windows">
-            <Include>scripts\**\*</Include>
-            <Destinations>
-                $(DirBuildTempScripts);
-            </Destinations>
-        </NuGetFilesToCopy>
-        <NuGetFilesToCopy Include="Ops.Tools.BaseImage.Windows">
-            <Include>unattend\**\*</Include>
+            <Include>**\*</Include>
             <Destinations>
                 $(DirBuildTempUnattend);
             </Destinations>
@@ -619,15 +613,15 @@
             <Encoding></Encoding>
         </BuildFilesToGenerate>
         <BuildFilesToGenerate Include="$(DirBuildTempIso)\variables.ps1">
-            <Template>$(DirBuildTempScripts)\variables.ps1</Template>
+            <Template>$(DirBuildTempUnattend)\scripts\variables.ps1</Template>
             <Encoding>UTF-8</Encoding>
         </BuildFilesToGenerate>
         <BuildFilesToGenerate Include="$(DirBuildTempIso)\autounattend.xml">
-            <Template>$(DirBuildTempUnattend)\prepare_image_autounattend.xml</Template>
+            <Template>$(DirBuildTempUnattend)\unattend\prepare_image_autounattend.xml</Template>
             <Encoding>UTF-8</Encoding>
         </BuildFilesToGenerate>
-        <BuildFilesToGenerate Include="$(DirBuildTempIso)\sysprep.xml">
-            <Template>$(DirBuildTempUnattend)\sysprep_image_autounattend.xml</Template>
+        <BuildFilesToGenerate Include="$(DirBuildTempIso)\sysprep-unattend.xml">
+            <Template>$(DirBuildTempUnattend)\unattend\sysprep_image_autounattend.xml</Template>
             <Encoding>UTF-8</Encoding>
         </BuildFilesToGenerate>
     </ItemGroup>
@@ -858,38 +852,6 @@
         <!--<DesignTimeDependencies Include="nBuildKit" />-->
         <!--<DesignTimeDependencies Include="nUnit" />-->
     </ItemGroup>
-
-
-
-
-
-    <!--
-        *************************************
-        *                                   *
-        *     SHARED TOOLS                  *
-        *                                   *
-        *************************************
-    -->
-
-    <!-- Overrides for the tools paths -->
-    <PropertyGroup>
-        <!--
-            The full path to the berks command line executable
-        -->
-        <ToolsExternalBerksPath>berks</ToolsExternalBerksPath>
-
-        <!--
-            The full path and version to the mkisofs command line executable. If not defined the packages directory is searched.
-        -->
-        <ToolsExternalMakeIsoFsPath>UNDEFINED</ToolsExternalMakeIsoFsPath>
-        <ToolsExternalMkIsoFsVersion>3.2.7.0</ToolsExternalMkIsoFsVersion>
-
-        <!--
-            The full path and version of the Packer command line executable. If not defined the packages directory is searched.
-        -->
-        <ToolsExternalPackerPath>UNDEFINED</ToolsExternalPackerPath>
-        <ToolsExternalPackerVersion>0.12.4.0</ToolsExternalPackerVersion>
-    </PropertyGroup>
 
 
 

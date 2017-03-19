@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project
     DefaultTargets="Help"
-    ToolsVersion="11.0"
+    ToolsVersion="14.0"
     xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <!-- Directories -->
@@ -41,21 +41,17 @@
         -->
         <FileNugetConfig Condition=" '$(FileNugetConfig)' == '' ">$(DirWorkspace)\nuget.config</FileNugetConfig>
 
-        <!-- External tools -->
-        <!--
-            The full path to the NuGet command line application. Expected to be found via the PATH environment variable.
-        -->
-        <ToolsExternalNuGetPath Condition=" '$(ToolsExternalNuGetPath)' == '' ">NuGet.exe</ToolsExternalNuGetPath>
-
+        <!-- Required packages -->
         <!--
             The name of the package that contains the entry point for the current build.
         -->
         <PackageNameEntryPoint Condition=" '$(PackageNameEntryPoint)' == '' ">Ops.Tools.Build.EntryPoint</PackageNameEntryPoint>
 
+        <!-- External tools -->
         <!--
-            Defines the version number of the configuration file
+            The full path to the NuGet command line application. Expected to be found via the PATH environment variable.
         -->
-        <NBuildKitConfigurationVersion>1.0</NBuildKitConfigurationVersion>
+        <ToolsExternalNuGetPath Condition=" '$(ToolsExternalNuGetPath)' == '' ">NuGet.exe</ToolsExternalNuGetPath>
 
         <!-- MsBuild -->
         <!--
@@ -236,9 +232,6 @@
         DependsOnTargets="EntryPoint_LocateEntryPoint"
         Name="EntryPoint_Execute">
         <Error
-            Condition=" '$(PackageVersion)' == '' "
-            Text="Could not determine the correct version of the $(PackageNameEntryPoint) NuGet package. Without the correct version of this package it is not possible to start the build." />
-        <Error
             Condition=" '$(DirEntryPointPackage)' == '' OR !Exists('$(DirEntryPointPackage)')"
             Text="Could not determine the location of the $(PackageNameEntryPoint) NuGet package. The file was expected to be in '$(DirPackages)\$(PackageNameEntryPoint).&lt;VERSION&gt;' directory, but that directory does not exist. Cannot start build." />
 
@@ -314,8 +307,15 @@
             non-existing path but that will lead to an error.
         -->
         <CreateProperty
-            Condition="Exists('$(DirPackages)')"
+            Condition="Exists('$(DirPackages)') AND Exists('$(DirPackages)\$(PackageNameEntryPoint).$(PackageVersion)\build')"
             Value="$(DirPackages)\$(PackageNameEntryPoint).$(PackageVersion)\build">
+            <Output
+                PropertyName="DirEntryPointPackage"
+                TaskParameter="Value" />
+        </CreateProperty>
+        <CreateProperty
+            Condition="Exists('$(DirPackages)') AND Exists('$(DirPackages)\$(PackageNameEntryPoint)\build')"
+            Value="$(DirPackages)\$(PackageNameEntryPoint)\build">
             <Output
                 PropertyName="DirEntryPointPackage"
                 TaskParameter="Value" />
@@ -394,7 +394,7 @@
 
         <CreateProperty
             Condition="Exists('$(DirPackages)')"
-            Value="$(DirPackages)\$(PackageNameEntryPoint).$(PackageVersion)\build">
+            Value="$(DirPackages)\$(PackageNameEntryPoint)\build">
             <Output
                 PropertyName="DirEntryPointPackage"
                 TaskParameter="Value" />
@@ -682,7 +682,7 @@
                             builder.Append(string.Format("install \"{0}\" ", PackageName));
                             builder.Append(string.Format("-Version \"{0}\" ", PackageVersion));
 
-                            builder.Append("-NonInteractive -Verbosity detailed -NoCache ");
+                            builder.Append("-NonInteractive -ExcludeVersion -Verbosity detailed -NoCache ");
 
                             // Make sure we remove the back-slash because if we don't then
                             // the closing quote will be eaten by the command line parser. Note that
@@ -767,6 +767,6 @@
     -->
 
     <PropertyGroup>
-        <OpsToolsBuildEntryPointVersion>$VersionOpsTools$</OpsToolsBuildEntryPointVersion>
+        <OpsToolsBuildEntryPointVersion>0.1</OpsToolsBuildEntryPointVersion>
     </PropertyGroup>
 </Project>
