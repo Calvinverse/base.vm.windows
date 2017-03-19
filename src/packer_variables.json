@@ -3,15 +3,13 @@
     "iso_url": "${IsoFileEscaped}",
 
     "vm_ram_size_in_mb": "2048",
-    "vm_name": "${VmName}",
     "vm_switch_name": "${VmSwitch}",
+    "vm_name": "${ImageName}",
 
     "admin_username": "${LocalAdministratorName}",
     "admin_password": "${LocalAdministratorPassword}",
 
-    "dir_config_user": "${DirTempJsonEscaped}/config",
     "dir_deploy": "${DirDeployJsonEscaped}",
-    "dir_scripts_user": "${DirTempJsonEscaped}/scripts",
-    "dir_cookbooks_user": "${DirTempJsonEscaped}/cookbooks",
-    "dir_temp_packer": "${DirTempJsonEscaped}/packer"
+    "dir_scripts_user": "${DirTempJsonEscaped}/unattend/scripts",
+    "dir_temp": "${DirTempJsonEscaped}"
 }

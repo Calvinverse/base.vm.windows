@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<archive>
+    <name>${ImageName}-${VersionSemantic}</name>
+    <files>
+        <file
+            src="${DirWorkspace}\readme.txt"
+            target="" />
+        <file
+            src="${DirTemp}\${ImageName}\Virtual Hard Disks\*.vhdx"
+            target="bin" />
+    </files>
+</archive>
