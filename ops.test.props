@@ -222,6 +222,18 @@
             <PostSteps>
             </PostSteps>
         </TestStepsToExecute>
+        <TestStepsToExecute Include="$(TestStepsPrepareFileHashes)">
+            <Properties>
+            </Properties>
+            <Groups>
+                prepare;
+                prepare.hash;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
         <TestStepsToExecute Include="$(TestStepsPrepareGenerateFiles)">
             <Properties>
             </Properties>

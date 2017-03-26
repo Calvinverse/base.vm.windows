@@ -1,5 +1,5 @@
 {
-    "iso_checksum": "BBEFA23F3B39E9266127EE7FA1BF774BC32EBA8F90267943D98F49731B1D198E",
+    "iso_checksum": "${IsoFileHash}",
     "iso_url": "${IsoFileEscaped}",
 
     "vm_ram_size_in_mb": "2048",

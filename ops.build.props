@@ -311,6 +311,19 @@
             </PostSteps>
         </BuildStepsToExecute>
 
+        <BuildStepsToExecute Include="$(BuildStepsPrepareFileHashes)">
+            <Properties>
+            </Properties>
+            <Groups>
+                prepare;
+                prepare.hash;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </BuildStepsToExecute>
+
         <BuildStepsToExecute Include="$(BuildStepsPrepareAssemblyInfo)">
             <Properties>
             </Properties>
@@ -549,6 +562,28 @@
         <!--
         <DirectoriesToDelete Include="" />
         -->
+    </ItemGroup>
+
+
+    <!--
+        **** PREPARE - CALCULATE HASHES ****
+    -->
+    <!--
+        The collection of files for which the hashes need to be calculated. The available hash algorithms
+        are:
+
+        - MD5
+        - SHA1
+        - SHA256
+        - SHA512
+
+        Hash values are stored in a file in the temp directory and can be retrieved with the
+        'ReadHashFromFile' task
+    -->
+    <ItemGroup>
+        <FilesToHash Include="$(IsoFile)">
+            <Algorithm>SHA256</Algorithm>
+        </FilesToHash>
     </ItemGroup>
 
 

@@ -3,7 +3,7 @@
         "iso_checksum": null,
         "iso_url": null,
         "vm_ram_size_in_mb": "2048",
-        "vm_name": "base.win2016",
+        "vm_name": "base-win2016",
         "vm_switch_name": "internal_switch",
         "admin_username": "admin",
         "admin_password": "admin",
@@ -43,6 +43,7 @@
             "elevated_password": "{{user `admin_password`}}",
             "scripts": [
                 "{{ user `dir_scripts_user` }}/Invoke-NGen.ps1",
+                "{{ user `dir_scripts_user` }}/Remove-WindowsFeatures.ps1",
                 "{{ user `dir_scripts_user` }}/PrepareFor-DiskOptimization.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-Defrag.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-DiskOptimization.ps1",
@@ -50,14 +51,5 @@
                 "{{ user `dir_scripts_user` }}/Invoke-Sysprep.ps1"
             ]
         }
-    ],
-    "post-processors": [
-        [
-            {
-                "output": "{{ user `dir_temp` }}/{{ user `vm_name` }}_manifest.json",
-                "strip_path": true,
-                "type": "manifest"
-            }
-        ]
     ]
 }

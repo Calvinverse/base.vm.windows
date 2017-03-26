@@ -207,6 +207,21 @@
         </DeployStepsToExecute>
 
         <!--
+        <DeployStepsToExecute Include="$(DeployStepsPrepareFileHashes)">
+            <Properties>
+            </Properties>
+            <Groups>
+                prepare;
+                prepare.hash;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </DeployStepsToExecute>
+        -->
+
+        <!--
         <DeployStepsToExecute Include="$(DeployStepsPushToTags)">
             <Properties>
                 Configuration=$(ProductionConfiguration);

@@ -3,10 +3,10 @@
     <name>${ImageName}-${VersionSemantic}</name>
     <files>
         <file
-            src="${DirWorkspace}\readme.txt"
+            src="${DirWorkspace}\readme.md"
             target="" />
         <file
             src="${DirTemp}\${ImageName}\Virtual Hard Disks\*.vhdx"
-            target="bin" />
+            target="" />
     </files>
 </archive>
