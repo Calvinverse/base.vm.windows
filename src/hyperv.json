@@ -8,6 +8,7 @@
         "admin_username": "admin",
         "admin_password": "admin",
         "dir_deploy": null,
+        "dir_log": null,
         "dir_scripts_user": null,
         "dir_temp": null
     },
@@ -43,7 +44,26 @@
             "elevated_password": "{{user `admin_password`}}",
             "scripts": [
                 "{{ user `dir_scripts_user` }}/Invoke-NGen.ps1",
-                "{{ user `dir_scripts_user` }}/Remove-WindowsFeatures.ps1",
+                "{{ user `dir_scripts_user` }}/Remove-WindowsFeatures.ps1"
+            ]
+        },
+        {
+            "type": "file",
+            "source": "c:/windows/temp",
+            "direction": "download",
+            "destination": "{{ user `dir_log` }}/packer/windows"
+        },
+        {
+            "type": "file",
+            "source": "c:/users{{ user `admin_username` }}/Appdata/Local/Temp/",
+            "direction": "download",
+            "destination": "{{ user `dir_log` }}/packer/local"
+        },
+        {
+            "type": "powershell",
+            "elevated_user": "{{user `admin_username`}}",
+            "elevated_password": "{{user `admin_password`}}",
+            "scripts": [
                 "{{ user `dir_scripts_user` }}/PrepareFor-DiskOptimization.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-Defrag.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-DiskOptimization.ps1",

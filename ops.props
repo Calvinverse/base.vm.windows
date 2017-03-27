@@ -357,11 +357,15 @@
         <TemplateTokens Include="IsoFileHash">
             <ReplacementValue>BBEFA23F3B39E9266127EE7FA1BF774BC32EBA8F90267943D98F49731B1D198E</ReplacementValue>
         </TemplateTokens>
-        <TemplateTokens Include="DirTempJsonEscaped">
-            <ReplacementValue>$(DirBuildTemp.Replace('\', '/'))</ReplacementValue>
-        </TemplateTokens>
+
         <TemplateTokens Include="DirDeployJsonEscaped">
             <ReplacementValue>$(DirBuildDeploy.Replace('\', '/'))</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="DirLogJsonEscaped">
+            <ReplacementValue>$(DirBuildLogs.Replace('\', '/'))</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="DirTempJsonEscaped">
+            <ReplacementValue>$(DirBuildTemp.Replace('\', '/'))</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="VmSwitch">
             <ReplacementValue>External switch</ReplacementValue>

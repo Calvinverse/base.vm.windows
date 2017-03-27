@@ -10,6 +10,7 @@
     "admin_password": "${LocalAdministratorPassword}",
 
     "dir_deploy": "${DirDeployJsonEscaped}",
+    "dir_log": "${DirLogJsonEscaped}",
     "dir_scripts_user": "${DirTempJsonEscaped}/unattend/scripts",
     "dir_temp": "${DirTempJsonEscaped}"
 }
