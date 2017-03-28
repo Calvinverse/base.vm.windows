@@ -48,16 +48,8 @@
             ]
         },
         {
-            "type": "file",
-            "source": "c:/windows/temp",
-            "direction": "download",
-            "destination": "{{ user `dir_log` }}/packer/windows"
-        },
-        {
-            "type": "file",
-            "source": "c:/users{{ user `admin_username` }}/Appdata/Local/Temp/",
-            "direction": "download",
-            "destination": "{{ user `dir_log` }}/packer/local"
+            "type": "shell-local",
+            "command": "powershell -executionpolicy bypass -noprofile -File {{ user `dir_scripts_user` }}/Copy-LogFilesFromVm.ps1 -vmName {{ user `vm_name` }} -userName {{ user `admin_username` }} -userPassword {{ user `admin_password` }} -targetDirectory {{ user `dir_log` }}/packer"
         },
         {
             "type": "powershell",
