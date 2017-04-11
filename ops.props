@@ -327,7 +327,7 @@
     <ItemGroup>
         <!-- General -->
         <TemplateTokens Include="LocalAdministratorName">
-            <ReplacementValue>TheBigKahuna</ReplacementValue>
+            <ReplacementValue>Administrator</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="LocalAdministratorPassword">
             <ReplacementValue>TheB1gK@huna</ReplacementValue>
