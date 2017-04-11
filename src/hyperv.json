@@ -62,10 +62,6 @@
                 "{{ user `dir_scripts_user` }}/Invoke-SDelete.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-Sysprep.ps1"
             ]
-        },
-        {
-            "type": "shell-local",
-            "command": "powershell -executionpolicy bypass -noprofile -File {{ user `dir_scripts_user` }}/Copy-LogFilesFromVm.ps1 -vmName {{ user `vm_name` }} -userName {{ user `admin_username` }} -userPassword {{ user `admin_password` }} -targetDirectory {{ user `dir_log` }}/packer.aftersysprep"
         }
     ]
 }
