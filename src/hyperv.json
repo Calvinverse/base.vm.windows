@@ -29,7 +29,7 @@
             "secondary_iso_images": [
                 "{{ user `dir_deploy` }}/unattend.iso"
             ],
-            "shutdown_command": "IF EXIST a:\\shutdown.cmd (CALL a:\\shutdown.cmd) ELSE (IF EXIST e:\\shutdown.cmd (CALL e:\\shutdown.cmd) ELSE (CALL f:\\shutdown.cmd)) &IF \"%ERRORLEVEL%\" == \"0\" (ECHO \"Shutdown script succeeded with exit code = %ERRORLEVEL%\" &EXIT 0) ELSE (ECHO \"Shutdown script failed with exit code = %ERRORLEVEL%\" &EXIT %ERRORLEVEL%)",
+            "shutdown_command": "IF EXIST a:\\run-sysprep.cmd (CALL a:\\run-sysprep.cmd) ELSE (IF EXIST e:\\run-sysprep.cmd (CALL e:\\run-sysprep.cmd) ELSE (CALL f:\\run-sysprep.cmd)) &IF \"%ERRORLEVEL%\" == \"0\" (ECHO \"Shutdown script succeeded with exit code = %ERRORLEVEL%\" &EXIT 0) ELSE (ECHO \"Shutdown script failed with exit code = %ERRORLEVEL%\" &EXIT %ERRORLEVEL%)",
             "switch_name": "{{ user `vm_switch_name` }}",
             "type": "hyperv-iso",
             "vm_name": "{{ user `vm_name` }}",
@@ -46,7 +46,7 @@
             "scripts": [
                 "{{ user `dir_scripts_user` }}/Invoke-NGen.ps1",
                 "{{ user `dir_scripts_user` }}/Remove-WindowsFeatures.ps1",
-                "{{ user `dir_scripts_user` }}/Remove-WindowsStoreApps.ps1"
+                "{{ user `dir_scripts_user` }}/Disable-Services.ps1"
             ]
         },
         {
@@ -61,8 +61,7 @@
                 "{{ user `dir_scripts_user` }}/PrepareFor-DiskOptimization.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-Defrag.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-DiskOptimization.ps1",
-                "{{ user `dir_scripts_user` }}/Invoke-SDelete.ps1",
-                "{{ user `dir_scripts_user` }}/Invoke-Sysprep.ps1"
+                "{{ user `dir_scripts_user` }}/Invoke-SDelete.ps1"
             ]
         }
     ]

@@ -595,7 +595,7 @@
     -->
     <ItemGroup>
         <FilesToCopy
-            Exclude="$(DirBuildTempUnattend)\scripts\variables.ps1"
+            Exclude="$(DirBuildTempUnattend)\scripts\variables.ps1;$(DirBuildTempUnattend)\scripts\setupcomplete.cmd"
             Include="$(DirBuildTempUnattend)\scripts\*.*">
             <Destination>$(DirBuildTempIso)</Destination>
         </FilesToCopy>
@@ -651,13 +651,17 @@
             <Template>$(DirBuildTempUnattend)\scripts\variables.ps1</Template>
             <Encoding>UTF-8</Encoding>
         </BuildFilesToGenerate>
+        <BuildFilesToGenerate Include="$(DirBuildTempIso)\setupcomplete.cmd">
+            <Template>$(DirBuildTempUnattend)\scripts\setupcomplete.cmd</Template>
+            <Encoding></Encoding>
+        </BuildFilesToGenerate>
         <BuildFilesToGenerate Include="$(DirBuildTempIso)\autounattend.xml">
             <Template>$(DirBuildTempUnattend)\unattend\prepare_image_autounattend.xml</Template>
-            <Encoding>UTF-8</Encoding>
+            <Encoding></Encoding>
         </BuildFilesToGenerate>
         <BuildFilesToGenerate Include="$(DirBuildTempIso)\sysprep-unattend.xml">
             <Template>$(DirBuildTempUnattend)\unattend\sysprep_image_autounattend.xml</Template>
-            <Encoding>UTF-8</Encoding>
+            <Encoding></Encoding>
         </BuildFilesToGenerate>
     </ItemGroup>
 
