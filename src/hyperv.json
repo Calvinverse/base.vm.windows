@@ -1,0 +1,68 @@
+{
+    "variables": {
+        "iso_checksum": null,
+        "iso_url": null,
+        "vm_ram_size_in_mb": "2048",
+        "vm_name": "base-win2016",
+        "vm_switch_name": "internal_switch",
+        "admin_username": "admin",
+        "admin_password": "admin",
+        "dir_deploy": null,
+        "dir_log": null,
+        "dir_scripts_user": null,
+        "dir_temp": null
+    },
+    "builders": [
+        {
+            "boot_wait": "0s",
+            "communicator": "winrm",
+            "enable_secure_boot": true,
+            "floppy_files": [],
+            "generation": 2,
+            "guest_additions_mode": "disable",
+            "iso_checksum": "{{ user `iso_checksum` }}",
+            "iso_checksum_type": "sha256",
+            "iso_url": "{{ user `iso_url` }}",
+            "iso_target_path": "{{ user `dir_temp` }}/packer",
+            "output_directory": "{{ user `dir_temp` }}/{{ user `vm_name` }}",
+            "ram_size": "{{ user `vm_ram_size_in_mb` }}",
+            "secondary_iso_images": [
+                "{{ user `dir_deploy` }}/unattend.iso"
+            ],
+            "shutdown_command": "IF EXIST a:\\run-sysprep.cmd (CALL a:\\run-sysprep.cmd) ELSE (IF EXIST e:\\run-sysprep.cmd (CALL e:\\run-sysprep.cmd) ELSE (CALL f:\\run-sysprep.cmd)) &IF \"%ERRORLEVEL%\" == \"0\" (ECHO \"Shutdown script succeeded with exit code = %ERRORLEVEL%\" &EXIT 0) ELSE (ECHO \"Shutdown script failed with exit code = %ERRORLEVEL%\" &EXIT %ERRORLEVEL%)",
+            "switch_name": "{{ user `vm_switch_name` }}",
+            "type": "hyperv-iso",
+            "vm_name": "{{ user `vm_name` }}",
+            "winrm_password": "{{ user `admin_password` }}",
+            "winrm_timeout": "2h",
+            "winrm_username": "{{ user `admin_username` }}"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "powershell",
+            "elevated_user": "{{user `admin_username`}}",
+            "elevated_password": "{{user `admin_password`}}",
+            "scripts": [
+                "{{ user `dir_scripts_user` }}/Invoke-NGen.ps1",
+                "{{ user `dir_scripts_user` }}/Remove-WindowsFeatures.ps1",
+                "{{ user `dir_scripts_user` }}/Disable-Services.ps1"
+            ]
+        },
+        {
+            "type": "shell-local",
+            "command": "powershell -executionpolicy bypass -noprofile -File {{ user `dir_scripts_user` }}/Copy-LogFilesFromVm.ps1 -vmName {{ user `vm_name` }} -userName {{ user `admin_username` }} -userPassword {{ user `admin_password` }} -targetDirectory {{ user `dir_log` }}/packer.beforesysprep"
+        },
+        {
+            "type": "powershell",
+            "elevated_user": "{{user `admin_username`}}",
+            "elevated_password": "{{user `admin_password`}}",
+            "scripts": [
+                "{{ user `dir_scripts_user` }}/PrepareFor-DiskOptimization.ps1",
+                "{{ user `dir_scripts_user` }}/Invoke-Defrag.ps1",
+                "{{ user `dir_scripts_user` }}/Invoke-DiskOptimization.ps1",
+                "{{ user `dir_scripts_user` }}/Invoke-SDelete.ps1"
+            ]
+        }
+    ]
+}
