@@ -316,8 +316,8 @@
         <!-- <TemplateTokenGenerators>UNDEFINED</TemplateTokenGenerators> -->
     </PropertyGroup>
     <PropertyGroup>
-        <WindowsImage Condition=" '$(WindowsImage)' == '' AND '$(ServerSku)' == 'Core' ">Windows Server 2016 SERVERDATACENTERCORE</WindowsImage>
-        <WindowsImage Condition=" '$(WindowsImage)' == '' ">Windows Server 2016 SERVERDATACENTER</WindowsImage>
+        <WindowsImage Condition=" '$(WindowsImage)' == '' AND '$(ServerSku)' == 'Core' ">SERVERDATACENTERCORE</WindowsImage>
+        <WindowsImage Condition=" '$(WindowsImage)' == '' ">SERVERDATACENTER</WindowsImage>
     </PropertyGroup>
 
     <!--
@@ -332,8 +332,11 @@
         <TemplateTokens Include="LocalAdministratorPassword">
             <ReplacementValue>TheB1gK@huna</ReplacementValue>
         </TemplateTokens>
+        <TemplateTokens Include="Sku">
+            <ReplacementValue>$(WindowsImage)</ReplacementValue>
+        </TemplateTokens>
         <TemplateTokens Include="ImageName">
-            <ReplacementValue>$(WindowsImage.Replace(' ', '_').ToLower())</ReplacementValue>
+            <ReplacementValue>Windows_Server_2016_$(WindowsImage)</ReplacementValue>
         </TemplateTokens>
 
         <!-- For the unattend file -->
@@ -341,7 +344,7 @@
             <ReplacementValue>CB7KF-BWN84-R7R2Y-793K2-8XDDG</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="WindowsImage">
-            <ReplacementValue>$(WindowsImage)</ReplacementValue>
+            <ReplacementValue>Windows Server 2016 $(WindowsImage)</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="DnsIPAddresses">
             <ReplacementValue>$(DnsIpAddress)</ReplacementValue>
