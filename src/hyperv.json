@@ -45,7 +45,6 @@
             "elevated_password": "{{user `admin_password`}}",
             "scripts": [
                 "{{ user `dir_scripts_user` }}/Invoke-NGen.ps1",
-                "{{ user `dir_scripts_user` }}/Remove-WindowsFeatures.ps1",
                 "{{ user `dir_scripts_user` }}/Disable-Services.ps1"
             ]
         },
