@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<iso>
+    <name>test</name>
+    <files>
+        <file src="${DirBuildTempTestPester}\*.*" target="pester" />
+    </files>
+</iso>
