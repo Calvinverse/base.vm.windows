@@ -1,16 +1,20 @@
 {
     "variables": {
-        "iso_checksum": null,
-        "iso_url": null,
-        "vm_ram_size_in_mb": "2048",
-        "vm_name": "base-win2016",
-        "vm_switch_name": "internal_switch",
         "admin_username": "admin",
         "admin_password": "admin",
+        
         "dir_deploy": null,
         "dir_log": null,
         "dir_scripts_user": null,
-        "dir_temp": null
+        "dir_temp": null,
+
+        "iso_checksum": null,
+        "iso_url": null,        
+        
+        "vm_name": "not_really_a_vm_name",
+        "vm_ram_size_in_mb": "2048",
+        "vm_switch_name": "this_switch_does_not_exist",
+        "vm_switch_vlan": ""
     },
     "builders": [
         {
@@ -45,7 +49,8 @@
             "elevated_password": "{{user `admin_password`}}",
             "scripts": [
                 "{{ user `dir_scripts_user` }}/Invoke-NGen.ps1",
-                "{{ user `dir_scripts_user` }}/Disable-Services.ps1"
+                "{{ user `dir_scripts_user` }}/Disable-Services.ps1",
+                "{{ user `dir_scripts_user` }}/Remove-WindowsFeatures.ps1"
             ]
         },
         {
