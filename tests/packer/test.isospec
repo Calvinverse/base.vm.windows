@@ -2,6 +2,6 @@
 <iso>
     <name>test</name>
     <files>
-        <file src="${DirBuildTempTestPester}\*.*" target="pester" />
+        <file src="${DirBuildTempTestsIntegrationPester}\*.*" target="pester" />
     </files>
 </iso>
