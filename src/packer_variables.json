@@ -6,12 +6,12 @@
     "dir_log": "${DirLogJsonEscaped}",
     "dir_scripts_user": "${DirTempJsonEscaped}/unattend/scripts",
     "dir_temp": "${DirTempJsonEscaped}",
-    
+
     "iso_checksum": "${IsoFileHash}",
     "iso_url": "${IsoFileEscaped}",
 
-    "vm_name": "${ImageNameWithoutSpaces}",
+    "vm_name": "${ImageName}",
     "vm_ram_size_in_mb": "2048",
     "vm_switch_name": "${VmSwitch}",
-    "vm_switch_vlan": "${VmSwitchVlan}"    
+    "vm_switch_vlan": "${VmSwitchVlan}"
 }
