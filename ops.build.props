@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="11.0"
+<Project ToolsVersion="14.0"
          DefaultTargets="Run"
          xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <!-- Overrides for the build configuration -->
@@ -124,7 +124,11 @@
         Additional parameters can be provided through the 'TemplateTokens' ItemGroup below.
     -->
     <ItemGroup>
-        <BuildFilesToGenerate Include="$(DirBuildTemp)\packer_variables.json">
+        <BuildFilesToGenerate Include="$(DirBuildTemp)\build\packer.json">
+            <Template>$(DirSrc)\packer.json</Template>
+            <Encoding></Encoding>
+        </BuildFilesToGenerate>
+        <BuildFilesToGenerate Include="$(DirBuildTemp)\build\packer_variables.json">
             <Template>$(DirSrc)\packer_variables.json</Template>
             <Encoding></Encoding>
         </BuildFilesToGenerate>
@@ -850,7 +854,7 @@
             The full path and version to the packer command line executable. If not defined the packages directory is searched.
         -->
         <ToolsExternalPackerPath>UNDEFINED</ToolsExternalPackerPath>
-        <ToolsExternalPackerVersion>1.1.0</ToolsExternalPackerVersion>
+        <ToolsExternalPackerVersion>1.2.0</ToolsExternalPackerVersion>
     </PropertyGroup>
 
 
@@ -866,6 +870,6 @@
     -->
 
     <PropertyGroup>
-        <OpsConfigurationVersion>0.1</OpsConfigurationVersion>
+        <OpsConfigurationVersion>0.3</OpsConfigurationVersion>
     </PropertyGroup>
 </Project>

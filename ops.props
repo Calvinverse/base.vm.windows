@@ -187,8 +187,9 @@
         <DirBuildTempIso>$(DirBuildTemp)\iso</DirBuildTempIso>
         <DirBuildTempScripts>$(DirBuildTemp)\scripts</DirBuildTempScripts>
         <DirBuildTempUnattend>$(DirBuildTemp)\unattend</DirBuildTempUnattend>
-        <DirBuildTempTestsIntegrationPacker>$(DirBuidTemp)\tests\integration\packer</DirBuildTempTestsIntegrationPacker>
-        <DirBuildTempTestsIntegrationPester>$(DirBuildTemp)\tests\integration\pester</DirBuildTempTestsIntegrationPester>
+        <DirBuildTempTestsIntegration>$(DirBuildTemp)\tests\integration</DirBuildTempTestsIntegration>
+        <DirBuildTempTestsIntegrationPacker>$(DirBuildTempTestsIntegration)\packer</DirBuildTempTestsIntegrationPacker>
+        <DirBuildTempTestsIntegrationPester>$(DirBuildTempTestsIntegration)\pester</DirBuildTempTestsIntegrationPester>
 
         <!-- The directory that will contain all the test files generated during the test process -->
         <!-- <DirBuildTest>$(DirBuild)\tests</DirBuildTest> -->
@@ -203,8 +204,10 @@
         <!-- <DirTemplates>$(DirWorkspace)\templates</DirTemplates> -->
 
         <!-- The directory that contains all the test files for the project -->
-        <!-- <DirTest>$(DirWorkspace)\tests</DirTest> -->
-        <DirTestsPacker>$(DirTests)\packer</DirTestsPacker>
+        <!-- <DirTests>$(DirWorkspace)\tests</DirTests> -->
+        <DirTestsIntegration>$(DirTests)\integration</DirTestsIntegration>
+        <DirTestsIntegrationPacker>$(DirTestsIntegration)\packer</DirTestsIntegrationPacker>
+        <DirTestsIntegrationPester>$(DirTestsIntegration)\pester</DirTestsIntegrationPester>
     </PropertyGroup>
 
     <!--
@@ -364,14 +367,14 @@
             <ReplacementValue>BBEFA23F3B39E9266127EE7FA1BF774BC32EBA8F90267943D98F49731B1D198E</ReplacementValue>
         </TemplateTokens>
 
-        <TemplateTokens Include="DirDeployJsonEscaped">
-            <ReplacementValue>$(DirBuildDeploy.Replace('\', '/'))</ReplacementValue>
-        </TemplateTokens>
         <TemplateTokens Include="DirLogJsonEscaped">
             <ReplacementValue>$(DirBuildLogs.Replace('\', '/'))</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="DirTempJsonEscaped">
             <ReplacementValue>$(DirBuildTemp.Replace('\', '/'))</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="DirDeployJsonEscaped">
+            <ReplacementValue>$(DirBuildDeploy.Replace('\', '/'))</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="VmSwitch">
             <ReplacementValue>External switch</ReplacementValue>
@@ -441,7 +444,7 @@
     -->
 
     <PropertyGroup>
-        <OpsConfigurationVersion>0.1</OpsConfigurationVersion>
+        <OpsConfigurationVersion>0.3</OpsConfigurationVersion>
     </PropertyGroup>
 
     <!--
@@ -449,7 +452,7 @@
         NuGet if no package is specified in the packages.config file.
     -->
     <PropertyGroup>
-        <PackageMinimumVersion Condition=" '$(PackageMinimumVersion)' == '' ">0.1.0</PackageMinimumVersion>
-        <PackageMaximumVersion Condition=" '$(PackageMaximumVersion)' == '' ">0.2.0</PackageMaximumVersion>
+        <PackageMinimumVersion Condition=" '$(PackageMinimumVersion)' == '' ">0.3.0</PackageMinimumVersion>
+        <PackageMaximumVersion Condition=" '$(PackageMaximumVersion)' == '' ">0.4.0</PackageMaximumVersion>
     </PropertyGroup>
 </Project>

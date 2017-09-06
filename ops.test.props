@@ -53,14 +53,14 @@
     <ItemGroup Condition=" '$(ShouldLoadFilesToCopy)' == 'true' ">
         <FilesToCopy
             Condition=" '$(IsTest)' == 'true' "
-            Exclude="$(DirTests)\pester\System.Tests.ps1;$(DirTests)\pester\Users.Tests.ps1"
-            Include="$(DirTests)\pester\**\*.*">
-            <Destination>$(DirBuildTempTestsIntegrationPester)</Destination>
+            Include="$(DirTestsIntegration)\scripts\**\*.*">
+            <Destination>$(DirBuildTempTestsIntegration)\scripts</Destination>
         </FilesToCopy>
         <FilesToCopy
             Condition=" '$(IsTest)' == 'true' "
-            Include="$(DirTests)\scripts\**\*.*">
-            <Destination>$(DirBuildTemp)\scripts</Destination>
+            Exclude="$(DirTestsIntegrationPester)\System.Tests.ps1;$(DirTestsIntegrationPester)\Users.Tests.ps1"
+            Include="$(DirTestsIntegrationPester)\**\*.*">
+            <Destination>$(DirBuildTempTestsIntegrationPester)</Destination>
         </FilesToCopy>
     </ItemGroup>
     <ItemGroup Condition=" '$(ShouldLoadArchiveFilesToCopy)' == 'true' ">
@@ -68,7 +68,7 @@
         <ArchiveFilesToCopy
             Condition=" '$(IsTest)' == 'true' AND Exists('$(DirBuildDeploy)') "
             Include="$(DirBuildDeploy)\${ProductName}-${VersionSemantic}.zip">
-            <Destination>$(DirBuildTemp)\${ImageNameWithoutSpaces}</Destination>
+            <Destination>$(DirBuildTemp)\${ImageName}</Destination>
         </ArchiveFilesToCopy>
     </ItemGroup>
 
@@ -92,20 +92,20 @@
     -->
     <ItemGroup>
         <TestFilesToGenerate Include="$(DirBuildTempTestsIntegrationPacker)\packer.json">
-            <Template>$(DirTests)\packer\packer.json</Template>
+            <Template>$(DirTestsIntegrationPacker)\packer.json</Template>
             <Encoding></Encoding>
         </TestFilesToGenerate>
         <TestFilesToGenerate Include="$(DirBuildTempTestsIntegrationPacker)\packer_variables.json">
-            <Template>$(DirTests)\packer\packer_variables.json</Template>
+            <Template>$(DirTestsIntegrationPacker)\packer_variables.json</Template>
             <Encoding></Encoding>
         </TestFilesToGenerate>
 
         <TestFilesToGenerate Include="$(DirBuildTempTestsIntegrationPester)\System.Tests.ps1">
-            <Template>$(DirTests)\pester\System.Tests.ps1</Template>
+            <Template>$(DirTestsIntegrationPester)\System.Tests.ps1</Template>
             <Encoding></Encoding>
         </TestFilesToGenerate>
         <TestFilesToGenerate Include="$(DirBuildTempTestsIntegrationPester)\Users.Tests.ps1">
-            <Template>$(DirTests)\pester\Users.Tests.ps1</Template>
+            <Template>$(DirTestsIntegrationPester)\Users.Tests.ps1</Template>
             <Encoding></Encoding>
         </TestFilesToGenerate>
     </ItemGroup>
@@ -157,9 +157,9 @@
     -->
     <ItemGroup Condition=" '$(ShouldLoadPackerImagesToTest)' == 'true' ">
         <PackerImagesToTest
-            Include="$(DirBuildTempPackerTest)\packer.json">
+            Include="$(DirBuildTempTestsIntegrationPacker)\packer.json">
             <Variables>
-                $(DirBuildTempPackerTest)\packer_variables.json
+                $(DirBuildTempTestsIntegrationPacker)\packer_variables.json
             </Variables>
         </PackerImagesToTest>
     </ItemGroup>
@@ -322,8 +322,22 @@
             <Properties>
             </Properties>
             <Groups>
-                CopyFiles;
-                Prepare;
+                prepare;
+                prepare.copy;
+                prepare.copy.nuget;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
+        <TestStepsToExecute Include="$(TestStepsPrepareCopyHttp)">
+            <Properties>
+            </Properties>
+            <Groups>
+                prepare;
+                prepare.copy;
+                prepare.copy.url;
             </Groups>
             <PreSteps>
             </PreSteps>
@@ -334,8 +348,22 @@
             <Properties>
             </Properties>
             <Groups>
-                CopyFiles;
-                Prepare;
+                prepare;
+                prepare.copy;
+                prepare.copy.files;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </TestStepsToExecute>
+        <TestStepsToExecute Include="$(TestStepsPrepareCopyArchive)">
+            <Properties>
+            </Properties>
+            <Groups>
+                prepare;
+                prepare.copy;
+                prepare.copy.archive;
             </Groups>
             <PreSteps>
             </PreSteps>
@@ -466,6 +494,6 @@
     -->
 
     <PropertyGroup>
-        <OpsConfigurationVersion>0.1</OpsConfigurationVersion>
+        <OpsConfigurationVersion>0.3</OpsConfigurationVersion>
     </PropertyGroup>
 </Project>
