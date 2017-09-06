@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <iso>
-    <name>unattend</name>
+    <name>windows</name>
     <files>
         <file src="${DirBuildTempIso}\*.*" target="" />
     </files>

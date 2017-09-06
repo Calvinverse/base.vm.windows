@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project
     DefaultTargets="Run"
-    ToolsVersion="11.0"
+    ToolsVersion="14.0"
     xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <!--
         **** BOOTSTRAP - BUILD TASKS ****
@@ -115,9 +115,10 @@
         The item group defining the location and contents of the ISO files that are generated during the build
         All file paths allow build templates, e.g. $(DirBuildDeploy)\myarchive-${VersionSemantic}.zip.
     -->
-    <ItemGroup Condition=" '@(IsoPackageSpecs)' == '' ">
+    <ItemGroup>
         <IsoPackageSpecs
-            Include="$(DirWorkspace)\**\*.isospec"
+            Condition=" '$(IsBuild)' == 'true' "
+            Include="$(DirSrc)\**\*.isospec"
             Exclude="$(DirBuild)\**\*.isospec" />
     </ItemGroup>
 
@@ -131,11 +132,12 @@
 
         All file paths allow build templates, e.g. $(DirBuildDeploy)\myarchive-${VersionSemantic}.zip.
     -->
-    <ItemGroup Condition=" '@(PackerImagesToBuild)' == '' ">
+    <ItemGroup>
         <PackerImagesToBuild
-            Include="$(DirSrc)\hyperv.json">
+            Condition=" '$(IsBuild)' == 'true' "
+            Include="$(DirBuildTemp)\build\packer.json">
             <Variables>
-                $(DirBuildTemp)\packer_variables.json
+                $(DirBuildTemp)\build\packer_variables.json
             </Variables>
         </PackerImagesToBuild>
     </ItemGroup>
@@ -153,6 +155,6 @@
     -->
 
     <PropertyGroup>
-        <OpsConfigurationVersion>0.1</OpsConfigurationVersion>
+        <OpsConfigurationVersion>0.3</OpsConfigurationVersion>
     </PropertyGroup>
 </Project>
