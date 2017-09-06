@@ -3,7 +3,7 @@ $global:progresspreference = 'SilentlyContinue'
 Describe 'On the system' {
     Context 'the machine name' {
         It 'should not be the test name' {
-            $env:COMPUTERNAME | Should Not Be '${ImageNameWithoutSpaces}'
+            $env:COMPUTERNAME | Should Not Be '${ImageName}'
         }
     }
 
