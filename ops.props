@@ -184,12 +184,14 @@
         <!-- The directory that will contain all the temporary files needed during the build process -->
         <!-- <DirBuildTemp>$(DirBuild)\temp</DirBuildTemp> -->
         <DirBuildTempConfig>$(DirBuildTemp)\config</DirBuildTempConfig>
+        <DirBuildTempCookbooks>$(DirBuildTemp)\cookbooks</DirBuildTempCookbooks>
         <DirBuildTempIso>$(DirBuildTemp)\iso</DirBuildTempIso>
         <DirBuildTempScripts>$(DirBuildTemp)\scripts</DirBuildTempScripts>
+        <DirBuildTempBuildPacker>$(DirBuildTemp)\build</DirBuildTempBuildPacker>
         <DirBuildTempUnattend>$(DirBuildTemp)\unattend</DirBuildTempUnattend>
         <DirBuildTempTestsIntegration>$(DirBuildTemp)\tests\integration</DirBuildTempTestsIntegration>
-        <DirBuildTempTestsIntegrationPacker>$(DirBuildTempTestsIntegration)\packer</DirBuildTempTestsIntegrationPacker>
-        <DirBuildTempTestsIntegrationPester>$(DirBuildTempTestsIntegration)\pester</DirBuildTempTestsIntegrationPester>
+        <DirBuildTempTestsIntegrationPacker>$(DirBuildTemp)\tests\integration\packer</DirBuildTempTestsIntegrationPacker>
+        <DirBuildTempTestsIntegrationPester>$(DirBuildTemp)\tests\integration\pester</DirBuildTempTestsIntegrationPester>
 
         <!-- The directory that will contain all the test files generated during the test process -->
         <!-- <DirBuildTest>$(DirBuild)\tests</DirBuildTest> -->
@@ -199,6 +201,8 @@
 
         <!-- The directory that contains the source files for the project -->
         <!-- <DirSrc>$(DirWorkspace)\src</DirSrc> -->
+        <DirSrcCookbooks>$(DirSrc)\cookbooks</DirSrcCookbooks>
+        <DirSrcPacker>$(DirSrc)\packer</DirSrcPacker>
 
         <!-- The directory that contains the template files for the project -->
         <!-- <DirTemplates>$(DirWorkspace)\templates</DirTemplates> -->
@@ -208,6 +212,10 @@
         <DirTestsIntegration>$(DirTests)\integration</DirTestsIntegration>
         <DirTestsIntegrationPacker>$(DirTestsIntegration)\packer</DirTestsIntegrationPacker>
         <DirTestsIntegrationPester>$(DirTestsIntegration)\pester</DirTestsIntegrationPester>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <NameCookbook>base_windows</NameCookbook>
     </PropertyGroup>
 
     <!--
@@ -246,6 +254,28 @@
             Include="$(DirWorkspace)\**\package.json"
             Exclude="$(DirBuild)\**\package.json;$(DirWorkspace)\**\bin\**\package.json;$(DirWorkspace)\**\obj\**\package.json;$(DirWorkspace)\**\bower_components\**\package.json;$(DirWorkspace)\**\node_modules\**\package.json" />
         -->
+    </ItemGroup>
+
+
+    <!--
+        **** PREPARE - BUNDLER RESTORE ****
+    -->
+    <ItemGroup Condition=" '$(ShouldLoadBundlerGemFiles)' == 'true' ">
+        <BundlerGemFiles
+            Condition=" '$(DirWorkspace)' != '' "
+            Include="$(DirSrcCookbooks)\**\Gemfile"
+            Exclude="$(DirBuild)\**\Gemfile;" />
+    </ItemGroup>
+
+
+    <!--
+        **** PREPARE - CHEF ****
+    -->
+    <!--
+        The collection of cookbooks for which the dependencies should be restored with Berkshelf
+    -->
+    <ItemGroup Condition=" '$(ShouldLoadChefCookbooksToRestore)' == 'true' ">
+        <ChefCookbooksToRestore Include="$(DirBuildTempCookbooks)\$(NameCookbook)" />
     </ItemGroup>
 
 
@@ -367,6 +397,16 @@
             <ReplacementValue>BBEFA23F3B39E9266127EE7FA1BF774BC32EBA8F90267943D98F49731B1D198E</ReplacementValue>
         </TemplateTokens>
 
+        <TemplateTokens Include="NameCookbook">
+            <ReplacementValue>$(NameCookbook)</ReplacementValue>
+        </TemplateTokens>
+
+        <TemplateTokens Include="DirSrcCookbooksJsonEscaped">
+            <ReplacementValue>$(DirBuildTempCookbooks.Replace('\', '/'))</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="DirVendorCookbooksJsonEscaped">
+            <ReplacementValue>$(DirVendorCookbooks.Replace('\', '/'))</ReplacementValue>
+        </TemplateTokens>
         <TemplateTokens Include="DirLogJsonEscaped">
             <ReplacementValue>$(DirBuildLogs.Replace('\', '/'))</ReplacementValue>
         </TemplateTokens>
@@ -390,6 +430,14 @@
         <TemplateTokens Include="DirBuildTempTestsIntegrationPester">
             <ReplacementValue>$(DirBuildTempTestsIntegrationPester)</ReplacementValue>
         </TemplateTokens>
+
+        <!-- Tool versions -->
+        <TemplateTokens Include="VersionWinSw">
+            <ReplacementValue>2.1.2</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="VersionConsul">
+            <ReplacementValue>1.0.1</ReplacementValue>
+        </TemplateTokens>
     </ItemGroup>
 
 
@@ -407,28 +455,15 @@
     <!-- Overrides for the tools paths -->
     <PropertyGroup>
         <!--
-            The full path and version of the Bower command line executable. If not defined the packages directory is searched.
+            The full path to the berkshelf application. If not defined the Gems bin directory is searched.
         -->
-        <!-- <ToolsExternalBowerPath>bower</ToolsExternalBowerPath>
-        <ToolsExternalBowerVersion>1.3.11</ToolsExternalBowerVersion> -->
+        <ToolsExternalBerkshelfPath>berks</ToolsExternalBerkshelfPath>
 
         <!--
-            The full path and version of the Node.js command line executable. If not defined the packages directory is searched.
+            The full path and version to the packer command line executable. If not defined the packages directory is searched.
         -->
-        <!-- <ToolsExternalNodeJsPath>node</ToolsExternalNodeJsPath>
-        <ToolsExternalNodeJsVersion>4.2.3</ToolsExternalNodeJsVersion> -->
-
-        <!--
-            The full path and version of the NPM command line executable. If not defined the packages directory is searched.
-        -->
-        <!-- <ToolsExternalNpmPath>npm</ToolsExternalNpmPath>
-        <ToolsExternalNpmVersion>3.5.2</ToolsExternalNpmVersion> -->
-
-        <!--
-            The full path and version of the python command line executable. If not defined the packages directory is searched.
-        -->
-        <!-- <ToolsExternalPythonPath>UNDEFINED</ToolsExternalPythonPath>
-        <ToolsExternalPythonVersion>2.7.9</ToolsExternalPythonVersion> -->
+        <ToolsExternalPackerPath>UNDEFINED</ToolsExternalPackerPath>
+        <ToolsExternalPackerVersion>1.1.1</ToolsExternalPackerVersion>
     </PropertyGroup>
 
 
