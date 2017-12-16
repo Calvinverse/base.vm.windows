@@ -93,11 +93,11 @@ describe 'base_windows::consul' do
     end
 
     it 'creates the windows service event log' do
-      expect(chef_run).to create_registry_key("HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/services/eventlog/Application/#{service_name}").with(
+      expect(chef_run).to create_registry_key("HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\services\\eventlog\\Application\\#{service_name}").with(
         values: [{
           name: 'EventMessageFile',
           type: :string,
-          data: 'c:/Windows/Microsoft.NET/Framework64/v4.0.30319/EventLogMessages.dll'
+          data: 'c:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\EventLogMessages.dll'
         }]
       )
     end
@@ -118,7 +118,7 @@ describe 'base_windows::consul' do
           }
         },
 
-        "log_level" : "debug"
+        "log_level" : "info"
       }
     JSON
     it 'creates consul_default.json in the consul ops directory' do

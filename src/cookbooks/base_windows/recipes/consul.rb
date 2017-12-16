@@ -109,20 +109,20 @@ directory consul_bin_path do
 end
 
 consul_config_path = "#{node['paths']['config']}/#{service_name}"
-directory consul_bin_path do
+directory consul_config_path do
   action :create
   rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
 end
 
 consul_exe = 'consul.exe'
-cookbook_file "#{consul_bin_path}\\#{consul_exe}" do
+cookbook_file "#{consul_bin_path}/#{consul_exe}" do
   action :create
   source consul_exe
 end
 
 # We need to multiple-escape the escape character because of ruby string and regex etc. etc. See here: http://stackoverflow.com/a/6209532/539846
 consul_config_file = 'consul_base.json'
-file "#{consul_bin_path}\\#{consul_config_file}" do
+file "#{consul_bin_path}/#{consul_config_file}" do
   content <<~JSON
     {
       "data_dir": "#{consul_bin_path}/data",
@@ -150,17 +150,17 @@ end
 
 consul_logs_path = "#{node['paths']['logs']}/#{service_name}"
 directory consul_logs_path do
-  rights :modify, consul_user_username, applies_to_children: true, applies_to_self: false
+  rights :modify, service_username, applies_to_children: true, applies_to_self: false
   action :create
 end
 
 service_exe_name = node['consul']['service']['exe']
-cookbook_file "#{consul_bin_path}\\#{service_exe_name}.exe" do
+cookbook_file "#{consul_bin_path}/#{service_exe_name}.exe" do
   source 'WinSW.NET4.exe'
   action :create
 end
 
-file "#{consul_bin_path}\\#{service_exe_name}.exe.config" do
+file "#{consul_bin_path}/#{service_exe_name}.exe.config" do
   content <<~XML
     <configuration>
         <runtime>
@@ -171,7 +171,7 @@ file "#{consul_bin_path}\\#{service_exe_name}.exe.config" do
   action :create
 end
 
-file "#{consul_bin_path}\\#{service_exe_name}.xml" do
+file "#{consul_bin_path}/#{service_exe_name}.xml" do
   content <<~XML
     <?xml version="1.0"?>
     <service>
@@ -194,7 +194,6 @@ file "#{consul_bin_path}\\#{service_exe_name}.xml" do
   action :create
 end
 
-service_name = node['consul']['service']
 powershell_script 'consul_as_service' do
   code <<-POWERSHELL
     $ErrorActionPreference = 'Stop'
@@ -210,7 +209,7 @@ powershell_script 'consul_as_service' do
     {
         New-Service `
             -Name '#{service_name}' `
-            -BinaryPathName '#{consul_bin_path}\\#{service_exe_name}.exe' `
+            -BinaryPathName '#{consul_bin_path}/#{service_exe_name}.exe' `
             -Credential $credential `
             -DisplayName '#{service_name}' `
             -StartupType Disabled

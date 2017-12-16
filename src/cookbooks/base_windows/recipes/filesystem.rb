@@ -8,22 +8,13 @@
 #
 
 config_directory = node['paths']['config']
-directory config_directory do
-  rights :read, 'Everyone', applies_to_children: true
-  rights :modify, 'Administrators', applies_to_children: true
-  action :create
-end
-
-log_directory = node['paths']['log']
-directory log_directory do
-  rights :read, 'Everyone', applies_to_children: true
-  rights :modify, 'Administrators', applies_to_children: true
-  action :create
-end
-
+logs_directory = node['paths']['logs']
 ops_directory = node['paths']['ops']
-directory ops_directory do
-  rights :read, 'Everyone', applies_to_children: true
-  rights :modify, 'Administrators', applies_to_children: true
-  action :create
+
+%W[#{config_directory} #{logs_directory} #{ops_directory}].each do |path|
+  directory path do
+    action :create
+    rights :read, 'Everyone', applies_to_children: true
+    rights :modify, 'Administrators', applies_to_children: true
+  end
 end

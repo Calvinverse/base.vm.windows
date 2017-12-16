@@ -185,6 +185,7 @@
         <!-- <DirBuildTemp>$(DirBuild)\temp</DirBuildTemp> -->
         <DirBuildTempConfig>$(DirBuildTemp)\config</DirBuildTempConfig>
         <DirBuildTempCookbooks>$(DirBuildTemp)\cookbooks</DirBuildTempCookbooks>
+        <DirBuildTempFiles>$(DirBuildTemp)\files</DirBuildTempFiles>
         <DirBuildTempIso>$(DirBuildTemp)\iso</DirBuildTempIso>
         <DirBuildTempScripts>$(DirBuildTemp)\scripts</DirBuildTempScripts>
         <DirBuildTempBuildPacker>$(DirBuildTemp)\build</DirBuildTempBuildPacker>
@@ -427,16 +428,25 @@
         <TemplateTokens Include="DirBuildTempIso">
             <ReplacementValue>$(DirBuildTempIso)</ReplacementValue>
         </TemplateTokens>
+        <TemplateTokens Include="DirVendorCookbooks">
+            <ReplacementValue>$(DirVendorCookbooks)</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="DirTestsIntegration">
+            <ReplacementValue>$(DirTestsIntegration)</ReplacementValue>
+        </TemplateTokens>
         <TemplateTokens Include="DirBuildTempTestsIntegrationPester">
             <ReplacementValue>$(DirBuildTempTestsIntegrationPester)</ReplacementValue>
         </TemplateTokens>
 
         <!-- Tool versions -->
-        <TemplateTokens Include="VersionWinSw">
-            <ReplacementValue>2.1.2</ReplacementValue>
+        <TemplateTokens Include="VersionChef">
+            <ReplacementValue>13.1.31</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="VersionConsul">
             <ReplacementValue>1.0.1</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="VersionWinSw">
+            <ReplacementValue>2.1.2</ReplacementValue>
         </TemplateTokens>
     </ItemGroup>
 
@@ -458,6 +468,11 @@
             The full path to the berkshelf application. If not defined the Gems bin directory is searched.
         -->
         <ToolsExternalBerkshelfPath>berks</ToolsExternalBerkshelfPath>
+
+        <!--
+            The full path and version of the GPG command line executable. If not defined the packages directory is searched.
+        -->
+        <ToolsExternalGpgPath>gpg</ToolsExternalGpgPath>
 
         <!--
             The full path and version to the packer command line executable. If not defined the packages directory is searched.

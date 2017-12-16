@@ -10,5 +10,5 @@ RSpec.configure do |config|
   config.platform = 'windows'
 
   # Specify the operating version to mock Ohai data from (default: nil)
-  config.version = '2016'
+  config.version = '2012r2'
 end

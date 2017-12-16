@@ -27,7 +27,7 @@ describe 'base_windows::network' do
     end
 
     it 'creates unbound.exe in the unbound ops directory' do
-      expect(chef_run).to create_cookbook_file("#{unbound_bin_path}/unbound.exe").with_source('unbound/unbound.exe')
+      expect(chef_run).to create_cookbook_file("#{unbound_bin_path}/unbound.exe").with_source('unbound.exe')
     end
   end
 

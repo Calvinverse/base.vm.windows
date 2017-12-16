@@ -105,16 +105,14 @@ end
 #
 
 service_name = node['unbound']['service']['name']
-unbound_bin_path = "#{node['paths']['ops']}/#{service_name}"
-directory unbound_bin_path do
-  action :create
-  rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
-end
 
+unbound_bin_path = "#{node['paths']['ops']}/#{service_name}"
 unbound_config_path = "#{node['paths']['config']}/#{service_name}"
-directory unbound_config_path do
-  action :create
-  rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
+%W[#{unbound_bin_path} #{unbound_config_path}].each do |path|
+  directory path do
+    action :create
+    rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
+  end
 end
 
 unbound_logs_path = "#{node['paths']['logs']}/#{service_name}"
@@ -124,13 +122,13 @@ directory unbound_logs_path do
 end
 
 unbound_exe = 'unbound.exe'
-cookbook_file "#{unbound_bin_path}\\#{unbound_exe}" do
+cookbook_file "#{unbound_bin_path}/#{unbound_exe}" do
   action :create
   source unbound_exe
 end
 
 unbound_config_file = 'unbound.conf'
-file "#{unbound_bin_path}\\#{unbound_config_file}" do
+file "#{unbound_bin_path}/#{unbound_config_file}" do
   action :create
   content <<~CONF
     #
@@ -415,7 +413,7 @@ powershell_script 'unbound_as_service' do
     {
         New-Service `
             -Name '#{service_name}' `
-            -BinaryPathName '#{unbound_bin_path}/#{unbound_exe} -w service -c #{unbound_bin_path}\\#{unbound_config_file}' `
+            -BinaryPathName '#{unbound_bin_path}/#{unbound_exe} -w service -c #{unbound_bin_path}/#{unbound_config_file}' `
             -Credential $credential `
             -DisplayName '#{service_name}' `
             -StartupType Disabled

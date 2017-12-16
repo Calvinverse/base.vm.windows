@@ -19,7 +19,7 @@ directory provisioning_bin_path do
 end
 
 provisioning_script = 'Initialize-Resource.ps1'
-cookbook_file "#{provisioning_bin_path}\\#{provisioning_script}" do
+cookbook_file "#{provisioning_bin_path}/#{provisioning_script}" do
   action :create
   source provisioning_script
 end
@@ -30,17 +30,17 @@ end
 
 provisioning_logs_path = "#{node['paths']['logs']}/#{service_name}"
 directory provisioning_logs_path do
-  rights :modify, consul_user_username, applies_to_children: true, applies_to_self: false
   action :create
+  rights :modify, 'Administrators', applies_to_children: true, applies_to_self: false
 end
 
 service_exe_name = node['provisioning']['service']['exe']
-cookbook_file "#{provisioning_bin_path}\\#{service_exe_name}.exe" do
-  source 'WinSW.NET4.exe'
+cookbook_file "#{provisioning_bin_path}/#{service_exe_name}.exe" do
   action :create
+  source 'WinSW.NET4.exe'
 end
 
-file "#{provisioning_bin_path}\\#{service_exe_name}.exe.config" do
+file "#{provisioning_bin_path}/#{service_exe_name}.exe.config" do
   content <<~XML
     <configuration>
         <runtime>
@@ -51,7 +51,7 @@ file "#{provisioning_bin_path}\\#{service_exe_name}.exe.config" do
   action :create
 end
 
-file "#{provisioning_bin_path}\\#{service_exe_name}.xml" do
+file "#{provisioning_bin_path}/#{service_exe_name}.xml" do
   content <<~XML
     <?xml version="1.0"?>
     <service>
@@ -60,7 +60,7 @@ file "#{provisioning_bin_path}\\#{service_exe_name}.xml" do
         <description>This service executes the environment provisioning for the current resource.</description>
 
         <executable>powershell.exe</executable>
-        <arguments>-NonInteractive -NoProfile -NoLogo -ExecutionPolicy RemoteSigned -File #{provisioning_bin_path}\\#{provisioning_script}</arguments>
+        <arguments>-NonInteractive -NoProfile -NoLogo -ExecutionPolicy RemoteSigned -File #{provisioning_bin_path}/#{provisioning_script}</arguments>
 
         <logpath>#{provisioning_logs_path}</logpath>
         <log mode="roll-by-size">
@@ -98,7 +98,7 @@ powershell_script 'provisioning_as_service' do
     {
         New-Service `
             -Name '#{service_name}' `
-            -BinaryPathName '#{provisioning_bin_path}\\#{service_exe_name}.exe' `
+            -BinaryPathName '#{provisioning_bin_path}/#{service_exe_name}.exe' `
             -DisplayName '#{service_name}' `
             -StartupType Automatic
     }
