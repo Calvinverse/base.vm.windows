@@ -69,16 +69,38 @@
             "type": "shell-local"
         },
         {
-            "cookbook_paths": [
-                "{{ user `dir_cookbooks_vendors` }}"
-            ],
-            "execute_command": "sudo -E chef-solo --no-color -c {{.ConfigPath}} -j {{.JsonPath}}",
-            "guest_os_type": "unix",
-            "install_command": "curl -LO https://omnitruck.chef.io/install.sh && {{if .Sudo}}sudo{{end}} bash ./install.sh -v 13.1.31 && rm install.sh",
-            "run_list": [
-                "{{ user `cookbook_name` }}::default"
-            ],
-            "type": "chef-solo"
+            "inline": "New-Item -Path c:/temp -ItemType Directory; $drive = 'd:'; if (Test-Path 'e:/client.rb') { $drive = 'e:'} else { if (Test-Path 'f:/client.rb') { $drive = 'f:'} }; Copy-Item \"$($drive)/*\" c:/temp -Recurse",
+            "type": "powershell"
+        },
+        {
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": "Start-Process 'msiexec' -ArgumentList '/qb /i c:\\temp\\chef.msi' -NoNewWindow -Wait",
+            "type": "powershell"
+        },
+        {
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": "& c:\\temp\\chefservice.exe -install ",
+            "type": "powershell"
+        },
+        {
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": "& c:\\temp\\eis-chef.exe --local-mode --config c:\\temp\\client.rb --override-runlist \"{{ user `cookbook_name` }}::default\" --log-level info ",
+            "type": "powershell"
+        },
+        {
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": "& c:\\temp\\chefservice.exe -uninstall ",
+            "type": "powershell"
+        },
+        {
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": "Start-Process 'msiexec' -ArgumentList '/qb /x C:\\temp\\chef.msi' -NoNewWindow -Wait",
+            "type": "powershell"
         },
         {
             "type": "powershell",
