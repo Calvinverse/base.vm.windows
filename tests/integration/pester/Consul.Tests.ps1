@@ -1,66 +1,32 @@
 Describe 'The consul application' {
     Context 'is installed' {
-        It 'with binaries in /usr/local/bin' {
-            '/usr/local/bin/consul' | Should Exist
+        It 'with binaries in c:\ops\consul' {
+            'c:\ops\consul\consul.exe' | Should Exist
+            'c:\ops\consul\consul_service.exe' | Should Exist
         }
 
-        It 'with default configuration in /etc/consul/consul.json' {
-            '/etc/consul/consul.json' | Should Exist
+        It 'with default configuration in c:\ops\consul' {
+            'c:\ops\consul\consul_base.json' | Should Exist
+            'c:\ops\consul\consul_service.exe.config' | Should Exist
+            'c:\ops\consul\consul_service.xml' | Should Exist
         }
 
-        It 'with environment configuration in /etc/consul/conf.d' {
-            '/etc/consul/conf.d/connections.json' | Should Exist
-            '/etc/consul/conf.d/location.json' | Should Exist
-            '/etc/consul/conf.d/region.json' | Should Exist
-            '/etc/consul/conf.d/secrets.json' | Should Exist
+        It 'with environment configuration in c:\config\consul' {
+            'c:\config\consul\location.json' | Should Exist
+            'c:\config\consul\region.json' | Should Exist
+            'c:\config\consul\secrets.json' | Should Exist
         }
     }
 
-    Context 'has been daemonized' {
-        $serviceConfigurationPath = '/etc/systemd/system/consul.service'
-        if (-not (Test-Path $serviceConfigurationPath))
-        {
-            It 'has a systemd configuration' {
-               $false | Should Be $true
-            }
-        }
-
-        $expectedContent = @'
-[Unit]
-Description=consul
-Wants=network.target
-After=network.target
-
-[Service]
-Environment="GOMAXPROCS=2" "PATH=/usr/local/bin:/usr/bin:/bin"
-ExecStart=/opt/consul/0.9.2/consul agent -config-file=/etc/consul/consul.json -config-dir=/etc/consul/conf.d
-ExecReload=/bin/kill -HUP $MAINPID
-KillSignal=TERM
-User=consul
-WorkingDirectory=/var/lib/consul
-
-[Install]
-WantedBy=multi-user.target
-
-'@
-        $serviceFileContent = Get-Content $serviceConfigurationPath | Out-String
-        $systemctlOutput = & systemctl status consul
-        It 'with a systemd service' {
-            $serviceFileContent | Should Be ($expectedContent -replace "`r", "")
-
-            $systemctlOutput | Should Not Be $null
-            $systemctlOutput.GetType().FullName | Should Be 'System.Object[]'
-            $systemctlOutput.Length | Should BeGreaterThan 3
-            $systemctlOutput[0] | Should Match 'consul.service - consul'
-        }
+    Context 'has been made into a service' {
+        $service = Get-Service consul
 
         It 'that is enabled' {
-            $systemctlOutput[1] | Should Match 'Loaded:\sloaded\s\(.*;\senabled;.*\)'
-
+            $service.StartType | Should Match 'Automatic'
         }
 
         It 'and is running' {
-            $systemctlOutput[2] | Should Match 'Active:\sactive\s\(running\).*'
+            $service.Status | Should Match 'Running'
         }
     }
 

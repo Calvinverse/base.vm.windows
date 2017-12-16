@@ -15,7 +15,7 @@
     "builders": [
         {
             "boot_command": [],
-            "boot_wait": "5s",
+            "boot_wait": "45s",
             "clone_from_vmxc_path": "{{ user `dir_temp` }}/{{ user `vm_name` }}",
             "communicator": "winrm",
             "enable_dynamic_memory": false,
@@ -30,7 +30,7 @@
             "output_directory": "{{ user `dir_temp` }}/test-{{ user `vm_name` }}",
             "ram_size": "{{ user `vm_ram_size_in_mb` }}",
             "secondary_iso_images": [
-                "{{ user `dir_deploy` }}/test.iso"
+                "{{ user `dir_deploy` }}/base.windows-test-provision.iso"
             ],
             "shutdown_command": "",
             "shutdown_timeout": "5m",
@@ -47,6 +47,14 @@
         }
     ],
     "provisioners": [
+        {
+            "expect_disconnect" : true,
+            "inline": [
+                "echo \"Waiting for reboot after provisioning ...\""
+            ],
+            "pause_before" : "30s",
+            "type": "shell"
+        },
         {
             "elevated_user": "{{user `admin_username`}}",
             "elevated_password": "{{user `admin_password`}}",
