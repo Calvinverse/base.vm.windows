@@ -35,8 +35,9 @@ Describe 'On the system' {
         $searcher = (New-Object -COM Microsoft.Update.Session).CreateUpdateSearcher()
         $updates  = $searcher.Search($criteria).Updates
 
+        $updatesThatAreNotWindowsDefender = @($updates | Where-Object { -not $_.Title.StartsWith('Definition Update for Windows Defender') })
         It 'should all be installed' {
-            $updates.Count | Should Be 0
+            $updatesThatAreNotWindowsDefender.Length | Should Be 0
         }
     }
 
