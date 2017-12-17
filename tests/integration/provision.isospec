@@ -10,5 +10,7 @@
         <file src="${DirTestsIntegration}\provision\shared\unbound\*.*" target="unbound" />
 
         <file src="${DirTestsIntegration}\pester\*.*" target="pester" />
+
+        <file src="${DirTestsIntegration}\provision\shared\*.json" target="" />
     </files>
 </iso>

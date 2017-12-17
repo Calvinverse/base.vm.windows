@@ -48,14 +48,6 @@
     ],
     "provisioners": [
         {
-            "expect_disconnect" : true,
-            "inline": [
-                "echo \"Waiting for reboot after provisioning ...\""
-            ],
-            "pause_before" : "30s",
-            "type": "shell"
-        },
-        {
             "elevated_user": "{{user `admin_username`}}",
             "elevated_password": "{{user `admin_password`}}",
             "execute_command": "powershell.exe -NoProfile -NonInteractive \"if (Test-Path variable:global:ProgressPreference){`$ProgressPreference='SilentlyContinue'}; & '{{.Path}}';exit `$LastExitCode\"; exit $LastExitCode",
