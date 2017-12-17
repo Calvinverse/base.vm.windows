@@ -3,6 +3,10 @@
         "admin_username": "admin",
         "admin_password": "admin",
 
+        "cookbook_name": "not_realy_a_cookbook_name",
+
+        "dir_cookbooks_src": "src/cookbooks",
+        "dir_cookbooks_vendors": "packages/vendor/cookbooks",
         "dir_deploy": null,
         "dir_log": null,
         "dir_scripts_user": null,
@@ -29,7 +33,6 @@
             "enable_virtualization_extensions": false,
             "generation": 2,
             "guest_additions_mode": "disable",
-            "http_directory": "",
             "http_port_min": 8150,
             "http_port_max": 8160,
             "iso_checksum": "{{ user `iso_checksum` }}",
@@ -56,10 +59,55 @@
     ],
     "provisioners": [
         {
+            "command": "Set-VM -Name {{ user `vm_name` }} -AutomaticCheckpointsEnabled $false",
+            "execute_command": ["Powershell.exe", "-NonInteractive", "-NoLogo", "-NoProfile", "-Command", "{{.Command}}"],
+            "type": "shell-local"
+        },
+        {
+            "command": "Get-VMSnapshot -VMName {{ user `vm_name` }} | Remove-VMSnapshot",
+            "execute_command": ["Powershell.exe", "-NonInteractive", "-NoLogo", "-NoProfile", "-Command", "{{.Command}}"],
+            "type": "shell-local"
+        },
+        {
+            "inline": "New-Item -Path c:/temp -ItemType Directory; $drive = 'd:'; if (Test-Path 'e:/client.rb') { $drive = 'e:'} else { if (Test-Path 'f:/client.rb') { $drive = 'f:'} }; Copy-Item \"$($drive)/*\" c:/temp -Recurse",
+            "type": "powershell"
+        },
+        {
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": "Start-Process 'msiexec' -ArgumentList '/qb /i c:\\temp\\chef.msi' -NoNewWindow -Wait",
+            "type": "powershell"
+        },
+        {
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": "& c:\\temp\\chefservice.exe -install ",
+            "type": "powershell"
+        },
+        {
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": "& c:\\temp\\eis-chef.exe --local-mode --config c:\\temp\\client.rb --override-runlist \"{{ user `cookbook_name` }}::default\" --log-level info ",
+            "type": "powershell"
+        },
+        {
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": "& c:\\temp\\chefservice.exe -uninstall ",
+            "type": "powershell"
+        },
+        {
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": "Start-Process 'msiexec' -ArgumentList '/qb /x C:\\temp\\chef.msi' -NoNewWindow -Wait",
+            "type": "powershell"
+        },
+        {
             "type": "powershell",
             "elevated_user": "{{user `admin_username`}}",
             "elevated_password": "{{user `admin_password`}}",
             "scripts": [
+                "{{ user `dir_scripts_user` }}/Remove-Chef.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-NGen.ps1",
                 "{{ user `dir_scripts_user` }}/Disable-Services.ps1",
                 "{{ user `dir_scripts_user` }}/Remove-WindowsFeatures.ps1"

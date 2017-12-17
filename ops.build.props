@@ -71,17 +71,81 @@
     <!--
         **** PREPARE - COPY FILES ****
     -->
-    <!--
-        Files that should be copied, either from the file system or from a NuGet package.
-    -->
+    <ItemGroup Condition=" '$(ShouldLoadHttpFilesToCopy)' == 'true' ">
+        <HttpFilesToCopy Include="https://github.com/kohsuke/winsw/releases/download/winsw-v${VersionWinSw}/WinSW.NET4.exe">
+            <Destination>$(DirBuildTempCookbooks)\$(NameCookbook)\files\windows</Destination>
+            <Unzip>false</Unzip>
+        </HttpFilesToCopy>
+        <HttpFilesToCopy Include="https://releases.hashicorp.com/consul/${VersionConsul}/consul_${VersionConsul}_windows_amd64.zip">
+            <Destination>$(DirBuildTempCookbooks)\$(NameCookbook)\files\windows</Destination>
+            <GpgKey>91A6E7F85D05C65630BEF18951852D87348FFC4C</GpgKey>
+            <HashAlgorithm>SHA256</HashAlgorithm>
+            <HashFile>https://releases.hashicorp.com/consul/${VersionConsul}/consul_${VersionConsul}_SHA256SUMS</HashFile>
+            <SignatureFile>https://releases.hashicorp.com/consul/${VersionConsul}/consul_${VersionConsul}_SHA256SUMS.sig</SignatureFile>
+            <Unzip>true</Unzip>
+        </HttpFilesToCopy>
+        <!--
+        <HttpFilesToCopy Include="https://releases.hashicorp.com/consul-template/${VersionConsulTemplate}/consul-template_${VersionConsulTemplate}_linux_amd64.zip">
+            <Destination>$(DirBuildTempCookbooks)\$(NameCookbook)\files\windows</Destination>
+            <GpgKey>91A6E7F85D05C65630BEF18951852D87348FFC4C</GpgKey>
+            <HashAlgorithm>SHA256</HashAlgorithm>
+            <HashFile>https://releases.hashicorp.com/consul-template/${VersionConsulTemplate}/consul-template_${VersionConsulTemplate}_SHA256SUMS</HashFile>
+            <SignatureFile>https://releases.hashicorp.com/consul-template/${VersionConsulTemplate}/consul-template_${VersionConsulTemplate}_SHA256SUMS.sig</SignatureFile>
+            <Unzip>true</Unzip>
+        </HttpFilesToCopy>
+        -->
+        <HttpFilesToCopy Include="http://www.unbound.net/downloads/unbound-1.6.3.zip">
+            <Destination>$(DirBuildTempCookbooks)\$(NameCookbook)\files\windows</Destination>
+            <Hash>9E3873F82D33079FF0DB75135D4D3F83285ECDDCDFDEC736CE71C7C9C5E10355</Hash>
+            <HashAlgorithm>SHA256</HashAlgorithm>
+            <Unzip>true</Unzip>
+        </HttpFilesToCopy>
+
+        <HttpFilesToCopy Include="https://packages.chef.io/files/stable/chef/${VersionChef}/windows/2012/chef-client-${VersionChef}-1-x64.msi">
+            <Destination>$(DirBuildTemp)</Destination>
+            <Hash>4E55555025A9AF26BF77E18BA5AAF262EDEAF8ACB10580EE3FABFF50C83D0D5A</Hash>
+            <HashAlgorithm>SHA256</HashAlgorithm>
+            <Name>chef.msi</Name>
+            <Unzip>false</Unzip>
+        </HttpFilesToCopy>
+        <HttpFilesToCopy Include="https://github.com/ebsco/chefservice/releases/download/v1.0.0.2/ChefService.exe">
+            <Destination>$(DirBuildTemp)</Destination>
+            <Hash>09795E2B834B050D260CD59AA439F72251C8C0FED1FB85F6E78E0A3FD6903DF7</Hash>
+            <HashAlgorithm>SHA256</HashAlgorithm>
+            <Unzip>false</Unzip>
+        </HttpFilesToCopy>
+        <HttpFilesToCopy Include="https://github.com/ebsco/chefservice/releases/download/v1.0.0.2/ChefService.exe.config">
+            <Destination>$(DirBuildTemp)</Destination>
+            <Hash>10EB1611AE052ED44771663A589F553B51735EFD722A4F33CEAFBE4689553E3C</Hash>
+            <HashAlgorithm>SHA256</HashAlgorithm>
+            <Unzip>false</Unzip>
+        </HttpFilesToCopy>
+        <HttpFilesToCopy Include="https://github.com/ebsco/chefservice/releases/download/v1.0.0.2/eis-chef.exe">
+            <Destination>$(DirBuildTemp)</Destination>
+            <Hash>A9ACF5349477A09BCB248670E0C3D5BB86B5251560713CE6AD3754E743033597</Hash>
+            <HashAlgorithm>SHA256</HashAlgorithm>
+            <Unzip>false</Unzip>
+        </HttpFilesToCopy>
+        <HttpFilesToCopy Include="https://github.com/ebsco/chefservice/releases/download/v1.0.0.2/eis-chef.exe.config">
+            <Destination>$(DirBuildTemp)</Destination>
+            <Hash>7D713AC5E97DE06C3BBC153E01B74A2871BFC2FAAC79A88E541DD3C01C794C90</Hash>
+            <HashAlgorithm>SHA256</HashAlgorithm>
+            <Unzip>false</Unzip>
+        </HttpFilesToCopy>
+    </ItemGroup>
     <ItemGroup>
         <FilesToCopy
             Exclude="$(DirBuildTempUnattend)\scripts\variables.ps1;$(DirBuildTempUnattend)\scripts\setupcomplete.cmd"
             Include="$(DirBuildTempUnattend)\scripts\*.*">
             <Destination>$(DirBuildTempIso)</Destination>
         </FilesToCopy>
+        <FilesToCopy
+            Exclude="$(DirSrcCookbooks)\$(NameCookbook)\metadata.rb"
+            Include="$(DirSrcCookbooks)\$(NameCookbook)\**\*.*">
+            <Destination>$(DirBuildTempCookbooks)\$(NameCookbook)</Destination>
+        </FilesToCopy>
     </ItemGroup>
-    <ItemGroup>
+    <ItemGroup Condition=" '$(ShouldLoadNuGetFilesToCopy)' == 'true' ">
         <NuGetFilesToCopy Include="Ops.Tools.BaseImage.Windows">
             <Include>**\*</Include>
             <Destinations>
@@ -123,13 +187,18 @@
 
         Additional parameters can be provided through the 'TemplateTokens' ItemGroup below.
     -->
-    <ItemGroup>
+    <ItemGroup Condition=" '$(ShouldLoadBuildFilesToGenerate)' == 'true' ">
+        <BuildFilesToGenerate Include="$(DirBuildTempCookbooks)\$(NameCookbook)\metadata.rb">
+            <Template>$(DirSrcCookbooks)\$(NameCookbook)\metadata.rb</Template>
+            <Encoding></Encoding>
+        </BuildFilesToGenerate>
+
         <BuildFilesToGenerate Include="$(DirBuildTemp)\build\packer.json">
-            <Template>$(DirSrc)\packer.json</Template>
+            <Template>$(DirSrcPacker)\packer.json</Template>
             <Encoding></Encoding>
         </BuildFilesToGenerate>
         <BuildFilesToGenerate Include="$(DirBuildTemp)\build\packer_variables.json">
-            <Template>$(DirSrc)\packer_variables.json</Template>
+            <Template>$(DirSrcPacker)\packer_variables.json</Template>
             <Encoding></Encoding>
         </BuildFilesToGenerate>
         <BuildFilesToGenerate Include="$(DirBuildTempIso)\variables.ps1">
@@ -348,6 +417,71 @@
 
 
     <!--
+        **** ANALYZE - RUBOCOP ****
+    -->
+    <!--
+        The collection of files that should be analyzed with Rubocop
+    -->
+    <ItemGroup Condition=" '$(ShouldLoadRubocopConfigurationFiles)' == 'true' ">
+        <RubocopConfigurationFiles Include="$(DirSrcCookbooks)\rubocop.yml" />
+    </ItemGroup>
+
+
+    <!--
+        **** ANALYZE - FOODCRITIC ****
+    -->
+    <!--
+        The collection of cookbooks that should be analyzed with Foodcritic
+    -->
+    <ItemGroup Condition=" '$(ShouldLoadChefCookbooksToAnalyze)' == 'true' ">
+        <ChefCookbooksToAnalyze Include="$(DirBuildTempCookbooks)\$(NameCookbook)" >
+            <!--
+                Ignore:
+                FC071 - Missing LICENSE file: because it's there, just not in the expected directory
+            -->
+            <RulesToExclude>FC071</RulesToExclude>
+        </ChefCookbooksToAnalyze>
+    </ItemGroup>
+
+
+    <!--
+        **** TEST - CHEFSPEC ****
+    -->
+    <!--
+        The collection of cookbooks that should be tested with ChefSpec.
+    -->
+    <ItemGroup Condition=" '$(ShouldLoadChefCookbooksToTest)' == 'true' ">
+        <ChefCookbooksToTest Include="$(DirBuildTempCookbooks)\$(NameCookbook)">
+            <ChefSpecPattern>./spec/*_spec.rb</ChefSpecPattern>
+        </ChefCookbooksToTest>
+    </ItemGroup>
+
+
+    <!--
+        **** PACKER - PACK ****
+    -->
+    <PropertyGroup>
+        <!-- Indicate that packer should keep the image if an error occurs. -->
+        <!-- <PackerKeepImageOnError>false</PackerKeepImageOnError> -->
+    </PropertyGroup>
+
+
+    <!--
+        **** DOCKER - PACK ****
+    -->
+    <PropertyGroup>
+        <!-- Indicate that docker should ignore cached images if possible. -->
+        <!-- <DockerIgnoreCache>true</DockerIgnoreCache> -->
+
+        <!-- Indicate that docker should always pull images if possible -->
+        <!-- <DockerAlwaysPull>true</DockerAlwaysPull> -->
+
+        <!-- Indicate that docker should squash intermediate layers when creating an image -->
+        <!-- <DockerSquashImages>true</DockerSquashImages> -->
+    </PropertyGroup>
+
+
+    <!--
         **** PACK - NUGET ****
     -->
     <PropertyGroup>
@@ -402,6 +536,9 @@
         - StepPath        : The full path to the script file for the step.
 
         Additionally all the standard properties as seen below and the properties for the given build step are passed in.
+
+        The following ItemGroup defines which steps are taken during the build process. The order of the items in the item group
+        determines in which order the build steps are executed.
 
         Additional build steps can be defined by providing the path to the MsBuild script that should be executed
         for that step, e.g. adding a build step that points to the 'c:\stuff\MyCoolScript.msbuild' will execute
@@ -586,12 +723,42 @@
         </BuildStepsToExecute>
         -->
 
+        <!--
+        <BuildStepsToExecute Include="$(BuildStepsPrepareRestoreGems)">
+            <Properties>
+            </Properties>
+            <Groups>
+                prepare;
+                prepare.restore;
+                prepare.restore.gems;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </BuildStepsToExecute>
+        -->
+
         <BuildStepsToExecute Include="$(BuildStepsPrepareCopyNuGet)">
             <Properties>
             </Properties>
             <Groups>
-                CopyFiles;
-                Prepare;
+                prepare;
+                prepare.copy;
+                prepare.copy.nuget;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </BuildStepsToExecute>
+        <BuildStepsToExecute Include="$(BuildStepsPrepareCopyHttp)">
+            <Properties>
+            </Properties>
+            <Groups>
+                prepare;
+                prepare.copy;
+                prepare.copy.url;
             </Groups>
             <PreSteps>
             </PreSteps>
@@ -602,8 +769,22 @@
             <Properties>
             </Properties>
             <Groups>
-                CopyFiles;
-                Prepare;
+                prepare;
+                prepare.copy;
+                prepare.copy.files;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </BuildStepsToExecute>
+        <BuildStepsToExecute Include="$(BuildStepsPrepareCopyArchive)">
+            <Properties>
+            </Properties>
+            <Groups>
+                prepare;
+                prepare.copy;
+                prepare.copy.archive;
             </Groups>
             <PreSteps>
             </PreSteps>
@@ -611,6 +792,7 @@
             </PostSteps>
         </BuildStepsToExecute>
 
+        <!--
         <BuildStepsToExecute Include="$(BuildStepsPrepareFileHashes)">
             <Properties>
             </Properties>
@@ -623,6 +805,7 @@
             <PostSteps>
             </PostSteps>
         </BuildStepsToExecute>
+        -->
 
         <BuildStepsToExecute Include="$(BuildStepsPrepareAssemblyInfo)">
             <Properties>
@@ -654,6 +837,20 @@
             <Groups>
                 Generate;
                 Prepare;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </BuildStepsToExecute>
+
+        <BuildStepsToExecute Include="$(BuildStepsPrepareRestoreBerkshelf)">
+            <Properties>
+            </Properties>
+            <Groups>
+                prepare;
+                prepare.restore;
+                prepare.restore.cookbooks;
             </Groups>
             <PreSteps>
             </PreSteps>
@@ -733,13 +930,62 @@
         </BuildStepsToExecute>
         -->
 
+        <BuildStepsToExecute Include="$(BuildStepsAnalyzeRuboCop)">
+            <Properties>
+                Configuration=$(TestConfiguration);
+                Platform=$(Platform)
+            </Properties>
+            <Groups>
+                test;
+                test.analyze;
+                test.analyze.rubocop;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </BuildStepsToExecute>
+
+        <BuildStepsToExecute Include="$(BuildStepsAnalyzeFoodCritic)">
+            <Properties>
+                Configuration=$(TestConfiguration);
+                Platform=$(Platform)
+            </Properties>
+            <Groups>
+                test;
+                test.analyze;
+                test.analyze.foodcritic;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </BuildStepsToExecute>
+
+        <BuildStepsToExecute Include="$(BuildStepsUnitTestChefSpec)">
+            <Properties>
+                Configuration=$(TestConfiguration);
+                Platform=$(Platform)
+            </Properties>
+            <Groups>
+                test;
+                test.unittest;
+                test.unittest.chefspec;
+            </Groups>
+            <PreSteps>
+            </PreSteps>
+            <PostSteps>
+            </PostSteps>
+        </BuildStepsToExecute>
+
         <BuildStepsToExecute Include="$(BuildStepsPackIso)">
             <Properties>
                 Configuration=$(ProductionConfiguration);
                 Platform=$(Platform)
             </Properties>
             <Groups>
-                Package;
+                package;
+                package.iso;
             </Groups>
             <PreSteps>
             </PreSteps>
@@ -752,7 +998,8 @@
                 Platform=$(Platform)
             </Properties>
             <Groups>
-                Package;
+                package;
+                package.packer;
             </Groups>
             <PreSteps>
             </PreSteps>
@@ -850,11 +1097,6 @@
 
     <!-- Overrides for the tools paths -->
     <PropertyGroup>
-        <!--
-            The full path and version to the packer command line executable. If not defined the packages directory is searched.
-        -->
-        <ToolsExternalPackerPath>UNDEFINED</ToolsExternalPackerPath>
-        <ToolsExternalPackerVersion>1.2.0</ToolsExternalPackerVersion>
     </PropertyGroup>
 
 
