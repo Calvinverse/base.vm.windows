@@ -84,7 +84,6 @@
             <SignatureFile>https://releases.hashicorp.com/consul/${VersionConsul}/consul_${VersionConsul}_SHA256SUMS.sig</SignatureFile>
             <Unzip>true</Unzip>
         </HttpFilesToCopy>
-        <!--
         <HttpFilesToCopy Include="https://releases.hashicorp.com/consul-template/${VersionConsulTemplate}/consul-template_${VersionConsulTemplate}_linux_amd64.zip">
             <Destination>$(DirBuildTempCookbooks)\$(NameCookbook)\files\windows</Destination>
             <GpgKey>91A6E7F85D05C65630BEF18951852D87348FFC4C</GpgKey>
@@ -93,7 +92,6 @@
             <SignatureFile>https://releases.hashicorp.com/consul-template/${VersionConsulTemplate}/consul-template_${VersionConsulTemplate}_SHA256SUMS.sig</SignatureFile>
             <Unzip>true</Unzip>
         </HttpFilesToCopy>
-        -->
         <HttpFilesToCopy Include="http://www.unbound.net/downloads/unbound-1.6.3.zip">
             <Destination>$(DirBuildTempCookbooks)\$(NameCookbook)\files\windows</Destination>
             <Hash>9E3873F82D33079FF0DB75135D4D3F83285ECDDCDFDEC736CE71C7C9C5E10355</Hash>

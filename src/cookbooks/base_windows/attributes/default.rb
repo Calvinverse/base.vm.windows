@@ -16,6 +16,15 @@ default['consul']['service']['user_name'] = 'consul'
 default['consul']['service']['user_password'] = SecureRandom.uuid
 
 #
+# CONSULTEMPLATE
+#
+
+default['consul_template']['service']['exe'] = 'consul-template_service'
+default['consul_template']['service']['name'] = 'consul-template'
+default['consul_template']['service']['user_name'] = 'consul-template'
+default['consul_template']['service']['user_password'] = SecureRandom.uuid
+
+#
 # FILESYSTEM
 #
 
