@@ -105,9 +105,9 @@ service_name = node['consul_template']['service']['name']
 consul_template_bin_path = "#{node['paths']['ops']}/#{service_name}"
 consul_template_config_path = "#{node['paths']['config']}/#{service_name}/config"
 consul_template_template_path = "#{node['paths']['config']}/#{service_name}/templates"
-consul_template_data_path = "c:/users/#{service_username}/AppData/local/consul-template"
+consul_template_logs_path = "#{node['paths']['logs']}/#{service_name}"
 
-%W[#{consul_template_bin_path} #{consul_template_config_path} #{consul_template_data_path} #{consul_template_template_path}].each do |path|
+%W[#{consul_template_bin_path} #{consul_template_config_path} #{consul_template_template_path}].each do |path|
   directory path do
     action :create
     recursive true
@@ -124,7 +124,7 @@ end
 # We need to multiple-escape the escape character because of ruby string and regex etc. etc. See here: http://stackoverflow.com/a/6209532/539846
 file "#{consul_template_config_path}/base.hcl" do
   action :create
-  content <<~CONF
+  content <<~HCL
     # This denotes the start of the configuration section for Consul. All values
     # contained in this section pertain to Consul.
     consul {
@@ -132,7 +132,7 @@ file "#{consul_template_config_path}/base.hcl" do
       # request. For more information on authentication, please see the Consul
       # documentation.
       auth {
-        enabled  = true
+        enabled  = false
         username = "test"
         password = "test"
       }
@@ -241,7 +241,7 @@ file "#{consul_template_config_path}/base.hcl" do
     # This is the path to store a PID file which will contain the process ID of the
     # Consul Template process. This is useful if you plan to send custom signals
     # to the process.
-    pid_file = "#{consul_template_data_path}/pid"
+    pid_file = "#{consul_template_logs_path}/pid.txt"
 
     # This is the quiescence timers; it defines the minimum and maximum amount of
     # time to wait for the cluster to reach a consistent state before rendering a
@@ -275,17 +275,16 @@ file "#{consul_template_config_path}/base.hcl" do
       # templates will be pre-rendered and stored.
       prefix = "consul-template/dedup/"
     }
-  CONF
+  HCL
 end
 
 #
 # WINDOWS SERVICE
 #
 
-consul_template_logs_path = "#{node['paths']['logs']}/#{service_name}"
 directory consul_template_logs_path do
-  rights :modify, service_username, applies_to_children: true, applies_to_self: false
   action :create
+  rights :modify, service_username, applies_to_children: true, applies_to_self: false
 end
 
 service_exe_name = node['consul_template']['service']['exe']
@@ -315,7 +314,6 @@ file "#{consul_template_bin_path}/#{service_exe_name}.xml" do
 
         <executable>#{consul_template_bin_path}/#{consul_template_exe}</executable>
         <arguments>-config=#{consul_template_config_path} -config=#{consul_template_template_path}</arguments>
-        <priority>high</priority>
 
         <logpath>#{consul_template_logs_path}</logpath>
         <log mode="roll-by-size">
