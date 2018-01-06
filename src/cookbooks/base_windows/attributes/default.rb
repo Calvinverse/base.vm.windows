@@ -24,6 +24,9 @@ default['consul_template']['service']['name'] = 'consul-template'
 default['consul_template']['service']['user_name'] = 'consul-template'
 default['consul_template']['service']['user_password'] = SecureRandom.uuid
 
+default['consul_template']['config_path'] = "#{config_path}/#{node['consul_template']['service']['name']}/config"
+default['consul_template']['template_path'] = "#{config_path}/#{node['consul_template']['service']['name']}/templates"
+
 #
 # FILESYSTEM
 #
@@ -57,6 +60,21 @@ default['firewall']['ipv6_enabled'] = false
 
 default['provisioning']['service']['exe'] = 'provisioning_service'
 default['provisioning']['service']['name'] = 'provisioning'
+
+#
+# SCOLLECTOR
+#
+
+default['scollector']['service']['exe'] = 'scollector'
+default['scollector']['service']['name'] = 'scollector'
+
+default['scollector']['release_url'] = 'https://github.com/bosun-monitor/bosun/releases/download'
+default['scollector']['bin_path'] = "#{ops_path}/#{node['scollector']['service']['name']}"
+default['scollector']['conf_dir'] = "#{config_path}/#{node['scollector']['service']['name']}"
+default['scollector']['version'] = '0.6.0-beta1'
+
+default['scollector']['config_file'] = 'scollector.toml'
+default['scollector']['consul_template_file'] = 'scollector.ctmpl'
 
 #
 # UNBOUND
