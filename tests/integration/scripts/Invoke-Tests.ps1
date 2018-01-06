@@ -34,6 +34,20 @@ if ($dvdDrive -eq '')
     exit -1
 }
 
-$result = Invoke-Pester -Script "$($dvdDrive)/pester/*" -PassThru
+# Copy the files from the DVD
+$tempDir = 'c:\temp'
+if (-not (Test-Path $tempDir))
+{
+    New-Item -Path $tempDir -ItemType Container | Out-Null
+}
+
+Copy-Item -Path "$($dvdDrive)/pester" -Destination $tempDir -Recurse
+
+# Set the consul Key-Value pairs
+. 'c:\temp\pester\consul\Set-ConsulKV.ps1'
+Set-ConsulKV
+
+# Invoke pester
+$result = Invoke-Pester -Script 'c:\temp\pester\*' -PassThru
 
 exit $result.FailedCount
