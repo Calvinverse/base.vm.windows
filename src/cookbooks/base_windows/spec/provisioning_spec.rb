@@ -8,6 +8,7 @@ describe 'base_windows::provisioning' do
 
   service_name = 'provisioning'
   provisioning_script = 'Initialize-Resource.ps1'
+  provisioning_helper_script = 'Initialize.ps1'
 
   context 'create the log locations' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
@@ -24,7 +25,11 @@ describe 'base_windows::provisioning' do
       expect(chef_run).to create_directory(provisioning_bin_path)
     end
 
-    it 'creates provisioning.exe in the provisioning ops directory' do
+    it 'creates Initialize.ps1 in the provisioning ops directory' do
+      expect(chef_run).to create_cookbook_file("#{provisioning_bin_path}/#{provisioning_helper_script}").with_source(provisioning_helper_script)
+    end
+
+    it 'creates Initialize-Resource.ps1 in the provisioning ops directory' do
       expect(chef_run).to create_cookbook_file("#{provisioning_bin_path}/#{provisioning_script}").with_source(provisioning_script)
     end
   end
