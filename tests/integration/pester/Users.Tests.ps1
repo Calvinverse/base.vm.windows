@@ -69,20 +69,21 @@ Describe 'The users list' {
         $users = Get-LocalUser
 
         It 'should not contain any unexpected users' {
-            $users.Length | Should Be 5
+            $users.Length | Should Be 6
             $users[0].UserName | Should Be 'Administrator'
             $users[1].UserName | Should Be 'consul'
-            $users[2].UserName | Should Be 'DefaultAccount'
-            $users[3].UserName | Should Be 'Guest'
-            $users[4].UserName | Should Be 'unbound_user'
+            $users[2].UserName | Should Be 'consul-template'
+            $users[3].UserName | Should Be 'DefaultAccount'
+            $users[4].UserName | Should Be 'Guest'
+            $users[5].UserName | Should Be 'unbound_user'
         }
 
         It 'should have the default account disabled' {
-            $users[2].UserFlags | Should Match '(ACCOUNTDISABLE)'
+            $users[3].UserFlags | Should Match '(ACCOUNTDISABLE)'
         }
 
         It 'should have the guest account disabled' {
-            $users[3].UserFlags | Should Match '(ACCOUNTDISABLE)'
+            $users[4].UserFlags | Should Match '(ACCOUNTDISABLE)'
         }
     }
 }

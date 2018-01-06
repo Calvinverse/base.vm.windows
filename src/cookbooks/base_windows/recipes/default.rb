@@ -20,5 +20,6 @@ include_recipe 'base_windows::filesystem'
 include_recipe 'base_windows::firewall'
 
 include_recipe 'base_windows::consul'
+include_recipe 'base_windows::consul_template'
 include_recipe 'base_windows::network'
 include_recipe 'base_windows::provisioning'

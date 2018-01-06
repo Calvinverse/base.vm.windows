@@ -18,6 +18,12 @@ directory provisioning_bin_path do
   rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
 end
 
+provisioning_helper_script = 'Initialize.ps1'
+cookbook_file "#{provisioning_bin_path}/#{provisioning_helper_script}" do
+  action :create
+  source provisioning_helper_script
+end
+
 provisioning_script = 'Initialize-Resource.ps1'
 cookbook_file "#{provisioning_bin_path}/#{provisioning_script}" do
   action :create

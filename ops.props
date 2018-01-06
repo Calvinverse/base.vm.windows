@@ -443,7 +443,10 @@
             <ReplacementValue>13.1.31</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="VersionConsul">
-            <ReplacementValue>1.0.1</ReplacementValue>
+            <ReplacementValue>1.0.2</ReplacementValue>
+        </TemplateTokens>
+        <TemplateTokens Include="VersionConsulTemplate">
+            <ReplacementValue>0.19.4</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="VersionWinSw">
             <ReplacementValue>2.1.2</ReplacementValue>
