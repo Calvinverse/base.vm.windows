@@ -139,7 +139,11 @@ file "#{consul_bin_path}/#{consul_config_file}" do
         }
       },
 
-      "log_level" : "info"
+      "leave_on_terminate" : false,
+
+      "log_level" : "info",
+
+      "skip_leave_on_interrupt" : true
     }
   JSON
 end

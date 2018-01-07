@@ -118,7 +118,11 @@ describe 'base_windows::consul' do
           }
         },
 
-        "log_level" : "info"
+        "leave_on_terminate" : false,
+
+        "log_level" : "info",
+
+        "skip_leave_on_interrupt" : true
       }
     JSON
     it 'creates consul_default.json in the consul ops directory' do
