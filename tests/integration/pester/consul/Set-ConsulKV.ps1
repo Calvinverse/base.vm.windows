@@ -28,8 +28,8 @@ function Set-ConsulKV
     #& 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/queue/logs/syslog/vhost 'testlogs'
 
     # load config/services/metrics
-    #& 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/metrics/host 'write.metrics'
-    #& 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/metrics/port '4242'
+    & 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/metrics/opentsdb/host 'write.metrics'
+    & 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/metrics/opentsdb/port '4242'
 
     Write-Output "Joining the local consul ..."
 
