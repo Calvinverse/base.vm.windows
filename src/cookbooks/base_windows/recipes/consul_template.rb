@@ -314,7 +314,7 @@ file "#{consul_template_bin_path}/#{service_exe_name}.xml" do
         <description>This service runs the consul-template agent.</description>
 
         <executable>#{consul_template_bin_path}/#{consul_template_exe}</executable>
-        <arguments>-config=#{consul_template_config_path} -config=#{consul_template_template_path}</arguments>
+        <arguments>-config=#{consul_template_config_path}</arguments>
 
         <logpath>#{consul_template_logs_path}</logpath>
         <log mode="roll-by-size">
