@@ -3,10 +3,15 @@
 require 'spec_helper'
 
 describe 'base_windows::system' do
+  scollector_bin_path = 'c:/ops/scollector'
   scollector_config_path = 'c:/config/scollector'
 
   context 'create the scollector locations' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
+
+    it 'creates the scollector bin directory' do
+      expect(chef_run).to create_directory(scollector_bin_path)
+    end
 
     it 'creates the scollector config directory' do
       expect(chef_run).to create_directory(scollector_config_path)
@@ -24,7 +29,7 @@ describe 'base_windows::system' do
     end
 
     it 'installs the scollector service' do
-        expect(chef_run).to run_powershell_script('scollector_as_service')
+      expect(chef_run).to run_powershell_script('scollector_as_service')
     end
 
     it 'enables the scollector service' do
@@ -32,7 +37,7 @@ describe 'base_windows::system' do
     end
 
     scollector_template_content = <<~CONF
-      Host = "http://{{ keyOrDefault "config/services/metrics/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/metrics/port" "80" }}"
+      Host = "http://{{ keyOrDefault "config/services/metrics/opentsdb/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/metrics/opentsdb/port" "80" }}"
 
       [Tags]
           environment = "{{ keyOrDefault "config/services/consul/datacenter" "unknown" }}"

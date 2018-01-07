@@ -15,12 +15,12 @@
 # DIRECTORIES
 #
 
-# The configuration file for scollector is dropped in the configuration path
-# when the resource is provisioned because it contains environment specific information
-scollector_config_path = node['scollector']['conf_dir']
-scollector_config_file = node['scollector']['config_file']
-scollector_config_file_path = "#{scollector_config_path}/#{scollector_config_file}"
+scollector_install_path = node['scollector']['bin_path']
+directory scollector_install_path do
+  action :create
+end
 
+scollector_config_path = node['scollector']['conf_dir']
 directory scollector_config_path do
   action :create
 end
@@ -29,25 +29,23 @@ end
 # INSTALL SCOLLECTOR
 #
 
-scollector_install_path = node['scollector']['bin_path']
-node.default['scollector']['arch'] = 'amd64'
-
-binary = "scollector-#{node['os']}-#{node['scollector']['arch']}.exe"
+binary = 'scollector-windows-amd64.exe'
+scollector_bin_file = "#{scollector_install_path}/#{node['scollector']['service']['name']}.exe"
 remote_file 'scollector' do
-  path "#{scollector_install_path}/#{node['scollector']['service']['name']}.exe"
+  path scollector_bin_file
   source "#{node['scollector']['release_url']}/#{node['scollector']['version']}/#{binary}"
-  owner 'root'
-  mode '0755'
   action :create
 end
 
 # Create the service for scollector.
 service_name = node['scollector']['service']['name']
+scollector_config_file = node['scollector']['config_file']
+scollector_config_file_path = "#{scollector_config_path}/#{scollector_config_file}"
 powershell_script 'scollector_as_service' do
   code <<~POWERSHELL
     $ErrorActionPreference = 'Stop'
 
-    & #{scollector_install_path} -conf #{scollector_config_file_path} -winsvc install
+    & '#{scollector_bin_file}' -conf #{scollector_config_file_path} -winsvc install
 
     # Set the service to restart if it fails
     sc.exe failure #{service_name} reset=86400 actions=restart/5000
@@ -59,12 +57,14 @@ service 'scollector' do
   action :enable
 end
 
+# The configuration file for scollector is dropped in the configuration path
+# when the resource is provisioned because it contains environment specific information
 scollector_template_file = node['scollector']['consul_template_file']
 consul_template_template_path = node['consul_template']['template_path']
 file "#{consul_template_template_path}/#{scollector_template_file}" do
   action :create
   content <<~CONF
-    Host = "http://{{ keyOrDefault "config/services/metrics/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/metrics/port" "80" }}"
+    Host = "http://{{ keyOrDefault "config/services/metrics/opentsdb/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/metrics/opentsdb/port" "80" }}"
 
     [Tags]
         environment = "{{ keyOrDefault "config/services/consul/datacenter" "unknown" }}"
@@ -74,7 +74,6 @@ file "#{consul_template_template_path}/#{scollector_template_file}" do
 end
 
 # Create the consul-template configuration file
-scollector_install_path = node['scollector']['conf_dir']
 consul_template_config_path = node['consul_template']['config_path']
 file "#{consul_template_config_path}/scollector.hcl" do
   action :create
