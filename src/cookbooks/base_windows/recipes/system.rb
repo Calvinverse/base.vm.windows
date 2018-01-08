@@ -64,7 +64,7 @@ consul_template_template_path = node['consul_template']['template_path']
 file "#{consul_template_template_path}/#{scollector_template_file}" do
   action :create
   content <<~CONF
-    Host = "http://{{ keyOrDefault "config/services/metrics/opentsdb/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/metrics/opentsdb/port" "80" }}"
+    Host = "http://{{ keyOrDefault "config/services/metrics/protocols/opentsdb/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/metrics/protocols/opentsdb/port" "80" }}"
 
     [Tags]
         environment = "{{ keyOrDefault "config/services/consul/datacenter" "unknown" }}"

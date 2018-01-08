@@ -20,16 +20,16 @@ function Set-ConsulKV
     & 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/consul/datacenter 'test-integration'
     & 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/consul/domain 'integrationtest'
 
+    # load config/services/metrics
+    & 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/metrics/protocols/opentsdb/host 'write.metrics'
+    & 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/metrics/protocols/opentsdb/port '4242'
+
     # load config/services/queue
     #& 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/queue/host 'active.queue'
     #& 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/queue/port '5672'
 
     #& 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/queue/logs/syslog/username 'testuser'
     #& 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/queue/logs/syslog/vhost 'testlogs'
-
-    # load config/services/metrics
-    & 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/metrics/opentsdb/host 'write.metrics'
-    & 'c:\ops\consul\consul.exe' kv put -http-addr=http://127.0.0.1:8550 config/services/metrics/opentsdb/port '4242'
 
     Write-Output "Joining the local consul ..."
 
