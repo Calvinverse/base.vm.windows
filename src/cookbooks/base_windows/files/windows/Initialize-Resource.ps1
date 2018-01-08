@@ -30,7 +30,7 @@ try
         throw 'No DVD drive found'
     }
 
-    # If the allow WinRM file is not there, disable WinRM in the firewall
+    # Only run the provisioning steps if we are asked to do so
     if (-not (Test-Path (Join-Path $dvdDriveLetter 'run_provisioning.json')))
     {
         # Not provisioning
