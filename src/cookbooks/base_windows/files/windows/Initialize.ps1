@@ -104,6 +104,7 @@ function Initialize-Consul
             ErrorAction = "Stop"
         }
 
+    Copy-Item -Path (Join-Path $dvdDriveLetter 'consul\consul_metrics.json') -Destination 'c:\config\consul\metrics.json' -Force @commonParameterSwitches
     Copy-Item -Path (Join-Path $dvdDriveLetter 'consul\consul_region.json') -Destination 'c:\config\consul\region.json' -Force @commonParameterSwitches
     Copy-Item -Path (Join-Path $dvdDriveLetter 'consul\consul_secrets.json') -Destination 'c:\config\consul\secrets.json' -Force @commonParameterSwitches
 
