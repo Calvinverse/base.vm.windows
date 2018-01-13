@@ -37,6 +37,8 @@ try
         return
     }
 
+    Set-HostName
+
     # If the allow WinRM file is not there, disable WinRM in the firewall
     if (-not (Test-Path (Join-Path $dvdDriveLetter 'allow_winrm.json')))
     {

@@ -196,3 +196,31 @@ function Set-DnsIpAddresses
     $serverDnsAddresses = @( $localhost )
     Set-DnsClientServerAddress -InterfaceIndex $adapter.InterfaceIndex -ServerAddresses $serverDnsAddresses -Verbose
 }
+
+function Set-HostName
+{
+    [CmdletBinding()]
+    param(
+    )
+
+    $ErrorActionPreference = 'Stop'
+
+    $commonParameterSwitches =
+        @{
+            Verbose = $PSBoundParameters.ContainsKey('Verbose');
+            Debug = $false;
+            ErrorAction = "Stop"
+        }
+
+
+    # Because windows host names can only be 15 characters we have a problem, so we're expecting:
+    # - RESOURCE_SHORT_NAME to be 4 characters
+    # - The major and minor version to be a single character
+    # - The patch version up to 2 characters
+    # - The post-fix to be 3 characters
+    $resourceShortName = $env:RESOURCE_SHORT_NAME.ToString().Substring(4)
+    $postfix = -join ((65..90) + (97..122) | Get-Random -Count 3 | % {[char]$_})
+    $name = "cv$($resourceShortName)-$($env:RESOURCE_VERSION_MAJOR)$($env:RESOURCE_VERSION_MINOR)$($env:RESOURCE_VERSION_PATCH)-$($postfix)"
+
+    Rename-Computer -NewName $name @commonParameterSwitches
+}
