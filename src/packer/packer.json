@@ -120,9 +120,7 @@
         {
             "elevated_password": "{{user `admin_password`}}",
             "elevated_user": "{{user `admin_username`}}",
-            "scripts": [
-                "c:/temp_dvd/Get-InstalledUpdates.ps1"
-            ],
+            "inline": "c:/temp_dvd/Get-InstalledUpdates.ps1",
             "type": "powershell"
         },
         {
