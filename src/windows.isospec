@@ -3,6 +3,7 @@
     <name>windows</name>
     <files>
         <file src="${DirSrc}\packer\client.rb" target="" />
+        <file src="${DirSrc}\scripts\*.ps1" target="scripts" />
         <file src="${DirBuildTempIso}\*.*" target="" />
         <file src="${DirBuildTemp}\chef.msi" target="" />
         <file src="${DirBuildTemp}\chefservice.exe" target="" />

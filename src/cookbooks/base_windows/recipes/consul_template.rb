@@ -102,9 +102,10 @@ end
 #
 service_name = node['consul_template']['service']['name']
 
+consul_template_config_path = node['consul_template']['config_path']
+consul_template_template_path = node['consul_template']['template_path']
+
 consul_template_bin_path = "#{node['paths']['ops']}/#{service_name}"
-consul_template_config_path = "#{node['paths']['config']}/#{service_name}/config"
-consul_template_template_path = "#{node['paths']['config']}/#{service_name}/templates"
 consul_template_logs_path = "#{node['paths']['logs']}/#{service_name}"
 
 %W[#{consul_template_bin_path} #{consul_template_config_path} #{consul_template_template_path}].each do |path|
@@ -313,7 +314,7 @@ file "#{consul_template_bin_path}/#{service_exe_name}.xml" do
         <description>This service runs the consul-template agent.</description>
 
         <executable>#{consul_template_bin_path}/#{consul_template_exe}</executable>
-        <arguments>-config=#{consul_template_config_path} -config=#{consul_template_template_path}</arguments>
+        <arguments>-config=#{consul_template_config_path}</arguments>
 
         <logpath>#{consul_template_logs_path}</logpath>
         <log mode="roll-by-size">

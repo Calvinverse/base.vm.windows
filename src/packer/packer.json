@@ -69,68 +69,80 @@
             "type": "shell-local"
         },
         {
-            "inline": "New-Item -Path c:/temp -ItemType Directory; $drive = 'd:'; if (Test-Path 'e:/client.rb') { $drive = 'e:'} else { if (Test-Path 'f:/client.rb') { $drive = 'f:'} }; Copy-Item \"$($drive)/*\" c:/temp -Recurse",
+            "inline": "New-Item -Path c:/temp_dvd -ItemType Directory; $drive = 'd:'; if (Test-Path 'e:/client.rb') { $drive = 'e:'} else { if (Test-Path 'f:/client.rb') { $drive = 'f:'} }; Copy-Item \"$($drive)/*\" c:/temp_dvd -Recurse",
             "type": "powershell"
         },
         {
             "elevated_password": "{{ user `admin_password` }}",
             "elevated_user": "{{ user `admin_username` }}",
-            "inline": "Start-Process 'msiexec' -ArgumentList '/qb /i c:\\temp\\chef.msi' -NoNewWindow -Wait",
+            "inline": "Start-Process 'msiexec' -ArgumentList '/qb /i c:\\temp_dvd\\chef.msi' -NoNewWindow -Wait",
             "type": "powershell"
         },
         {
             "elevated_password": "{{ user `admin_password` }}",
             "elevated_user": "{{ user `admin_username` }}",
-            "inline": "& c:\\temp\\chefservice.exe -install ",
+            "inline": "& c:\\temp_dvd\\chefservice.exe -install ",
             "type": "powershell"
         },
         {
             "elevated_password": "{{ user `admin_password` }}",
             "elevated_user": "{{ user `admin_username` }}",
-            "inline": "& c:\\temp\\eis-chef.exe --local-mode --config c:\\temp\\client.rb --override-runlist \"{{ user `cookbook_name` }}::default\" --log-level info ",
+            "inline": "& c:\\temp_dvd\\eis-chef.exe --local-mode --config c:\\temp_dvd\\client.rb --override-runlist \"{{ user `cookbook_name` }}::default\" --log-level info ",
             "type": "powershell"
         },
         {
             "elevated_password": "{{ user `admin_password` }}",
             "elevated_user": "{{ user `admin_username` }}",
-            "inline": "& c:\\temp\\chefservice.exe -uninstall ",
+            "inline": "& c:\\temp_dvd\\chefservice.exe -uninstall ",
             "type": "powershell"
         },
         {
             "elevated_password": "{{ user `admin_password` }}",
             "elevated_user": "{{ user `admin_username` }}",
-            "inline": "Start-Process 'msiexec' -ArgumentList '/qb /x C:\\temp\\chef.msi' -NoNewWindow -Wait",
+            "inline": "Start-Process 'msiexec' -ArgumentList '/qb /x C:\\temp_dvd\\chef.msi' -NoNewWindow -Wait",
             "type": "powershell"
         },
         {
-            "type": "powershell",
-            "elevated_user": "{{user `admin_username`}}",
             "elevated_password": "{{user `admin_password`}}",
+            "elevated_user": "{{user `admin_username`}}",
             "scripts": [
                 "{{ user `dir_scripts_user` }}/Remove-Chef.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-NGen.ps1",
                 "{{ user `dir_scripts_user` }}/Disable-Services.ps1",
                 "{{ user `dir_scripts_user` }}/Remove-WindowsFeatures.ps1"
-            ]
+            ],
+            "type": "powershell"
         },
         {
             "restart_timeout": "20m",
             "type": "windows-restart"
         },
         {
-            "type": "shell-local",
-            "command": "powershell -executionpolicy bypass -noprofile -File {{ user `dir_scripts_user` }}/Copy-LogFilesFromVm.ps1 -vmName {{ user `vm_name` }} -userName {{ user `admin_username` }} -userPassword {{ user `admin_password` }} -targetDirectory {{ user `dir_log` }}/packer.beforesysprep"
+            "elevated_password": "{{user `admin_password`}}",
+            "elevated_user": "{{user `admin_username`}}",
+            "inline": "c:/temp_dvd/Get-InstalledUpdates.ps1",
+            "type": "powershell"
         },
         {
-            "type": "powershell",
-            "elevated_user": "{{user `admin_username`}}",
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": "Remove-Item -Path c:/temp_dvd -Recurse -Force",
+            "type": "powershell"
+        },
+        {
+            "command": "powershell -executionpolicy bypass -noprofile -File {{ user `dir_scripts_user` }}/Copy-LogFilesFromVm.ps1 -vmName {{ user `vm_name` }} -userName {{ user `admin_username` }} -userPassword {{ user `admin_password` }} -targetDirectory {{ user `dir_log` }}/packer.beforesysprep",
+            "type": "shell-local"
+        },
+        {
             "elevated_password": "{{user `admin_password`}}",
+            "elevated_user": "{{user `admin_username`}}",
             "scripts": [
                 "{{ user `dir_scripts_user` }}/PrepareFor-DiskOptimization.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-Defrag.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-DiskOptimization.ps1",
                 "{{ user `dir_scripts_user` }}/Invoke-SDelete.ps1"
-            ]
+            ],
+            "type": "powershell"
         }
     ]
 }

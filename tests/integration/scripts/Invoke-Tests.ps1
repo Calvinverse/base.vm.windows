@@ -44,8 +44,8 @@ if (-not (Test-Path $tempDir))
 Copy-Item -Path "$($dvdDrive)/pester" -Destination $tempDir -Recurse
 
 # Set the consul Key-Value pairs
-. 'c:\temp\pester\consul\Set-ConsulKV.ps1'
-Set-ConsulKV
+. 'c:\temp\pester\consul\Initialize-Environment.ps1'
+Initialize-Environment
 
 # Invoke pester
 $result = Invoke-Pester -Script 'c:\temp\pester\*' -PassThru
