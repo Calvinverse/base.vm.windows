@@ -46,12 +46,22 @@ $commonParameterSwitches =
         ErrorAction = "Stop"
     }
 
+# ---------------------------- Script functions --------------------------------
+
+function Get-AdkPath
+{
+    $props = Get-ItemProperty -Path "HKLM:\Software\WOW6432Node\Microsoft\Windows Kits\Installed Roots" @commonParameterSwitches
+    return $props.KitsRoot10
+}
+
+# ---------------------------- End script functions ----------------------------
 
 Write-Output "Searching for the windows ADK ..."
-
-$props = Get-ItemProperty -Path "HKLM:\Software\WOW6432Node\Microsoft\Windows Kits\Installed Roots" @commonParameterSwitches
-$adkPath = $props.KitsRoot10
-Write-Output "The ADK 10 application has been detected on the current computer."
+$adkPath = Get-AdkPath
+if (-not (Test-Path $adkPath))
+{
+    throw "Failed to find the ADK install path. Cannot continue"
+}
 
 # Then we create the parent folder of the output file, if it does not exist
 if (!(Test-Path -Path (Split-Path -Path $unattendedIsoPath -Parent)))
