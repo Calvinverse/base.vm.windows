@@ -86,13 +86,13 @@ try
     Write-Output "ISO file mounted at $($volume)"
 
     # Make directories to put the original files and the new files in
-    $originalIsoFilePath = Join-Path $workingPath 'originaliso'
+    $originalIsoFilePath = Join-Path $workingPath 'iso_contents'
     if (-not (Test-Path $originalIsoFilePath))
     {
         New-Item -Path $originalIsoFilePath -ItemType Directory | Out-Null
     }
 
-    $updatedIsoFilePath = Join-Path $workingPath 'updatediso'
+    $updatedIsoFilePath = Join-Path $workingPath 'wim_unpacked'
     if (-not (Test-Path $updatedIsoFilePath))
     {
         New-Item -Path $updatedIsoFilePath -ItemType Directory | Out-Null
@@ -113,46 +113,59 @@ try
     Write-Output "Using DISM to mount the WIM file at: $($originalIsoFilePath)\sources\install.wim"
     dism.exe /mount-wim /wimfile:"$($originalIsoFilePath)\sources\install.wim" /mountdir:"$($updatedIsoFilePath)" /index:1
 
-    Write-Output "Adding updates to the image ..."
-    $updateFiles = Get-Item $updatesPath
-    foreach ($thing in $updateFiles)
+    try
     {
-        Write-Output "Adding update in file $($updateFile.FullName) to the image ..."
-        dism.exe /image:$updatedIsoFilePath /Add-Package /Packagepath:($updateFile.FullName)
-        if ($LastExitCode -ne 0)
+        try
         {
-            Write-Error "DISM failed with exit code: $($LastExitCode)"
+            Write-Output "Adding updates to the image ..."
+            $updateFiles = Get-ChildItem -Path $updatesPath -Recurse -File
+            foreach ($updateFile in $updateFiles)
+            {
+                Write-Output "Adding update in file $($updateFile.FullName) to the image ..."
+                Write-Output "dism.exe /image:$updatedIsoFilePath /Add-Package /Packagepath:""$($updateFile.FullName)"""
+                dism.exe /image:$updatedIsoFilePath /Add-Package /Packagepath:"$($updateFile.FullName)"
+                if ($LastExitCode -ne 0)
+                {
+                    Write-Error "DISM failed with exit code: $($LastExitCode)"
+                }
+
+                Start-Sleep -Seconds 10
+            }
+
+            Write-Output "Updates Applied to WIM"
+
+            dism.exe /image:"$($updatedIsoFilePath)" /cleanup-image /StartComponentCleanup /ResetBase
+        }
+        finally
+        {
+            dism.exe /unmount-image /mountdir:"$($updatedIsoFilePath)" /commit
         }
 
-        Start-Sleep -Seconds 10
+        $oscdimg = $adkPath + "Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\oscdimg.exe"
+        $parameters = "-bootdata:2#p0,e,b""$($originalIsoFilePath)\boot\Etfsboot.com""#pEF,e,b""$($originalIsoFilePath)\efi\Microsoft\boot\Efisys.bin"" -u1 -udfver102 " +  """$originalIsoFilePath"" " +  """$outputIsoPath"""
+
+        $processResult = Start-Process -FilePath $oscdimg -ArgumentList $parameters -Wait -NoNewWindow -PassThru @commonParameterSwitches
+
+        if ($processResult.ExitCode -ne 0)
+        {
+            Write-Error "There was an error while creating the iso file."
+        }
+        else
+        {
+            Write-Output "The content of the ISO has been repackaged in the new ISO file."
+        }
     }
-
-    Write-Output "Updates Applied to WIM"
-
-    dism.exe /image:"$($updatedIsoFilePath)" /cleanup-image /StartComponentCleanup /ResetBase
-
-    dism.exe /unmount-image /mountdir:"$($updatedIsoFilePath)" /commit
-
-    $oscdimg = $adkPath + "Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\oscdimg.exe"
-    $parameters = '-bootdata:2#p0,e,bboot\Etfsboot.com#pEF,e,befi\Microsoft\boot\Efisys.bin -u1 -udfver102 ' +  """$updatedIsoFilePath"" " +  """$outputIsoPath"""
-
-    $processResult = Start-Process -FilePath $oscdimg -ArgumentList $parameters -Wait -NoNewWindow -PassThru @commonParameterSwitches
-
-    if ($processResult.ExitCode -ne 0)
+    finally
     {
-        Write-Error "There was an error while creating the iso file."
+        dism.exe /Cleanup-Wim
     }
-    else
-    {
-        Write-Output "The content of the ISO has been repackaged in the new ISO file."
-    }
-
-    dism.exe /Cleanup-Wim
 }
 finally
 {
     if (Test-Path $workingPath)
     {
         #Remove-Item -Path $workingPath -Force -Recurse -ErrorAction SilentlyContinue
+        Remove-Item -Path $originalIsoFilePath -Force -Recurse -ErrorAction SilentlyContinue
+        Remove-Item -Path $updatedIsoFilePath -Force -Recurse -ErrorAction SilentlyContinue
     }
 }
