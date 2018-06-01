@@ -74,19 +74,23 @@ default['provisioning']['service']['exe'] = 'provisioning_service'
 default['provisioning']['service']['name'] = 'provisioning'
 
 #
-# SCOLLECTOR
+# TELEGRAF
 #
 
-default['scollector']['service']['exe'] = 'scollector'
-default['scollector']['service']['name'] = 'scollector'
+default['telegraf']['service']['exe'] = 'telegraf_service'
+default['telegraf']['service']['name'] = 'telegraf'
+default['telegraf']['service']['user_name'] = 'telegraf_user'
+default['telegraf']['service']['user_password'] = SecureRandom.uuid
 
-default['scollector']['release_url'] = 'https://github.com/bosun-monitor/bosun/releases/download'
-default['scollector']['bin_path'] = "#{ops_path}/#{node['scollector']['service']['name']}"
-default['scollector']['conf_dir'] = "#{config_path}/#{node['scollector']['service']['name']}"
-default['scollector']['version'] = '0.6.0-beta1'
+default['telegraf']['version'] = '1.6.3'
+default['telegraf']['shasums'] = 'ee9a163e17fe3a58f22d29ca789a62965f75aaa277f26ad2f98514dbdba15ec0'
+default['telegraf']['download_urls'] = "https://dl.influxdata.com/telegraf/releases/telegraf-#{node['telegraf']['version']}_windows_amd64.zip"
 
-default['scollector']['config_file'] = 'scollector.toml'
-default['scollector']['consul_template_file'] = 'scollector.ctmpl'
+default['telegraf']['consul_template_file'] = 'telegraf.ctmpl'
+default['telegraf']['config_file_path'] = "#{ops_path}/#{node['telegraf']['service']['name']}/telegraf.conf"
+default['telegraf']['config_directory'] = "#{config_path}/#{node['telegraf']['service']['name']}"
+
+default['telegraf']['statsd']['port'] = 8125
 
 #
 # UNBOUND
