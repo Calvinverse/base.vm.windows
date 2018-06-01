@@ -40,13 +40,16 @@ directory provisioning_logs_path do
   rights :modify, 'Administrators', applies_to_children: true, applies_to_self: false
 end
 
+winsw_zip_path = "#{node['paths']['temp']}/winsw.zip"
 service_exe_name = node['provisioning']['service']['exe']
-cookbook_file "#{provisioning_bin_path}/#{service_exe_name}.exe" do
-  action :create
-  source 'WinSW.NET4.exe'
+seven_zip_archive "#{provisioning_bin_path}/#{service_exe_name}.exe" do
+  overwrite true
+  source winsw_zip_path
+  timeout 30
 end
 
 file "#{provisioning_bin_path}/#{service_exe_name}.exe.config" do
+  action :create
   content <<~XML
     <configuration>
         <runtime>
@@ -54,7 +57,6 @@ file "#{provisioning_bin_path}/#{service_exe_name}.exe.config" do
         </runtime>
     </configuration>
   XML
-  action :create
 end
 
 file "#{provisioning_bin_path}/#{service_exe_name}.xml" do
