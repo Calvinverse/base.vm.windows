@@ -62,7 +62,7 @@ try
     Write-Output 'Searching for update files ...'
     $updates = Get-LatestUpdate `
         -WindowsVersion Windows10 `
-        -Build 16299 `
+        -Build 14393 `
         -Architecture x64 `
         @commonParameterSwitches
     Write-Output "Found $($updates.Length) updates."
@@ -142,7 +142,9 @@ try
         }
 
         $oscdimg = $adkPath + "Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\oscdimg.exe"
-        $parameters = "-bootdata:2#p0,e,b""$($originalIsoFilePath)\boot\Etfsboot.com""#pEF,e,b""$($originalIsoFilePath)\efi\Microsoft\boot\Efisys.bin"" -u1 -udfver102 " +  """$originalIsoFilePath"" " +  """$outputIsoPath"""
+        $etfsboot = $adkPath + "Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\etfsboot.com"
+        $efisys_noprompt = $adkPath + "Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\efisys_noprompt.bin"
+        $parameters = "-bootdata:2#p0,e,b""$etfsboot""#pEF,e,b""$efisys_noprompt"" -u1 -udfver102 ""$originalIsoFilePath"" ""$outputIsoPath"""
 
         $processResult = Start-Process -FilePath $oscdimg -ArgumentList $parameters -Wait -NoNewWindow -PassThru @commonParameterSwitches
 
