@@ -11,10 +11,17 @@ temp_path = 'c:/temp'
 # CONSUL
 #
 
+default['consul']['version'] = '1.1.0'
+default['consul']['url'] = "https://releases.hashicorp.com/consul/#{node['consul']['version']}/consul_#{node['consul']['version']}_windows_amd64.zip"
+default['consul']['config']['domain'] = 'consulverse'
+
 default['consul']['service']['exe'] = 'consul_service'
 default['consul']['service']['name'] = 'consul'
 default['consul']['service']['user_name'] = 'consul'
 default['consul']['service']['user_password'] = SecureRandom.uuid
+
+default['consul']['path']['bin'] = "#{ops_path}/#{node['consul']['service']['name']}"
+default['consul']['path']['exe'] = "#{node['consul']['path']['bin']}/#{node['consul']['service']['name']}.exe"
 
 #
 # CONSULTEMPLATE
