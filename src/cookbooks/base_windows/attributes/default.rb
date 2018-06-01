@@ -5,6 +5,7 @@
 config_path = 'c:/config'
 logs_path = 'c:/logs'
 ops_path = 'c:/ops'
+temp_path = 'c:/temp'
 
 #
 # CONSUL
@@ -34,6 +35,7 @@ default['consul_template']['template_path'] = "#{config_path}/#{node['consul_tem
 default['paths']['config'] = config_path
 default['paths']['logs'] = logs_path
 default['paths']['ops'] = ops_path
+default['paths']['temp'] = temp_path
 
 #
 # FIREWALL
@@ -84,3 +86,12 @@ default['unbound']['service']['exe'] = 'unbound_service'
 default['unbound']['service']['name'] = 'unbound'
 default['unbound']['service']['user_name'] = 'unbound_user'
 default['unbound']['service']['user_password'] = SecureRandom.uuid
+
+#
+# WINSW
+#
+
+default['winsw']['version'] = '2.1.2'
+default['winsw']['url'] = "https://github.com/kohsuke/winsw/releases/download/winsw-v#{node['winsw']['version']}/WinSW.NET4.exe"
+
+default['winsw']['path']['bin'] = "#{ops_path}/winsw"
