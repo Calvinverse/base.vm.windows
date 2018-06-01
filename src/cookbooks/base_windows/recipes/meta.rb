@@ -11,3 +11,7 @@ resource_name = node['resource']['name']
 env 'BASE_IMAGE' do
   value resource_name
 end
+
+env 'STATSD_ENABLED_SERVICES' do
+  value 'consul'
+end
