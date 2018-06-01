@@ -7,6 +7,14 @@ describe 'base_windows::network' do
   unbound_logs_path = 'c:/logs/unbound'
   unbound_bin_path = 'c:/ops/unbound'
 
+  context 'create the user to run the service with' do
+    let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
+
+    it 'creates the unbound user' do
+      expect(chef_run).to run_powershell_script('unbound_user_with_password_that_does_not_expire')
+    end
+  end
+
   context 'create the log locations' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
 
@@ -27,15 +35,7 @@ describe 'base_windows::network' do
     end
 
     it 'creates unbound.exe in the unbound ops directory' do
-      expect(chef_run).to create_cookbook_file("#{unbound_bin_path}/unbound.exe").with_source('unbound.exe')
-    end
-  end
-
-  context 'create the user to run the service with' do
-    let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
-
-    it 'creates the unbound user' do
-      expect(chef_run).to run_powershell_script('unbound_user_with_password_that_does_not_expire')
+      expect(chef_run).to extract_seven_zip_archive("#{unbound_bin_path}/unbound.exe")
     end
   end
 
@@ -48,7 +48,7 @@ describe 'base_windows::network' do
 
     unbound_default_config_content = <<~CONF
       #
-      # See unbound.conf(5) man page, version 1.6.3.
+      # See unbound.conf(5) man page, version 1.7.1.
       #
 
       # Use this to include other text into the file.
@@ -307,7 +307,7 @@ describe 'base_windows::network' do
           # these zones, as if they were all listed as domain-insecure.
           insecure-lan-zones: yes
     CONF
-    it 'creates unboundconfiguration.ini in the unbound ops directory' do
+    it 'creates unbound.conf in the unbound ops directory' do
       expect(chef_run).to create_file("#{unbound_bin_path}/unbound.conf").with_content(unbound_default_config_content)
     end
   end

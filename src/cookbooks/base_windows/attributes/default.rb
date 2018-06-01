@@ -89,6 +89,9 @@ default['scollector']['consul_template_file'] = 'scollector.ctmpl'
 # UNBOUND
 #
 
+default['unbound']['version'] = '1.7.1'
+default['unbound']['url'] = "http://www.unbound.net/downloads/unbound-#{node['unbound']['version']}.zip"
+
 default['unbound']['service']['exe'] = 'unbound_service'
 default['unbound']['service']['name'] = 'unbound'
 default['unbound']['service']['user_name'] = 'unbound_user'

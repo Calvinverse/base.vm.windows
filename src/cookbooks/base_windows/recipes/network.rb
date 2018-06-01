@@ -122,9 +122,17 @@ directory unbound_logs_path do
 end
 
 unbound_exe = 'unbound.exe'
-cookbook_file "#{unbound_bin_path}/#{unbound_exe}" do
+unbound_zip_path = "#{node['paths']['temp']}/unbound.zip"
+remote_file unbound_zip_path do
   action :create
-  source unbound_exe
+  source node['unbound']['url']
+end
+
+unbound_exe_path = "#{unbound_bin_path}/#{unbound_exe}"
+seven_zip_archive unbound_exe_path do
+  overwrite true
+  source unbound_zip_path
+  timeout 30
 end
 
 unbound_config_file = 'unbound.conf'
@@ -132,7 +140,7 @@ file "#{unbound_bin_path}/#{unbound_config_file}" do
   action :create
   content <<~CONF
     #
-    # See unbound.conf(5) man page, version 1.6.3.
+    # See unbound.conf(5) man page, version #{node['unbound']['version']}.
     #
 
     # Use this to include other text into the file.
@@ -449,7 +457,7 @@ end
 #
 
 # Disable the caching of negative DNS responses because that would stop unbound from working as a DNS for a period of time
-# if there is a failed DNS request (e.g. the unbound machine is busy or something)
+# if there is a failed DNS request (e.g. the remote machine is busy or something)
 registry_key 'HKLM\\SYSTEM\\CurrentControlSet\\Services\\Dnscache\\Parameters' do
   values [
     {
