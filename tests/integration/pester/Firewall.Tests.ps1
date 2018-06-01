@@ -48,4 +48,25 @@ Describe 'The firewall' {
         $rules = @( Get-NetFirewallRule -DisplayGroup 'Network Discovery' -Enabled True -ErrorAction SilentlyContinue )
         $rules.Length | Should Be 0
     }
+
+    Context 'Should allow consul' {
+        #$rules = @( Get-NetFirewallRule -DisplayGroup 'Windows Remote Management' -Enabled True )
+        #$rules.Length | Should Be 2 # Ideally only 1 because we only want the Domain / Private profile to allow WinRM, but the public profile has one too
+        #$port = Get-NetFirewallPortFilter -AssociatedNetFirewallRule $rules[0]
+
+        #$port.Protocol | Should Be 'TCP'
+        #$port.LocalPort | Should Be 5985
+        #$port.RemotePort | Should Be 'Any'
+
+        # Ports
+        # 8300
+        # 8301
+        # 8302
+        # 8500
+        # 8600
+    }
+
+    # Allow telegraf on port 8125
+
+    # Allow unbound on port 53
 }

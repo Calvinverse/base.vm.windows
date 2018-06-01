@@ -68,6 +68,8 @@ Describe 'The users list' {
     Context 'on the machine' {
         $users = Get-LocalUser
 
+        Write-Output $users
+
         It 'should not contain any unexpected users' {
             $users.Length | Should Be 6
             $users[0].UserName | Should Be 'Administrator'

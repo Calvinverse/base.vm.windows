@@ -30,5 +30,11 @@ Describe 'The unbound application' {
             $result = Resolve-DnsName -Name 'google.com' -DnsOnly -NoHostsFile
             $result.Length | Should BeGreaterThan 0
         }
+
+        It 'should resolve consul addresses' {
+            $result = Resolve-DnsName -Name 'consul.service.integrationtest' -DnsOnly -NoHostsFile
+            $result | Should Not Be $null
+            $result | Should Be $localIpAddress
+        }
     }
 }
