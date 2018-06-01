@@ -116,10 +116,18 @@ consul_template_logs_path = "#{node['paths']['logs']}/#{service_name}"
   end
 end
 
-consul_template_exe = 'consul-template.exe'
-cookbook_file "#{consul_template_bin_path}/#{consul_template_exe}" do
+consul_template_zip_path = "#{node['paths']['temp']}/consul-template.zip"
+remote_file consul_template_zip_path do
   action :create
-  source consul_template_exe
+  source node['consul-template']['url']
+end
+
+consul_template_exe_filename = 'consul-template.exe'
+consul_template_exe_path = "#{consul_template_bin_path}/#{consul_template_exe_filename}"
+seven_zip_archive consul_template_exe_path do
+  overwrite true
+  source consul_template_zip_path
+  timeout 30
 end
 
 # We need to multiple-escape the escape character because of ruby string and regex etc. etc. See here: http://stackoverflow.com/a/6209532/539846
@@ -270,11 +278,11 @@ file "#{consul_template_config_path}/base.hcl" do
     deduplicate {
       # This enables de-duplication mode. Specifying any other options also enables
       # de-duplication mode.
-      enabled = true
+      enabled = false
 
       # This is the prefix to the path in Consul's KV store where de-duplication
       # templates will be pre-rendered and stored.
-      prefix = "consul-template/dedup/"
+      # prefix = "consul-template/dedup/"
     }
   HCL
 end
@@ -288,13 +296,16 @@ directory consul_template_logs_path do
   rights :modify, service_username, applies_to_children: true, applies_to_self: false
 end
 
+winsw_zip_path = "#{node['paths']['temp']}/winsw.zip"
 service_exe_name = node['consul_template']['service']['exe']
-cookbook_file "#{consul_template_bin_path}/#{service_exe_name}.exe" do
-  source 'WinSW.NET4.exe'
-  action :create
+seven_zip_archive "#{consul_template_bin_path}/#{service_exe_name}.exe" do
+  overwrite true
+  source winsw_zip_path
+  timeout 30
 end
 
 file "#{consul_template_bin_path}/#{service_exe_name}.exe.config" do
+  action :create
   content <<~XML
     <configuration>
         <runtime>
@@ -302,7 +313,92 @@ file "#{consul_template_bin_path}/#{service_exe_name}.exe.config" do
         </runtime>
     </configuration>
   XML
+end
+
+consul_exe_path = node['consul']['path']['exe']
+run_consul_template_script = "#{consul_template_bin_path}/Invoke-ConsulTemplate.ps1"
+file run_consul_template_script do
   action :create
+  content <<~POWERSHELL
+    function Get-KeyFromConsulKv
+    {
+      [CmdletBinding()]
+      param(
+        [string] $key
+      )
+
+      $output = & "#{consul_exe_path}" kv get $key
+      if ($LASTEXITCODE -eq 0)
+      {
+        return $output
+      }
+      else
+      {
+        return ''
+      }
+    }
+
+    function Remove-KeyFromConsulKv
+    {
+      [CmdletBinding()]
+      param(
+        [string] $key
+      )
+
+      $output = & "#{consul_exe_path}" kv delete $key
+      if ($LASTEXITCODE -eq 0)
+      {
+        Write-Output "Removed the '$key' key from the consul k-v store"
+      }
+      else
+      {
+        Write-Output "No key at '$key' found to remove from the consul k-v store"
+      }
+    }
+
+    function Invoke-Script
+    {
+      # read the key from the consul k-v
+      hostname = $env:ComputerName
+      $vaultKeyPath = "auth/services/templates/$($hostname)/secrets"
+      $vaultKey = Get-KeyFromConsulKv -key $vaultKeyPath
+
+      # delete the key from the consul k-v
+      $envVars=""
+      $vaultOptions=""
+
+      $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+      $startInfo.FileName = "#{consul_template_exe_path}"
+      $startInfo.RedirectStandardOutput = $false
+      $startInfo.UseShellExecute = $false
+      $startInfo.CreateNoWindow = $true
+
+      if ($vaultKey -ne '')
+      {
+        Remove-KeyFromConsulKv -key $vaultKeyPath
+
+        $startInfo.EnvironmentVariables.Add('VAULT_TOKEN', $vaultKey)
+
+        $serviceName = Get-KeyFromConsulKv -key 'config/services/secrets/protocols/http/host'
+        $domain= Get-KeyFromConsulKv -key 'config/services/consul/domain'
+        $ort= Get-KeyFromConsulKv -key 'config/services/secrets/protocols/http/port'
+        $vaultOptions="-vault-addr=http://$($serviceName).service.$($domain):$($port) -vault-unwrap-token -vault-renew-token -vault-retry"
+      }
+
+      $startInfo.Arguments = "-config=""#{consul_template_config_path}"" $($vaultOptions)"
+
+      $process = New-Object System.Diagnostics.Process
+      $process.StartInfo = $startInfo
+      $process.Start() | Out-Null
+      $process.WaitForExit()
+    }
+
+    # =============================================================================
+
+    # Fire up
+    Invoke-Script
+  POWERSHELL
+  mode '755'
 end
 
 file "#{consul_template_bin_path}/#{service_exe_name}.xml" do
@@ -313,8 +409,8 @@ file "#{consul_template_bin_path}/#{service_exe_name}.xml" do
         <name>#{service_name}</name>
         <description>This service runs the consul-template agent.</description>
 
-        <executable>#{consul_template_bin_path}/#{consul_template_exe}</executable>
-        <arguments>-config=#{consul_template_config_path}</arguments>
+        <executable>powershell.exe</executable>
+        <arguments>-NoLogo -NonInteractive -NoProfile -File "#{run_consul_template_script}"</arguments>
 
         <logpath>#{consul_template_logs_path}</logpath>
         <log mode="roll-by-size">

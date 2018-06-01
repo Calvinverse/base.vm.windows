@@ -27,6 +27,9 @@ default['consul']['path']['exe'] = "#{node['consul']['path']['bin']}/#{node['con
 # CONSULTEMPLATE
 #
 
+default['consul-template']['version'] = '0.19.4'
+default['consul-template']['url'] = "https://releases.hashicorp.com/consul-template/#{node['consul-template']['version']}/consul-template_#{node['consul-template']['version']}_windows_amd64.zip"
+
 default['consul_template']['service']['exe'] = 'consul-template_service'
 default['consul_template']['service']['name'] = 'consul-template'
 default['consul_template']['service']['user_name'] = 'consul-template'

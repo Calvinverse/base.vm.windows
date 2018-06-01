@@ -11,6 +11,14 @@ describe 'base_windows::consul_template' do
   consul_template_logs_path = 'c:/logs/consul-template'
   consul_template_bin_path = 'c:/ops/consul-template'
 
+  context 'create the user to run the service with' do
+    let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
+
+    it 'creates the consul-template user' do
+      expect(chef_run).to run_powershell_script('consul_template_user_with_password_that_does_not_expire')
+    end
+  end
+
   context 'create the log locations' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
 
@@ -39,15 +47,7 @@ describe 'base_windows::consul_template' do
     end
 
     it 'creates consul-template.exe in the consul-template ops directory' do
-      expect(chef_run).to create_cookbook_file("#{consul_template_bin_path}/#{service_name}.exe").with_source("#{service_name}.exe")
-    end
-  end
-
-  context 'create the user to run the service with' do
-    let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
-
-    it 'creates the consul-template user' do
-      expect(chef_run).to run_powershell_script('consul_template_user_with_password_that_does_not_expire')
+      expect(chef_run).to extract_seven_zip_archive("#{consul_template_bin_path}/#{service_name}.exe")
     end
   end
 
@@ -56,10 +56,10 @@ describe 'base_windows::consul_template' do
 
     win_service_name = 'consul-template_service'
     it 'creates consul-template_service.exe in the consul-template ops directory' do
-      expect(chef_run).to create_cookbook_file("#{consul_template_bin_path}/#{win_service_name}.exe").with_source('WinSW.NET4.exe')
+      expect(chef_run).to extract_seven_zip_archive("#{consul_template_bin_path}/#{win_service_name}.exe")
     end
 
-    consul_template_service_exe_config_content = <<~XML
+    service_exe_config_content = <<~XML
       <configuration>
           <runtime>
               <generatePublisherEvidence enabled="false"/>
@@ -67,7 +67,90 @@ describe 'base_windows::consul_template' do
       </configuration>
     XML
     it 'creates consul-template_service.exe.config in the consul-template ops directory' do
-      expect(chef_run).to create_file("#{consul_template_bin_path}/#{win_service_name}.exe.config").with_content(consul_template_service_exe_config_content)
+      expect(chef_run).to create_file("#{consul_template_bin_path}/#{win_service_name}.exe.config").with_content(service_exe_config_content)
+    end
+
+    consul_template_service_script_content = <<~POWERSHELL
+      function Get-KeyFromConsulKv
+      {
+        [CmdletBinding()]
+        param(
+          [string] $key
+        )
+
+        $output = & "c:/ops/consul/consul.exe" kv get $key
+        if ($LASTEXITCODE -eq 0)
+        {
+          return $output
+        }
+        else
+        {
+          return ''
+        }
+      }
+
+      function Remove-KeyFromConsulKv
+      {
+        [CmdletBinding()]
+        param(
+          [string] $key
+        )
+
+        $output = & "c:/ops/consul/consul.exe" kv delete $key
+        if ($LASTEXITCODE -eq 0)
+        {
+          Write-Output "Removed the '$key' key from the consul k-v store"
+        }
+        else
+        {
+          Write-Output "No key at '$key' found to remove from the consul k-v store"
+        }
+      }
+
+      function Invoke-Script
+      {
+        # read the key from the consul k-v
+        hostname = $env:ComputerName
+        $vaultKeyPath = "auth/services/templates/$($hostname)/secrets"
+        $vaultKey = Get-KeyFromConsulKv -key $vaultKeyPath
+
+        # delete the key from the consul k-v
+        $envVars=""
+        $vaultOptions=""
+
+        $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $startInfo.FileName = "c:/ops/consul-template/consul-template.exe"
+        $startInfo.RedirectStandardOutput = $false
+        $startInfo.UseShellExecute = $false
+        $startInfo.CreateNoWindow = $true
+
+        if ($vaultKey -ne '')
+        {
+          Remove-KeyFromConsulKv -key $vaultKeyPath
+
+          $startInfo.EnvironmentVariables.Add('VAULT_TOKEN', $vaultKey)
+
+          $serviceName = Get-KeyFromConsulKv -key 'config/services/secrets/protocols/http/host'
+          $domain= Get-KeyFromConsulKv -key 'config/services/consul/domain'
+          $ort= Get-KeyFromConsulKv -key 'config/services/secrets/protocols/http/port'
+          $vaultOptions="-vault-addr=http://$($serviceName).service.$($domain):$($port) -vault-unwrap-token -vault-renew-token -vault-retry"
+        }
+
+        $startInfo.Arguments = "-config=""c:/config/consul-template/config"" $($vaultOptions)"
+
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo = $startInfo
+        $process.Start() | Out-Null
+        $process.WaitForExit()
+      }
+
+      # =============================================================================
+
+      # Fire up
+      Invoke-Script
+    POWERSHELL
+    it 'creates Invoke-ConsulTemplate.ps1 script in the consul-template ops directory' do
+      expect(chef_run).to create_file("#{consul_template_bin_path}/Invoke-ConsulTemplate.ps1").with_content(consul_template_service_script_content)
     end
 
     consul_template_service_xml_content = <<~XML
@@ -77,8 +160,8 @@ describe 'base_windows::consul_template' do
           <name>#{service_name}</name>
           <description>This service runs the consul-template agent.</description>
 
-          <executable>#{consul_template_bin_path}/consul-template.exe</executable>
-          <arguments>-config=#{consul_template_config_config_path}</arguments>
+          <executable>powershell.exe</executable>
+          <arguments>-NoLogo -NonInteractive -NoProfile -File "#{consul_template_bin_path}/Invoke-ConsulTemplate.ps1"</arguments>
 
           <logpath>#{consul_template_logs_path}</logpath>
           <log mode="roll-by-size">
@@ -251,11 +334,11 @@ describe 'base_windows::consul_template' do
       deduplicate {
         # This enables de-duplication mode. Specifying any other options also enables
         # de-duplication mode.
-        enabled = true
+        enabled = false
 
         # This is the prefix to the path in Consul's KV store where de-duplication
         # templates will be pre-rendered and stored.
-        prefix = "consul-template/dedup/"
+        # prefix = "consul-template/dedup/"
       }
     HCL
     it 'creates default.hcl in the consul-template config directory' do
