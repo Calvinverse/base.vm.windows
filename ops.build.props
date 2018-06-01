@@ -72,36 +72,9 @@
         **** PREPARE - COPY FILES ****
     -->
     <ItemGroup Condition=" '$(ShouldLoadHttpFilesToCopy)' == 'true' ">
-        <HttpFilesToCopy Include="https://github.com/kohsuke/winsw/releases/download/winsw-v${VersionWinSw}/WinSW.NET4.exe">
-            <Destination>$(DirBuildTempCookbooks)\$(NameCookbook)\files\windows</Destination>
-            <Unzip>false</Unzip>
-        </HttpFilesToCopy>
-        <HttpFilesToCopy Include="https://releases.hashicorp.com/consul/${VersionConsul}/consul_${VersionConsul}_windows_amd64.zip">
-            <Destination>$(DirBuildTempCookbooks)\$(NameCookbook)\files\windows</Destination>
-            <GpgKey>91A6E7F85D05C65630BEF18951852D87348FFC4C</GpgKey>
-            <HashAlgorithm>SHA256</HashAlgorithm>
-            <HashFile>https://releases.hashicorp.com/consul/${VersionConsul}/consul_${VersionConsul}_SHA256SUMS</HashFile>
-            <SignatureFile>https://releases.hashicorp.com/consul/${VersionConsul}/consul_${VersionConsul}_SHA256SUMS.sig</SignatureFile>
-            <Unzip>true</Unzip>
-        </HttpFilesToCopy>
-        <HttpFilesToCopy Include="https://releases.hashicorp.com/consul-template/${VersionConsulTemplate}/consul-template_${VersionConsulTemplate}_windows_amd64.zip">
-            <Destination>$(DirBuildTempCookbooks)\$(NameCookbook)\files\windows</Destination>
-            <GpgKey>91A6E7F85D05C65630BEF18951852D87348FFC4C</GpgKey>
-            <HashAlgorithm>SHA256</HashAlgorithm>
-            <HashFile>https://releases.hashicorp.com/consul-template/${VersionConsulTemplate}/consul-template_${VersionConsulTemplate}_SHA256SUMS</HashFile>
-            <SignatureFile>https://releases.hashicorp.com/consul-template/${VersionConsulTemplate}/consul-template_${VersionConsulTemplate}_SHA256SUMS.sig</SignatureFile>
-            <Unzip>true</Unzip>
-        </HttpFilesToCopy>
-        <HttpFilesToCopy Include="http://www.unbound.net/downloads/unbound-1.6.3.zip">
-            <Destination>$(DirBuildTempCookbooks)\$(NameCookbook)\files\windows</Destination>
-            <Hash>9E3873F82D33079FF0DB75135D4D3F83285ECDDCDFDEC736CE71C7C9C5E10355</Hash>
-            <HashAlgorithm>SHA256</HashAlgorithm>
-            <Unzip>true</Unzip>
-        </HttpFilesToCopy>
-
         <HttpFilesToCopy Include="https://packages.chef.io/files/stable/chef/${VersionChef}/windows/2012/chef-client-${VersionChef}-1-x64.msi">
             <Destination>$(DirBuildTemp)</Destination>
-            <Hash>4E55555025A9AF26BF77E18BA5AAF262EDEAF8ACB10580EE3FABFF50C83D0D5A</Hash>
+            <Hash>10B56FFAA0263AAFF7F7E8A6556DAE1794D75863D17D37E6D5EA09FC3C5A9742</Hash>
             <HashAlgorithm>SHA256</HashAlgorithm>
             <Name>chef.msi</Name>
             <Unzip>false</Unzip>
