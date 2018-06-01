@@ -1,1 +1,1 @@
-cookbook_path ["c:/temp/cookbooks"]
+cookbook_path ["c:/temp_dvd/cookbooks"]
