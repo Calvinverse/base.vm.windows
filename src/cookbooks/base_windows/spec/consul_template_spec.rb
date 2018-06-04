@@ -55,8 +55,8 @@ describe 'base_windows::consul_template' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
 
     win_service_name = 'consul-template_service'
-    it 'creates consul-template_service.exe in the consul-template ops directory' do
-      expect(chef_run).to extract_seven_zip_archive("#{consul_template_bin_path}/#{win_service_name}.exe")
+    it 'downloads the winsw file' do
+      expect(chef_run).to create_remote_file("#{consul_template_bin_path}/#{win_service_name}.exe")
     end
 
     service_exe_config_content = <<~XML

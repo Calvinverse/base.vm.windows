@@ -296,12 +296,10 @@ directory consul_template_logs_path do
   rights :modify, service_username, applies_to_children: true, applies_to_self: false
 end
 
-winsw_zip_path = "#{node['paths']['temp']}/winsw.zip"
 service_exe_name = node['consul_template']['service']['exe']
-seven_zip_archive "#{consul_template_bin_path}/#{service_exe_name}.exe" do
-  overwrite true
-  source winsw_zip_path
-  timeout 30
+remote_file "#{consul_template_bin_path}/#{service_exe_name}.exe" do
+  action :create
+  source node['winsw']['url']
 end
 
 file "#{consul_template_bin_path}/#{service_exe_name}.exe.config" do

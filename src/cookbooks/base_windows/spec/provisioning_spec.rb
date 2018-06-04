@@ -38,8 +38,8 @@ describe 'base_windows::provisioning' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
 
     win_service_name = 'provisioning_service'
-    it 'creates provisioning_service.exe in the provisioning ops directory' do
-      expect(chef_run).to extract_seven_zip_archive("#{provisioning_bin_path}/#{win_service_name}.exe")
+    it 'downloads the winsw file' do
+      expect(chef_run).to create_remote_file("#{provisioning_bin_path}/#{win_service_name}.exe")
     end
 
     provisioning_service_exe_config_content = <<~XML
