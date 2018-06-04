@@ -196,8 +196,17 @@ function Set-HostName
     # - The major and minor version to be a single character
     # - The patch version up to 2 characters
     # - The post-fix to be 3 characters
-    $resourceShortName = $env:RESOURCE_SHORT_NAME.ToString().Substring(4)
-    $postfix = -join ((65..90) + (97..122) | Get-Random -Count 3 | % {[char]$_})
+    $resourceShortName = $env:RESOURCE_SHORT_NAME
+    if (($resourceShortName -ne $null) -and ($resourceShortName -ne ''))
+    {
+        $resourceShortName = $resourceShortName.ToString().Substring(4)
+    }
+    else
+    {
+        $resourceShortName = ''
+    }
+
+    $postfix = -join ((65..90) + (97..122) | Get-Random -Count 3 | Foreach-Object { [char]$_ })
     $name = "cv$($resourceShortName)-$($env:RESOURCE_VERSION_MAJOR)$($env:RESOURCE_VERSION_MINOR)$($env:RESOURCE_VERSION_PATCH)-$($postfix)"
 
     Rename-Computer -NewName $name @commonParameterSwitches
