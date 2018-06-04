@@ -75,10 +75,16 @@ function Find-DvdDriveLetter
     }
     catch
     {
-        Continue;
+        Write-Verbose "Failed to find DVD. Error is $($_.Exception.ToString())"
+        return $null
     }
 
-    return $cd.Drive
+    if ($cd -ne $null)
+    {
+        return $cd.Drive
+    }
+
+    return $null
 }
 
 function Initialize-Consul

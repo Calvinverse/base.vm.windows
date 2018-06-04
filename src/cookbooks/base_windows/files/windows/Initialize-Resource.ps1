@@ -27,7 +27,9 @@ try
     $dvdDriveLetter = Find-DvdDriveLetter @commonParameterSwitches
     if (($dvdDriveLetter -eq $null) -or ($dvdDriveLetter -eq ''))
     {
-        throw 'No DVD drive found'
+        Start-Sleep -Seconds 15
+        Write-Output 'No DVD drive found'
+        return
     }
 
     # Only run the provisioning steps if we are asked to do so
@@ -37,7 +39,7 @@ try
         return
     }
 
-    Set-HostName
+    Set-HostName @commonParameterSwitches
 
     # If the allow WinRM file is not there, disable WinRM in the firewall
     if (-not (Test-Path (Join-Path $dvdDriveLetter 'allow_winrm.json')))
