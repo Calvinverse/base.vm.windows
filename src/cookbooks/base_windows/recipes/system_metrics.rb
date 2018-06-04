@@ -126,8 +126,7 @@ remote_file telegraf_zip_path do
   source node['telegraf']['download_urls']
 end
 
-telegraf_exe_path = "#{telegraf_bin_path}/#{telegraf_exe}"
-seven_zip_archive telegraf_exe_path do
+seven_zip_archive node['paths']['ops'] do
   overwrite true
   source telegraf_zip_path
   timeout 30

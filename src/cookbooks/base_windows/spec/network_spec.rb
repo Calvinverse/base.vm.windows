@@ -35,7 +35,7 @@ describe 'base_windows::network' do
     end
 
     it 'creates unbound.exe in the unbound ops directory' do
-      expect(chef_run).to extract_seven_zip_archive("#{unbound_bin_path}/unbound.exe")
+      expect(chef_run).to extract_seven_zip_archive(unbound_bin_path)
     end
   end
 

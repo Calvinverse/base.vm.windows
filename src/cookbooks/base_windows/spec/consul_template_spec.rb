@@ -47,7 +47,7 @@ describe 'base_windows::consul_template' do
     end
 
     it 'creates consul-template.exe in the consul-template ops directory' do
-      expect(chef_run).to extract_seven_zip_archive("#{consul_template_bin_path}/#{service_name}.exe")
+      expect(chef_run).to extract_seven_zip_archive(consul_template_bin_path)
     end
   end
 

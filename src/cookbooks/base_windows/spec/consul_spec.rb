@@ -26,7 +26,7 @@ describe 'base_windows::consul' do
     end
 
     it 'creates consul.exe in the consul ops directory' do
-      expect(chef_run).to extract_seven_zip_archive("#{consul_bin_path}/#{service_name}.exe")
+      expect(chef_run).to extract_seven_zip_archive(consul_bin_path)
     end
 
     consul_default_config_content = <<~JSON

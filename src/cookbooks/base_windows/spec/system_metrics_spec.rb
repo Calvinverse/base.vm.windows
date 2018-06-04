@@ -35,7 +35,7 @@ describe 'base_windows::system_metrics' do
     end
 
     it 'creates telegraf.exe in the telegraf ops directory' do
-      expect(chef_run).to extract_seven_zip_archive("#{telegraf_bin_path}/telegraf.exe")
+      expect(chef_run).to extract_seven_zip_archive('c:/ops')
     end
   end
 

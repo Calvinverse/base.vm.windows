@@ -121,7 +121,7 @@ remote_file consul_zip_path do
 end
 
 consul_exe_path = node['consul']['path']['exe']
-seven_zip_archive consul_exe_path do
+seven_zip_archive consul_bin_path do
   overwrite true
   source consul_zip_path
   timeout 30

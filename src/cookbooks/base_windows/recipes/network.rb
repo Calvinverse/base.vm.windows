@@ -128,8 +128,7 @@ remote_file unbound_zip_path do
   source node['unbound']['url']
 end
 
-unbound_exe_path = "#{unbound_bin_path}/#{unbound_exe}"
-seven_zip_archive unbound_exe_path do
+seven_zip_archive unbound_bin_path do
   overwrite true
   source unbound_zip_path
   timeout 30

@@ -124,7 +124,7 @@ end
 
 consul_template_exe_filename = 'consul-template.exe'
 consul_template_exe_path = "#{consul_template_bin_path}/#{consul_template_exe_filename}"
-seven_zip_archive consul_template_exe_path do
+seven_zip_archive consul_template_bin_path do
   overwrite true
   source consul_template_zip_path
   timeout 30
