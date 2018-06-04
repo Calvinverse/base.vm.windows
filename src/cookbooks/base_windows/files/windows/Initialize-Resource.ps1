@@ -47,6 +47,7 @@ try
 
     Initialize-Consul -dvdDriveLetter $dvdDriveLetter @commonParameterSwitches
     Initialize-Unbound -dvdDriveLetter $dvdDriveLetter @commonParameterSwitches
+    Initialize-ConsulTemplate -dvdDriveLetter $dvdDriveLetter @commonParameterSwitches
 
     Disable-ProvisioningService @commonParameterSwitches
 }

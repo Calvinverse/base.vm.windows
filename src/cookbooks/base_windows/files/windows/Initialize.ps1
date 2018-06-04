@@ -109,6 +109,25 @@ function Initialize-Consul
     EnableAndStartService -serviceName 'consul' @commonParameterSwitches
 }
 
+function Initialize-ConsulTemplate
+{
+    [CmdletBinding()]
+    param(
+        [string] $dvdDriveLetter
+    )
+
+    $ErrorActionPreference = 'Stop'
+
+    $commonParameterSwitches =
+        @{
+            Verbose = $PSBoundParameters.ContainsKey('Verbose');
+            Debug = $false;
+            ErrorAction = "Stop"
+        }
+
+    EnableAndStartService -serviceName 'consul-template' @commonParameterSwitches
+}
+
 function Initialize-Unbound
 {
     [CmdletBinding()]
