@@ -71,6 +71,10 @@ describe 'base_windows::consul_template' do
     end
 
     consul_template_service_script_content = <<~POWERSHELL
+      [CmdletBinding()]
+      param(
+      )
+
       function Get-KeyFromConsulKv
       {
         [CmdletBinding()]
@@ -78,7 +82,7 @@ describe 'base_windows::consul_template' do
           [string] $key
         )
 
-        $output = & "c:/ops/consul/consul.exe" kv get $key
+        $output = & "c:/ops/consul/consul.exe" kv get $key 2>&1
         if ($LASTEXITCODE -eq 0)
         {
           return $output
@@ -96,7 +100,7 @@ describe 'base_windows::consul_template' do
           [string] $key
         )
 
-        $output = & "c:/ops/consul/consul.exe" kv delete $key
+        $output = & "c:/ops/consul/consul.exe" kv delete $key 2>&1
         if ($LASTEXITCODE -eq 0)
         {
           Write-Output "Removed the '$key' key from the consul k-v store"
@@ -109,18 +113,18 @@ describe 'base_windows::consul_template' do
 
       function Invoke-Script
       {
-        # read the key from the consul k-v
-        hostname = $env:ComputerName
+        Write-Output "Read the Vault key from the consul k-v ... "
+        $hostname = $env:ComputerName
         $vaultKeyPath = "auth/services/templates/$($hostname)/secrets"
         $vaultKey = Get-KeyFromConsulKv -key $vaultKeyPath
 
-        # delete the key from the consul k-v
         $envVars=""
         $vaultOptions=""
 
         $startInfo = New-Object System.Diagnostics.ProcessStartInfo
         $startInfo.FileName = "c:/ops/consul-template/consul-template.exe"
-        $startInfo.RedirectStandardOutput = $false
+        $startInfo.RedirectStandardOutput = $true
+        $startInfo.RedirectStandardError = $true
         $startInfo.UseShellExecute = $false
         $startInfo.CreateNoWindow = $true
 
@@ -138,10 +142,57 @@ describe 'base_windows::consul_template' do
 
         $startInfo.Arguments = "-config=""c:/config/consul-template/config"" $($vaultOptions)"
 
+        Write-Output "Starting Consul-Template ... "
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo = $startInfo
-        $process.Start() | Out-Null
-        $process.WaitForExit()
+
+        # Adding event handers for stdout and stderr.
+        $writeToFileEvent = {
+          if (-not ([String]::IsNullOrEmpty($EventArgs.Data)))
+          {
+            Out-File -FilePath $Event.MessageData -Append -InputObject $EventArgs.Data
+          }
+        }
+
+        $stdOutEvent = Register-ObjectEvent `
+          -InputObject $process `
+          -Action $writeToFileEvent `
+          -EventName 'OutputDataReceived' `
+          -MessageData '#{consul_template_logs_path}/consul-template.out.log'
+        $stdErrEvent = Register-ObjectEvent `
+          -InputObject $process `
+          -Action $writeToFileEvent `
+          -EventName 'ErrorDataReceived' `
+          -MessageData '#{consul_template_logs_path}/consul-template.err.log'
+
+        try
+        {
+          $process.Start() | Out-Null
+          try
+          {
+            $process.BeginOutputReadLine()
+            $process.BeginErrorReadLine()
+
+            while (-not ($process.HasExited))
+            {
+              Start-Sleep -Seconds 5
+            }
+          }
+          finally
+          {
+            if (-not ($process.HasExited))
+            {
+              $process.Close()
+            }
+          }
+        }
+        finally
+        {
+          Unregister-Event -SourceIdentifier $stdOutEvent.Name
+          Unregister-Event -SourceIdentifier $stdErrEvent.Name
+        }
+
+        Write-Output "Consul-Template stopped"
       }
 
       # =============================================================================
