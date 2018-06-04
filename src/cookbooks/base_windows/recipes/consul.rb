@@ -227,7 +227,9 @@ file "#{consul_bin_path}/#{service_exe_name}.xml" do
         <description>This service runs the consul agent.</description>
 
         <executable>#{consul_exe_path}</executable>
-        <arguments>agent -config-file=#{consul_bin_path}/#{consul_config_file} -config-dir=#{consul_config_path}</arguments>
+        <argument>agent</argument>
+        <argument>-config-file=#{consul_bin_path}/#{consul_config_file}</argument>
+        <argument>-config-dir=#{consul_config_path}</argument>
         <priority>high</priority>
 
         <logpath>#{consul_logs_path}</logpath>
