@@ -54,6 +54,8 @@ try
     Initialize-ConsulTemplate -dvdDriveLetter $dvdDriveLetter @commonParameterSwitches
 
     Disable-ProvisioningService @commonParameterSwitches
+
+    Restart-Computer -ComputerName . -Force
 }
 catch
 {
