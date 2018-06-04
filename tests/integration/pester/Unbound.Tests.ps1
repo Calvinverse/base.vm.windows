@@ -27,14 +27,15 @@ Describe 'The unbound application' {
 
     Context 'DNS resoluton works' {
         It 'for external addresses' {
-            $result = Resolve-DnsName -Name 'google.com' -DnsOnly -NoHostsFile
+            $result = Resolve-DnsName -Name 'google.com' -DnsOnly -NoHostsFile -Type A
             $result.Length | Should BeGreaterThan 0
         }
 
+        $localIpAddress = (Get-NetIPConfiguration).IPv4Address
         It 'should resolve consul addresses' {
-            $result = Resolve-DnsName -Name 'consul.service.integrationtest' -DnsOnly -NoHostsFile
+            $result = Resolve-DnsName -Name 'consul.service.integrationtest' -DnsOnly -NoHostsFile  -Type A
             $result | Should Not Be $null
-            $result | Should Be $localIpAddress
+            $result.IP4Address | Should Be $localIpAddress.IPAddress
         }
     }
 }

@@ -128,8 +128,8 @@ function Start-TestConsul
         -FilePath 'c:\ops\consul\consul.exe' `
         -ArgumentList "agent -config-file c:\temp\pester\environment\consul.json" `
         -PassThru `
-        -RedirectStandardOutput c:\temp\pester\consul\consuloutput.out `
-        -RedirectStandardError c:\temp\pester\consul\consulerror.out
+        -RedirectStandardOutput c:\temp\pester\environment\consuloutput.out `
+        -RedirectStandardError c:\temp\pester\environment\consulerror.out
 
     Write-Output "Going to sleep for 10 seconds ..."
     Start-Sleep -Seconds 10

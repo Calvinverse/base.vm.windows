@@ -71,13 +71,14 @@ Describe 'The users list' {
         Write-Output $users
 
         It 'should not contain any unexpected users' {
-            $users.Length | Should Be 6
+            $users.Length | Should Be 7
             $users[0].UserName | Should Be 'Administrator'
             $users[1].UserName | Should Be 'consul'
             $users[2].UserName | Should Be 'consul-template'
             $users[3].UserName | Should Be 'DefaultAccount'
             $users[4].UserName | Should Be 'Guest'
-            $users[5].UserName | Should Be 'unbound_user'
+            $users[5].UserName | Should Be 'telegraf_user'
+            $users[6].UserName | Should Be 'unbound_user'
         }
 
         It 'should have the default account disabled' {
