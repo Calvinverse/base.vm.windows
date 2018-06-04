@@ -157,7 +157,7 @@ powershell_script 'telegraf_as_service' do
             -BinaryPathName '#{telegraf_bin_path}/#{telegraf_exe} --config "#{telegraf_config_file}" --config-directory "#{telegraf_config_directory}"' `
             -Credential $credential `
             -DisplayName '#{service_name}' `
-            -StartupType Disabled
+            -StartupType Automatic
     }
 
     # Set the service to restart if it fails
@@ -610,7 +610,7 @@ file "#{consul_template_config_path}/telegraf.hcl" do
       # command will only run if the resulting template changes. The command must
       # return within 30s (configurable), and it must have a successful exit code.
       # Consul Template is not a replacement for a process monitor or init system.
-      command = "powershell.exe -noprofile -nologo -noninteractive -command ""Restart-Service #{service_name}"" "
+      command = "powershell.exe -noprofile -nologo -noninteractive -command \\"Restart-Service #{service_name}\\" "
 
       # This is the maximum amount of time to wait for the optional command to
       # return. Default is 30s.
