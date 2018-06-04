@@ -45,6 +45,8 @@ try
         # Disable WinRM in the firewall
     }
 
+    Set-NetworkLocation @commonParameterSwitches
+
     Initialize-Consul -dvdDriveLetter $dvdDriveLetter @commonParameterSwitches
     Initialize-Unbound -dvdDriveLetter $dvdDriveLetter @commonParameterSwitches
     Initialize-ConsulTemplate -dvdDriveLetter $dvdDriveLetter @commonParameterSwitches

@@ -202,3 +202,26 @@ function Set-HostName
 
     Rename-Computer -NewName $name @commonParameterSwitches
 }
+
+function Set-NetworkLocation
+{
+    [CmdletBinding()]
+    param(
+    )
+
+    $ErrorActionPreference = 'Stop'
+
+    $commonParameterSwitches =
+        @{
+            Verbose = $PSBoundParameters.ContainsKey('Verbose');
+            Debug = $false;
+            ErrorAction = "Stop"
+        }
+
+    # Get all the physical network adapters that provide IPv4 services, are enabled
+    $adapters = @(Get-NetAdapter -Physical | Where-Object { Get-NetIPAddress -InterfaceIndex $_.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue })
+    foreach($adapter in $adapters)
+    {
+        Set-NetConnectionProfile -InterfaceIndex $adapter.ifIndex -NetworkCategory Private
+    }
+}
