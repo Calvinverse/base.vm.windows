@@ -161,7 +161,11 @@ describe 'base_windows::consul_template' do
           <description>This service runs the consul-template agent.</description>
 
           <executable>powershell.exe</executable>
-          <arguments>-NoLogo -NonInteractive -NoProfile -File "#{consul_template_bin_path}/Invoke-ConsulTemplate.ps1"</arguments>
+          <argument>-NoLogo</argument>
+          <argument>-NonInteractive</argument>
+          <argument>-NoProfile</argument>
+          <argument>-File "#{consul_template_bin_path}/Invoke-ConsulTemplate.ps1"</argument>
+          <stoptimeout>30sec</stoptimeout>
 
           <logpath>#{consul_template_logs_path}</logpath>
           <log mode="roll-by-size">
