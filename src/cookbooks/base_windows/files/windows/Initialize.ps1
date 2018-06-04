@@ -19,12 +19,6 @@ function Disable-ProvisioningService
             -Name 'Provisioning' `
             -StartupType Disabled `
             @commonParameterSwitches
-
-        Stop-Service `
-            -Name 'Provisioning' `
-            -NoWait `
-            -Force `
-            @commonParameterSwitches
     }
     catch
     {
