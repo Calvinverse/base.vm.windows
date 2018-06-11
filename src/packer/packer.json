@@ -33,6 +33,7 @@
             "enable_virtualization_extensions": false,
             "generation": 2,
             "guest_additions_mode": "disable",
+            "headless": true,
             "http_port_min": 8150,
             "http_port_max": 8160,
             "iso_checksum": "{{ user `iso_checksum` }}",
@@ -119,7 +120,13 @@
         {
             "elevated_password": "{{user `admin_password`}}",
             "elevated_user": "{{user `admin_username`}}",
-            "inline": "c:/temp_dvd/Get-InstalledUpdates.ps1",
+            "inline": "dir c:/; dir c:/temp_dvd; dir c:/temp_dvd/scripts",
+            "type": "powershell"
+        },
+        {
+            "elevated_password": "{{user `admin_password`}}",
+            "elevated_user": "{{user `admin_username`}}",
+            "inline": "c:/temp_dvd/scripts/Get-InstalledUpdates.ps1",
             "type": "powershell"
         },
         {
@@ -129,7 +136,10 @@
             "type": "powershell"
         },
         {
-            "command": "powershell -executionpolicy bypass -noprofile -File {{ user `dir_scripts_user` }}/Copy-LogFilesFromVm.ps1 -vmName {{ user `vm_name` }} -userName {{ user `admin_username` }} -userPassword {{ user `admin_password` }} -targetDirectory {{ user `dir_log` }}/packer.beforesysprep",
+            "env_var_format": "$env:%s=\"%s\"; ",
+            "execute_command" : ["powershell.exe", "{{.Vars}} {{.Script}}"],
+            "inline": ["{{ user `dir_scripts_user` }}/Copy-LogFilesFromVm.ps1 -vmName {{ user `vm_name` }} -userName {{ user `admin_username` }} -userPassword {{ user `admin_password` }} -targetDirectory {{ user `dir_log` }}/packer.beforesysprep"],
+            "tempfile_extension": ".ps1",
             "type": "shell-local"
         },
         {
