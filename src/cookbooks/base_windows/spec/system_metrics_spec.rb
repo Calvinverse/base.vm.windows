@@ -132,108 +132,132 @@ describe 'base_windows::system_metrics' do
       #                            INPUT PLUGINS                                    #
       ###############################################################################
 
-      # Read metrics about cpu usage
-      [[inputs.cpu]]
-        ## Whether to report per-cpu stats or not
-        percpu = true
-        ## Whether to report total system cpu stats or not
-        totalcpu = true
-        ## If true, collect raw CPU time metrics.
-        collect_cpu_time = false
-        ## If true, compute and report the sum of all non-idle CPU states.
-        report_active = false
-        [inputs.cpu.tags]
-          influxdb_database = "{{ keyOrDefault "config/services/metrics/databases/system" "system" }}"
+      [[inputs.win_perf_counters]]
+        [inputs.win_perf_counters.tags]
+        influxdb_database = "system"
 
+        [[inputs.win_perf_counters.object]]
+          # Processor usage, alternative to native, reports on a per core.
+          ObjectName = "Processor"
+          Instances = ["*"]
+          Counters = [
+            "% Idle Time",
+            "% Interrupt Time",
+            "% Privileged Time",
+            "% User Time",
+            "% Processor Time",
+            "% DPC Time",
+          ]
+          Measurement = "cpu"
+          # Set to true to include _Total instance when querying for all (*).
+          IncludeTotal=true
 
-      # Read metrics about disk usage by mount point
-      [[inputs.disk]]
-        ## By default, telegraf gather stats for all mountpoints.
-        ## Setting mountpoints will restrict the stats to the specified mountpoints.
-        # mount_points = ["/"]
+        [[inputs.win_perf_counters.object]]
+          # Disk times and queues
+          ObjectName = "LogicalDisk"
+          Instances = ["*"]
+          Counters = [
+            "% Idle Time",
+            "% Disk Time",
+            "% Disk Read Time",
+            "% Disk Write Time",
+            "Current Disk Queue Length",
+            "% Free Space",
+            "Free Megabytes",
+          ]
+          Measurement = "disk"
+          # Set to true to include _Total instance when querying for all (*).
+          #IncludeTotal=false
 
-        ## Ignore some mountpoints by filesystem type. For example (dev)tmpfs (usually
-        ## present on /run, /var/run, /dev/shm or /dev).
-        ignore_fs = ["tmpfs", "devtmpfs", "devfs"]
-        [inputs.disk.tags]
-          influxdb_database = "{{ keyOrDefault "config/services/metrics/databases/system" "system" }}"
+        [[inputs.win_perf_counters.object]]
+          ObjectName = "PhysicalDisk"
+          Instances = ["*"]
+          Counters = [
+            "Disk Read Bytes/sec",
+            "Disk Write Bytes/sec",
+            "Current Disk Queue Length",
+            "Disk Reads/sec",
+            "Disk Writes/sec",
+            "% Disk Time",
+            "% Disk Read Time",
+            "% Disk Write Time",
+          ]
+          Measurement = "diskio"
 
+        [[inputs.win_perf_counters.object]]
+          ObjectName = "Network Interface"
+          Instances = ["*"]
+          Counters = [
+            "Bytes Received/sec",
+            "Bytes Sent/sec",
+            "Packets Received/sec",
+            "Packets Sent/sec",
+            "Packets Received Discarded",
+            "Packets Outbound Discarded",
+            "Packets Received Errors",
+            "Packets Outbound Errors",
+          ]
+          Measurement = "net"
 
-      # Read metrics about disk IO by device
-      [[inputs.diskio]]
-        ## By default, telegraf will gather stats for all devices including
-        ## disk partitions.
-        ## Setting devices will restrict the stats to the specified devices.
-        # devices = ["sda", "sdb"]
-        ## Uncomment the following line if you need disk serial numbers.
-        # skip_serial_number = false
-        #
-        ## On systems which support it, device metadata can be added in the form of
-        ## tags.
-        ## Currently only Linux is supported via udev properties. You can view
-        ## available properties for a device by running:
-        ## 'udevadm info -q property -n /dev/sda'
-        # device_tags = ["ID_FS_TYPE", "ID_FS_USAGE"]
-        #
-        ## Using the same metadata source as device_tags, you can also customize the
-        ## name of the device via templates.
-        ## The 'name_templates' parameter is a list of templates to try and apply to
-        ## the device. The template may contain variables in the form of '$PROPERTY' or
-        ## '${PROPERTY}'. The first template which does not contain any variables not
-        ## present for the device is used as the device name tag.
-        ## The typical use case is for LVM volumes, to get the VG/LV name instead of
-        ## the near-meaningless DM-0 name.
-        # name_templates = ["$ID_FS_LABEL","$DM_VG_NAME/$DM_LV_NAME"]
-        [inputs.diskio.tags]
-          influxdb_database = "{{ keyOrDefault "config/services/metrics/databases/system" "system" }}"
+        [[inputs.win_perf_counters.object]]
+          ObjectName = "System"
+          Counters = [
+            "Context Switches/sec",
+            "System Calls/sec",
+            "Processor Queue Length",
+            "System Up Time",
+          ]
+          Instances = ["------"]
+          Measurement = "system"
+          # Set to true to include _Total instance when querying for all (*).
+          #IncludeTotal=false
 
+        [[inputs.win_perf_counters.object]]
+          # Example query where the Instance portion must be removed to get data back,
+          # such as from the Memory object.
+          ObjectName = "Memory"
+          Counters = [
+            "Available Bytes",
+            "Cache Faults/sec",
+            "Demand Zero Faults/sec",
+            "Page Faults/sec",
+            "Pages/sec",
+            "Transition Faults/sec",
+            "Pool Nonpaged Bytes",
+            "Pool Paged Bytes",
+            "Standby Cache Reserve Bytes",
+            "Standby Cache Normal Priority Bytes",
+            "Standby Cache Core Bytes",
+          ]
+          # Use 6 x - to remove the Instance bit from the query.
+          Instances = ["------"]
+          Measurement = "mem"
+          # Set to true to include _Total instance when querying for all (*).
+          #IncludeTotal=false
 
-      # Get kernel statistics from /proc/stat
-      [[inputs.kernel]]
-        # no configuration
-        [inputs.kernel.tags]
-          influxdb_database = "{{ keyOrDefault "config/services/metrics/databases/system" "system" }}"
+        [[inputs.win_perf_counters.object]]
+          # Example query where the Instance portion must be removed to get data back,
+          # such as from the Paging File object.
+          ObjectName = "Paging File"
+          Counters = [
+            "% Usage",
+          ]
+          Instances = ["_Total"]
+          Measurement = "swap"
 
-
-      # Read metrics about memory usage
-      [[inputs.mem]]
-        # no configuration
-        [inputs.mem.tags]
-          influxdb_database = "{{ keyOrDefault "config/services/metrics/databases/system" "system" }}"
-
-
-      # Gather metrics about network interfaces
-      [[inputs.net]]
-        ## By default, telegraf gathers stats from any up interface (excluding loopback)
-        ## Setting interfaces will tell it to gather these explicit interfaces,
-        ## regardless of status. When specifying an interface, glob-style
-        ## patterns are also supported.
-        ##
-        # interfaces = ["eth*", "enp0s[0-1]", "lo"]
-        ##
-        [inputs.net.tags]
-          influxdb_database = "{{ keyOrDefault "config/services/metrics/databases/system" "system" }}"
-
-
-      # Get the number of processes and group them by status
-      [[inputs.processes]]
-        # no configuration
-        [inputs.processes.tags]
-          influxdb_database = "{{ keyOrDefault "config/services/metrics/databases/system" "system" }}"
-
-
-      # Read metrics about swap memory usage
-      [[inputs.swap]]
-        # no configuration
-        [inputs.swap.tags]
-          influxdb_database = "{{ keyOrDefault "config/services/metrics/databases/system" "system" }}"
-
-
-      # Read metrics about system load & uptime
-      [[inputs.system]]
-        # no configuration
-        [inputs.system.tags]
-          influxdb_database = "{{ keyOrDefault "config/services/metrics/databases/system" "system" }}"
+        [[inputs.win_perf_counters.object]]
+          ObjectName = "Network Interface"
+          Instances = ["*"]
+          Counters = [
+            "Bytes Sent/sec",
+            "Bytes Received/sec",
+            "Packets Sent/sec",
+            "Packets Received/sec",
+            "Packets Received Discarded",
+            "Packets Received Errors",
+            "Packets Outbound Discarded",
+            "Packets Outbound Errors",
+          ]
 
 
       # # A plugin to collect stats from Unbound - a validating, recursive, and caching DNS resolver
@@ -250,7 +274,7 @@ describe 'base_windows::system_metrics' do
         ## Use the builtin fielddrop/fieldpass telegraf filters in order to keep/remove specific fields
         # fieldpass = ["total_*", "num_*","time_up", "mem_*"]
         [inputs.unbound.tags]
-          influxdb_database = "{{ keyOrDefault "config/services/metrics/databases/system" "system" }}"
+          influxdb_database = "system"
 
 
       # Statsd UDP/TCP Server
@@ -305,7 +329,7 @@ describe 'base_windows::system_metrics' do
         ## of percentiles but also increases the memory usage and cpu time.
         # percentile_limit = 1000
         [inputs.statsd.tags]
-          influxdb_database = "{{ keyOrDefault "config/services/metrics/databases/statsd" "statsd" }}"
+          influxdb_database = "statsd"
 
       ###############################################################################
       #                            OUTPUT PLUGINS                                   #
@@ -355,7 +379,7 @@ describe 'base_windows::system_metrics' do
         ## Compress each HTTP request payload using GZIP.
         # content_encoding = "gzip"
         [outputs.influxdb.tagpass]
-          influxdb_database = ["{{ keyOrDefault "config/services/metrics/databases/system" "system" }}"]
+          influxdb_database = ["system"]
 
       # Configuration for influxdb server to send metrics to
       [[outputs.influxdb]]
@@ -400,7 +424,7 @@ describe 'base_windows::system_metrics' do
         ## Compress each HTTP request payload using GZIP.
         # content_encoding = "gzip"
         [outputs.influxdb.tagpass]
-          influxdb_database = ["{{ keyOrDefault "config/services/metrics/databases/statsd" "statsd" }}"]
+          influxdb_database = ["statsd"]
 
       # Configuration for influxdb server to send metrics to
       [[outputs.influxdb]]
@@ -411,7 +435,7 @@ describe 'base_windows::system_metrics' do
         # urls = ["udp://127.0.0.1:8089"] # UDP endpoint example
         urls = ["http://{{ keyOrDefault "config/services/metrics/protocols/http/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/metrics/protocols/http/port" "80" }}"]
         ## The target database for metrics (telegraf will create it if not exists).
-        database = "{{ keyOrDefault "config/services/metrics/databases/system" "system" }}" # required
+        database = "{{ keyOrDefault "config/services/metrics/databases/services" "services" }}" # required
 
         ## Name of existing retention policy to write to.  Empty string writes to
         ## the default retention policy.
@@ -445,7 +469,7 @@ describe 'base_windows::system_metrics' do
         ## Compress each HTTP request payload using GZIP.
         # content_encoding = "gzip"
         [outputs.influxdb.tagpass]
-          influxdb_database = ["{{ keyOrDefault "config/services/metrics/databases/services" "services" }}"]
+          influxdb_database = ["services"]
       {{ else }}
       # Send metrics to nowhere at all
       [[outputs.discard]]
