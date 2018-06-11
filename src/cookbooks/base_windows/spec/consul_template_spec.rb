@@ -103,17 +103,17 @@ describe 'base_windows::consul_template' do
         $output = & "c:/ops/consul/consul.exe" kv delete $key 2>&1
         if ($LASTEXITCODE -eq 0)
         {
-          Write-Output "Removed the '$key' key from the consul k-v store"
+          Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Removed the '$key' key from the consul k-v store"
         }
         else
         {
-          Write-Output "No key at '$key' found to remove from the consul k-v store"
+          Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - No key at '$key' found to remove from the consul k-v store"
         }
       }
 
       function Invoke-Script
       {
-        Write-Output "Read the Vault key from the consul k-v ... "
+        Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Searching for the Vault key for Consul-Template in the Consul k-v ... "
         $hostname = $env:ComputerName
         $vaultKeyPath = "auth/services/templates/$($hostname)/secrets"
         $vaultKey = Get-KeyFromConsulKv -key $vaultKeyPath
@@ -130,7 +130,10 @@ describe 'base_windows::consul_template' do
 
         if ($vaultKey -ne '')
         {
+          Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Found the Vault key for Consul-Template in the Consul k-v. Removing k-v entry ... "
           Remove-KeyFromConsulKv -key $vaultKeyPath
+
+          Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Removed k-v entry"
 
           $startInfo.EnvironmentVariables.Add('VAULT_TOKEN', $vaultKey)
 
@@ -142,7 +145,7 @@ describe 'base_windows::consul_template' do
 
         $startInfo.Arguments = "-config=""c:/config/consul-template/config"" $($vaultOptions)"
 
-        Write-Output "Starting Consul-Template ... "
+        Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Starting Consul-Template ... "
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo = $startInfo
 
@@ -192,7 +195,7 @@ describe 'base_windows::consul_template' do
           Unregister-Event -SourceIdentifier $stdErrEvent.Name
         }
 
-        Write-Output "Consul-Template stopped"
+        Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Consul-Template stopped"
       }
 
       # =============================================================================
@@ -215,7 +218,8 @@ describe 'base_windows::consul_template' do
           <argument>-NoLogo</argument>
           <argument>-NonInteractive</argument>
           <argument>-NoProfile</argument>
-          <argument>-File "#{consul_template_bin_path}/Invoke-ConsulTemplate.ps1"</argument>
+          <argument>-File</argument>
+          <argument>"#{consul_template_bin_path}/Invoke-ConsulTemplate.ps1"</argument>
           <stoptimeout>30sec</stoptimeout>
 
           <logpath>#{consul_template_logs_path}</logpath>
