@@ -16,13 +16,20 @@ service_password = node['consul_template']['service']['user_password']
 # it will ever be guessed. And the user is a normal user who can't do anything so we don't really care about it
 powershell_script 'consul_template_user_with_password_that_does_not_expire' do
   code <<~POWERSHELL
-    $user = '#{service_username}'
-    $password = '#{service_password}'
-    $ObjOU = [ADSI]"WinNT://$env:ComputerName"
-    $objUser = $objOU.Create("User", $user)
-    $objUser.setpassword($password)
-    $objUser.UserFlags = 64 + 65536 # ADS_UF_PASSWD_CANT_CHANGE + ADS_UF_DONT_EXPIRE_PASSWD
-    $objUser.SetInfo()
+    $userName = '#{service_username}'
+    $password = ConvertTo-SecureString -String '#{service_password}' -AsPlainText -Force
+    $localUser = New-LocalUser `
+      -Name $userName `
+      -Password $password `
+      -PasswordNeverExpires `
+      -UserMayNotChangePassword `
+      -AccountNeverExpires `
+      -Verbose
+
+    Add-LocalGroupMember `
+      -Group 'Administrators' `
+      -Member $localUser.Name `
+      -Verbose
   POWERSHELL
 end
 
