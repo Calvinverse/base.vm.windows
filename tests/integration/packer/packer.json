@@ -17,7 +17,7 @@
     "builders": [
         {
             "boot_command": [],
-            "boot_wait": "45s",
+            "boot_wait": "150s",
             "clone_from_vmxc_path": "{{ user `dir_temp` }}/{{ user `vm_name` }}",
             "communicator": "winrm",
             "enable_dynamic_memory": false,
@@ -26,6 +26,7 @@
             "enable_virtualization_extensions": false,
             "generation": 2,
             "guest_additions_mode": "disable",
+            "headless": true,
             "http_directory": "",
             "http_port_min": 8150,
             "http_port_max": 8160,
@@ -37,7 +38,7 @@
             "shutdown_command": "",
             "shutdown_timeout": "5m",
             "skip_compaction": true,
-            "ssh_username": "{{user `admin_username`}}",
+            "skip_export": true,
             "switch_name": "{{user `vm_switch_name`}}",
             "switch_vlan_id": "{{ user `vm_switch_vlan` }}",
             "type": "hyperv-vmcx",
@@ -52,7 +53,6 @@
         {
             "elevated_user": "{{user `admin_username`}}",
             "elevated_password": "{{user `admin_password`}}",
-            "execute_command": "powershell.exe -NoProfile -NonInteractive \"if (Test-Path variable:global:ProgressPreference){`$ProgressPreference='SilentlyContinue'}; & '{{.Path}}';exit `$LastExitCode\"; exit $LastExitCode",
             "scripts": [
                 "{{ user `dir_scripts_user` }}/Invoke-Tests.ps1"
             ],

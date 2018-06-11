@@ -22,12 +22,28 @@ function Initialize-Environment
         Write-Output "Waiting for 10 seconds for consul and vault to start ..."
         Start-Sleep -Seconds 10
 
-        Join-Cluster
-
         Set-VaultSecrets
         Set-ConsulKV
 
-        Write-Output "Giving consul-template 30 seconds to process the data ..."
+        Join-Cluster
+
+        Write-Output "Waiting 30 seconds for Consul-Template to be active ..."
+        $ts = New-TimeSpan -Seconds 30
+        $killTime = (Get-Date) + $ts
+        while ((Get-Date) -lt $killTime)
+        {
+            if (((Get-Service -Name 'consul-template').Status -eq 'Running'))
+            {
+                Write-Output "Consul-Template is running"
+                break
+            }
+            else
+            {
+                Start-Sleep -Seconds 2
+            }
+        }
+
+        Write-Output "Giving Consul-Template 30 seconds to process the data ..."
         Start-Sleep -Seconds 30
     }
     catch
