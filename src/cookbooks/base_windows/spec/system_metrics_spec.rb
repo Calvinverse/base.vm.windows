@@ -266,7 +266,7 @@ describe 'base_windows::system_metrics' do
         # use_sudo = false
 
         ## The default location of the unbound-control binary can be overridden with:
-        binary = "c:/ops/unbound/unbound-control"
+        binary = "c:/Program Files/Unbound/unbound-control"
 
         ## The default timeout of 1s can be overriden with:
         # timeout = "1s"

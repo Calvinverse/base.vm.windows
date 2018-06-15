@@ -106,7 +106,7 @@ end
 
 service_name = node['unbound']['service']['name']
 
-unbound_bin_path = "#{node['paths']['ops']}/#{service_name}"
+unbound_bin_path = node['unbound']['path']['bin']
 unbound_config_path = "#{node['paths']['config']}/#{service_name}"
 %W[#{unbound_bin_path} #{unbound_config_path}].each do |path|
   directory path do
@@ -134,7 +134,8 @@ seven_zip_archive unbound_bin_path do
   timeout 30
 end
 
-unbound_config_file = 'unbound.conf'
+unbound_control_port = node['unbound']['control']['port']
+unbound_config_file = 'service.conf'
 file "#{unbound_bin_path}/#{unbound_config_file}" do
   action :create
   content <<~CONF
@@ -397,6 +398,35 @@ file "#{unbound_bin_path}/#{unbound_config_file}" do
         # The insecure-lan-zones option disables validation for
         # these zones, as if they were all listed as domain-insecure.
         insecure-lan-zones: yes
+
+    # Remote control config section.
+    remote-control:
+        # Enable remote control with unbound-control(8) here.
+        # set up the keys and certificates with unbound-control-setup.
+        control-enable: yes
+
+        # Set to no and use an absolute path as control-interface to use
+        # a unix local named pipe for unbound-control.
+        control-use-cert: no
+
+        # what interfaces are listened to for remote control.
+        # give 0.0.0.0 and ::0 to listen to all interfaces.
+        control-interface: 127.0.0.1
+
+        # port number for remote control operations.
+        control-port: #{unbound_control_port}
+
+        # unbound server key file.
+        # server-key-file: "@UNBOUND_RUN_DIR@/unbound_server.key"
+
+        # unbound server certificate file.
+        # server-cert-file: "@UNBOUND_RUN_DIR@/unbound_server.pem"
+
+        # unbound-control key file.
+        # control-key-file: "@UNBOUND_RUN_DIR@/unbound_control.key"
+
+        # unbound-control certificate file.
+        # control-cert-file: "@UNBOUND_RUN_DIR@/unbound_control.pem"
   CONF
 end
 
@@ -420,7 +450,7 @@ powershell_script 'unbound_as_service' do
     {
         New-Service `
             -Name '#{service_name}' `
-            -BinaryPathName '#{unbound_bin_path}/#{unbound_exe} -w service -c #{unbound_bin_path}/#{unbound_config_file}' `
+            -BinaryPathName '#{unbound_bin_path}/#{unbound_exe} -w service' `
             -Credential $credential `
             -DisplayName '#{service_name}' `
             -StartupType Disabled
@@ -449,6 +479,15 @@ firewall_rule 'unbound-dns-tcp' do
   dest_port 53
   direction :in
   protocol :tcp
+end
+
+firewall_rule 'unbound-control-tcp' do
+  command :allow
+  description 'Allow Unbound control (TCP) proxy traffic'
+  dest_port unbound_control_port
+  direction :in
+  protocol :tcp
+  source '127.0.0.1'
 end
 
 #

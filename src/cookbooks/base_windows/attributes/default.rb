@@ -104,6 +104,9 @@ default['unbound']['service']['name'] = 'unbound'
 default['unbound']['service']['user_name'] = 'unbound_user'
 default['unbound']['service']['user_password'] = SecureRandom.uuid
 
+default['unbound']['path']['bin'] = 'c:/Program Files/Unbound'
+default['unbound']['control']['port'] = 8953
+
 #
 # WINSW
 #

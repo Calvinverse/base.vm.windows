@@ -104,7 +104,7 @@ Describe 'The firewall' {
 
     Context 'Should allow unbound' {
         $rules = @( Get-NetFirewallRule -Enabled True | Where-Object { $_.DisplayName -like 'unbound*' } )
-        $rules.Length | Should Be 2
+        $rules.Length | Should Be 3
 
         $port = Get-NetFirewallPortFilter -AssociatedNetFirewallRule $rules[0]
         $port.Protocol | Should Be 'UDP'
@@ -115,5 +115,13 @@ Describe 'The firewall' {
         $port.Protocol | Should Be 'TCP'
         $port.LocalPort | Should Be 53
         $port.RemotePort | Should Be 'Any'
+
+        $port = Get-NetFirewallPortFilter -AssociatedNetFirewallRule $rules[2]
+        $port.Protocol | Should Be 'TCP'
+        $port.LocalPort | Should Be 8953
+        $port.RemotePort | Should Be 'Any'
+
+        $address = Get-NetFirewallAddressFilter -AssociatedNetFirewallRule $rules[2]
+        $address.RemoteAddress | Should Be '127.0.0.1'
     }
 }

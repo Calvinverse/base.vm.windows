@@ -5,7 +5,7 @@ require 'spec_helper'
 describe 'base_windows::network' do
   unbound_config_path = 'c:/config/unbound'
   unbound_logs_path = 'c:/logs/unbound'
-  unbound_bin_path = 'c:/ops/unbound'
+  unbound_bin_path = 'c:/Program Files/Unbound'
 
   context 'create the user to run the service with' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
@@ -34,7 +34,7 @@ describe 'base_windows::network' do
       expect(chef_run).to create_directory(unbound_bin_path)
     end
 
-    it 'creates unbound.exe in the unbound ops directory' do
+    it 'creates unbound.exe in the unbound bin directory' do
       expect(chef_run).to extract_seven_zip_archive(unbound_bin_path)
     end
   end
@@ -306,9 +306,38 @@ describe 'base_windows::network' do
           # The insecure-lan-zones option disables validation for
           # these zones, as if they were all listed as domain-insecure.
           insecure-lan-zones: yes
+
+      # Remote control config section.
+      remote-control:
+          # Enable remote control with unbound-control(8) here.
+          # set up the keys and certificates with unbound-control-setup.
+          control-enable: yes
+
+          # Set to no and use an absolute path as control-interface to use
+          # a unix local named pipe for unbound-control.
+          control-use-cert: no
+
+          # what interfaces are listened to for remote control.
+          # give 0.0.0.0 and ::0 to listen to all interfaces.
+          control-interface: 127.0.0.1
+
+          # port number for remote control operations.
+          control-port: 8953
+
+          # unbound server key file.
+          # server-key-file: "@UNBOUND_RUN_DIR@/unbound_server.key"
+
+          # unbound server certificate file.
+          # server-cert-file: "@UNBOUND_RUN_DIR@/unbound_server.pem"
+
+          # unbound-control key file.
+          # control-key-file: "@UNBOUND_RUN_DIR@/unbound_control.key"
+
+          # unbound-control certificate file.
+          # control-cert-file: "@UNBOUND_RUN_DIR@/unbound_control.pem"
     CONF
     it 'creates unbound.conf in the unbound ops directory' do
-      expect(chef_run).to create_file("#{unbound_bin_path}/unbound.conf").with_content(unbound_default_config_content)
+      expect(chef_run).to create_file("#{unbound_bin_path}/service.conf").with_content(unbound_default_config_content)
     end
   end
 
@@ -363,6 +392,16 @@ describe 'base_windows::network' do
         dest_port: 53,
         direction: :in,
         protocol: :tcp
+      )
+    end
+
+    it 'opens the Unbound control TCP port' do
+      expect(chef_run).to create_firewall_rule('unbound-control-tcp').with(
+        command: :allow,
+        dest_port: 8953,
+        direction: :in,
+        protocol: :tcp,
+        source: '127.0.0.1'
       )
     end
   end

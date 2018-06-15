@@ -191,7 +191,7 @@ end
 consul_template_template_path = node['consul_template']['template_path']
 consul_template_config_path = node['consul_template']['config_path']
 
-unbound_bin_path = "#{node['paths']['ops']}/#{node['unbound']['service']['name']}"
+unbound_bin_path = node['unbound']['path']['bin']
 
 # The configuration file for telegraf is dropped in the configuration path
 # when the resource is provisioned because it contains environment specific information
