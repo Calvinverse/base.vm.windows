@@ -16,13 +16,20 @@ service_password = node['consul_template']['service']['user_password']
 # it will ever be guessed. And the user is a normal user who can't do anything so we don't really care about it
 powershell_script 'consul_template_user_with_password_that_does_not_expire' do
   code <<~POWERSHELL
-    $user = '#{service_username}'
-    $password = '#{service_password}'
-    $ObjOU = [ADSI]"WinNT://$env:ComputerName"
-    $objUser = $objOU.Create("User", $user)
-    $objUser.setpassword($password)
-    $objUser.UserFlags = 64 + 65536 # ADS_UF_PASSWD_CANT_CHANGE + ADS_UF_DONT_EXPIRE_PASSWD
-    $objUser.SetInfo()
+    $userName = '#{service_username}'
+    $password = ConvertTo-SecureString -String '#{service_password}' -AsPlainText -Force
+    $localUser = New-LocalUser `
+      -Name $userName `
+      -Password $password `
+      -PasswordNeverExpires `
+      -UserMayNotChangePassword `
+      -AccountNeverExpires `
+      -Verbose
+
+    Add-LocalGroupMember `
+      -Group 'Administrators' `
+      -Member $localUser.Name `
+      -Verbose
   POWERSHELL
 end
 
@@ -116,10 +123,18 @@ consul_template_logs_path = "#{node['paths']['logs']}/#{service_name}"
   end
 end
 
-consul_template_exe = 'consul-template.exe'
-cookbook_file "#{consul_template_bin_path}/#{consul_template_exe}" do
+consul_template_zip_path = "#{node['paths']['temp']}/consul-template.zip"
+remote_file consul_template_zip_path do
   action :create
-  source consul_template_exe
+  source node['consul-template']['url']
+end
+
+consul_template_exe_filename = 'consul-template.exe'
+consul_template_exe_path = "#{consul_template_bin_path}/#{consul_template_exe_filename}"
+seven_zip_archive consul_template_bin_path do
+  overwrite true
+  source consul_template_zip_path
+  timeout 30
 end
 
 # We need to multiple-escape the escape character because of ruby string and regex etc. etc. See here: http://stackoverflow.com/a/6209532/539846
@@ -270,11 +285,11 @@ file "#{consul_template_config_path}/base.hcl" do
     deduplicate {
       # This enables de-duplication mode. Specifying any other options also enables
       # de-duplication mode.
-      enabled = true
+      enabled = false
 
       # This is the prefix to the path in Consul's KV store where de-duplication
       # templates will be pre-rendered and stored.
-      prefix = "consul-template/dedup/"
+      # prefix = "consul-template/dedup/"
     }
   HCL
 end
@@ -289,12 +304,13 @@ directory consul_template_logs_path do
 end
 
 service_exe_name = node['consul_template']['service']['exe']
-cookbook_file "#{consul_template_bin_path}/#{service_exe_name}.exe" do
-  source 'WinSW.NET4.exe'
+remote_file "#{consul_template_bin_path}/#{service_exe_name}.exe" do
   action :create
+  source node['winsw']['url']
 end
 
 file "#{consul_template_bin_path}/#{service_exe_name}.exe.config" do
+  action :create
   content <<~XML
     <configuration>
         <runtime>
@@ -302,7 +318,146 @@ file "#{consul_template_bin_path}/#{service_exe_name}.exe.config" do
         </runtime>
     </configuration>
   XML
+end
+
+consul_exe_path = node['consul']['path']['exe']
+run_consul_template_script = "#{consul_template_bin_path}/Invoke-ConsulTemplate.ps1"
+file run_consul_template_script do
   action :create
+  content <<~POWERSHELL
+    [CmdletBinding()]
+    param(
+    )
+
+    function Get-KeyFromConsulKv
+    {
+      [CmdletBinding()]
+      param(
+        [string] $key
+      )
+
+      $output = & "#{consul_exe_path}" kv get $key 2>&1
+      if ($LASTEXITCODE -eq 0)
+      {
+        return $output
+      }
+      else
+      {
+        return ''
+      }
+    }
+
+    function Remove-KeyFromConsulKv
+    {
+      [CmdletBinding()]
+      param(
+        [string] $key
+      )
+
+      $output = & "#{consul_exe_path}" kv delete $key 2>&1
+      if ($LASTEXITCODE -eq 0)
+      {
+        Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Removed the '$key' key from the consul k-v store"
+      }
+      else
+      {
+        Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - No key at '$key' found to remove from the consul k-v store"
+      }
+    }
+
+    function Invoke-Script
+    {
+      Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Searching for the Vault key for Consul-Template in the Consul k-v ... "
+      $hostname = $env:ComputerName
+      $vaultKeyPath = "auth/services/templates/$($hostname)/secrets"
+      $vaultKey = Get-KeyFromConsulKv -key $vaultKeyPath
+
+      $envVars=""
+      $vaultOptions=""
+
+      $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+      $startInfo.FileName = "#{consul_template_exe_path}"
+      $startInfo.RedirectStandardOutput = $true
+      $startInfo.RedirectStandardError = $true
+      $startInfo.UseShellExecute = $false
+      $startInfo.CreateNoWindow = $true
+
+      if ($vaultKey -ne '')
+      {
+        Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Found the Vault key for Consul-Template in the Consul k-v. Removing k-v entry ... "
+        Remove-KeyFromConsulKv -key $vaultKeyPath
+
+        Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Removed k-v entry"
+
+        $startInfo.EnvironmentVariables.Add('VAULT_TOKEN', $vaultKey)
+
+        $serviceName = Get-KeyFromConsulKv -key 'config/services/secrets/protocols/http/host'
+        $domain= Get-KeyFromConsulKv -key 'config/services/consul/domain'
+        $ort= Get-KeyFromConsulKv -key 'config/services/secrets/protocols/http/port'
+        $vaultOptions="-vault-addr=http://$($serviceName).service.$($domain):$($port) -vault-unwrap-token -vault-renew-token -vault-retry"
+      }
+
+      $startInfo.Arguments = "-config=""#{consul_template_config_path}"" $($vaultOptions)"
+
+      Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Starting Consul-Template ... "
+      $process = New-Object System.Diagnostics.Process
+      $process.StartInfo = $startInfo
+
+      # Adding event handers for stdout and stderr.
+      $writeToFileEvent = {
+        if (-not ([String]::IsNullOrEmpty($EventArgs.Data)))
+        {
+          Out-File -FilePath $Event.MessageData -Append -InputObject $EventArgs.Data
+        }
+      }
+
+      $stdOutEvent = Register-ObjectEvent `
+        -InputObject $process `
+        -Action $writeToFileEvent `
+        -EventName 'OutputDataReceived' `
+        -MessageData '#{consul_template_logs_path}/consul-template.out.log'
+      $stdErrEvent = Register-ObjectEvent `
+        -InputObject $process `
+        -Action $writeToFileEvent `
+        -EventName 'ErrorDataReceived' `
+        -MessageData '#{consul_template_logs_path}/consul-template.err.log'
+
+      try
+      {
+        $process.Start() | Out-Null
+        try
+        {
+          $process.BeginOutputReadLine()
+          $process.BeginErrorReadLine()
+
+          while (-not ($process.HasExited))
+          {
+            Start-Sleep -Seconds 5
+          }
+        }
+        finally
+        {
+          if (-not ($process.HasExited))
+          {
+            $process.Close()
+          }
+        }
+      }
+      finally
+      {
+        Unregister-Event -SourceIdentifier $stdOutEvent.Name
+        Unregister-Event -SourceIdentifier $stdErrEvent.Name
+      }
+
+      Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Consul-Template stopped"
+    }
+
+    # =============================================================================
+
+    # Fire up
+    Invoke-Script
+  POWERSHELL
+  mode '755'
 end
 
 file "#{consul_template_bin_path}/#{service_exe_name}.xml" do
@@ -313,8 +468,13 @@ file "#{consul_template_bin_path}/#{service_exe_name}.xml" do
         <name>#{service_name}</name>
         <description>This service runs the consul-template agent.</description>
 
-        <executable>#{consul_template_bin_path}/#{consul_template_exe}</executable>
-        <arguments>-config=#{consul_template_config_path}</arguments>
+        <executable>powershell.exe</executable>
+        <argument>-NoLogo</argument>
+        <argument>-NonInteractive</argument>
+        <argument>-NoProfile</argument>
+        <argument>-File</argument>
+        <argument>"#{run_consul_template_script}"</argument>
+        <stoptimeout>30sec</stoptimeout>
 
         <logpath>#{consul_template_logs_path}</logpath>
         <log mode="roll-by-size">

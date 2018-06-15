@@ -13,6 +13,7 @@ Describe 'The consul application' {
 
         It 'with environment configuration in c:\config\consul' {
             'c:\config\consul\location.json' | Should Exist
+            'c:\config\consul\metrics.json' | Should Exist
             'c:\config\consul\region.json' | Should Exist
             'c:\config\consul\secrets.json' | Should Exist
         }
@@ -36,6 +37,10 @@ Describe 'The consul application' {
         It 'responds to HTTP calls' {
             $response.StatusCode | Should Be 200
             $agentInformation | Should Not Be $null
+        }
+
+        It 'is not a server instance' {
+            $agentInformation.Config.Server | Should Be $false
         }
     }
 }

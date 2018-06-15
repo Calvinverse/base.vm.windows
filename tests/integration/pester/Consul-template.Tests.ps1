@@ -9,7 +9,6 @@ Describe 'The consul-template application' {
 
         It 'with default configuration in c:\ops\consul-template\config' {
             'c:\config\consul-template\config\base.hcl' | Should Exist
-            'c:\config\consul-template\config\vault.hcl' | Should Exist
         }
     }
 

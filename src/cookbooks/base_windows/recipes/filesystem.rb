@@ -10,8 +10,9 @@
 config_directory = node['paths']['config']
 logs_directory = node['paths']['logs']
 ops_directory = node['paths']['ops']
+temp_directory = node['paths']['temp']
 
-%W[#{config_directory} #{logs_directory} #{ops_directory}].each do |path|
+%W[#{config_directory} #{logs_directory} #{ops_directory} #{temp_directory}].each do |path|
   directory path do
     action :create
     rights :read, 'Everyone', applies_to_children: true

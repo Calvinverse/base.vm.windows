@@ -10,19 +10,11 @@ describe 'base_windows::consul' do
   service_name = 'consul'
   consul_config_file = 'consul_base.json'
 
-  context 'create the log locations' do
+  context 'create the user to run the service with' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
 
-    it 'creates the consul logs directory' do
-      expect(chef_run).to create_directory(consul_logs_path)
-    end
-  end
-
-  context 'create the config locations' do
-    let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
-
-    it 'creates the consul config directory' do
-      expect(chef_run).to create_directory(consul_config_path)
+    it 'creates the consul user' do
+      expect(chef_run).to run_powershell_script('consul_user_with_password_that_does_not_expire')
     end
   end
 
@@ -34,15 +26,61 @@ describe 'base_windows::consul' do
     end
 
     it 'creates consul.exe in the consul ops directory' do
-      expect(chef_run).to create_cookbook_file("#{consul_bin_path}/#{service_name}.exe").with_source("#{service_name}.exe")
+      expect(chef_run).to extract_seven_zip_archive(consul_bin_path)
+    end
+
+    consul_default_config_content = <<~JSON
+      {
+        "addresses": {
+          "http": "0.0.0.0"
+        },
+        "client_addr": "127.0.0.1",
+
+        "data_dir": "c:/ops/consul/data",
+
+        "disable_host_node_id": true,
+        "disable_remote_exec": true,
+        "disable_update_check": true,
+
+        "dns_config": {
+          "allow_stale": true,
+          "max_stale": "87600h",
+          "node_ttl": "30s",
+          "service_ttl": {
+            "*": "30s"
+          }
+        },
+
+        "leave_on_terminate" : false,
+
+        "log_level" : "INFO",
+
+        "ports": {
+          "dns": 8600,
+          "http": 8500,
+          "serf_lan": 8301,
+          "serf_wan": 8302,
+          "server": 8300
+        },
+
+        "server": false,
+
+        "skip_leave_on_interrupt" : true,
+
+        "verify_incoming" : false,
+        "verify_outgoing": false
+      }
+    JSON
+    it 'creates consul_default.json in the consul ops directory' do
+      expect(chef_run).to create_file("#{consul_bin_path}/#{consul_config_file}").with_content(consul_default_config_content)
     end
   end
 
-  context 'create the user to run the service with' do
+  context 'create the log locations' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
 
-    it 'creates the consul user' do
-      expect(chef_run).to run_powershell_script('consul_user_with_password_that_does_not_expire')
+    it 'creates the consul logs directory' do
+      expect(chef_run).to create_directory(consul_logs_path)
     end
   end
 
@@ -50,11 +88,11 @@ describe 'base_windows::consul' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
 
     win_service_name = 'consul_service'
-    it 'creates consul_service.exe in the consul ops directory' do
-      expect(chef_run).to create_cookbook_file("#{consul_bin_path}/#{win_service_name}.exe").with_source('WinSW.NET4.exe')
+    it 'downloads the winsw file' do
+      expect(chef_run).to create_remote_file("#{consul_bin_path}/#{win_service_name}.exe")
     end
 
-    consul_service_exe_config_content = <<~XML
+    service_exe_config_content = <<~XML
       <configuration>
           <runtime>
               <generatePublisherEvidence enabled="false"/>
@@ -62,7 +100,7 @@ describe 'base_windows::consul' do
       </configuration>
     XML
     it 'creates consul_service.exe.config in the consul ops directory' do
-      expect(chef_run).to create_file("#{consul_bin_path}/#{win_service_name}.exe.config").with_content(consul_service_exe_config_content)
+      expect(chef_run).to create_file("#{consul_bin_path}/#{win_service_name}.exe.config").with_content(service_exe_config_content)
     end
 
     consul_service_xml_content = <<~XML
@@ -73,7 +111,9 @@ describe 'base_windows::consul' do
           <description>This service runs the consul agent.</description>
 
           <executable>#{consul_bin_path}/consul.exe</executable>
-          <arguments>agent -config-file=#{consul_bin_path}/#{consul_config_file} -config-dir=#{consul_config_path}</arguments>
+          <argument>agent</argument>
+          <argument>-config-file=#{consul_bin_path}/#{consul_config_file}</argument>
+          <argument>-config-dir=#{consul_config_path}</argument>
           <priority>high</priority>
 
           <logpath>#{consul_logs_path}</logpath>
@@ -101,32 +141,25 @@ describe 'base_windows::consul' do
         }]
       )
     end
+  end
 
-    consul_default_config_content = <<~JSON
+  context 'create the config locations' do
+    let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
+
+    it 'creates the consul config directory' do
+      expect(chef_run).to create_directory(consul_config_path)
+    end
+
+    consul_metrics_config_content = <<~JSON
       {
-        "data_dir": "c:/ops/consul/data",
-
-        "disable_remote_exec": true,
-        "disable_update_check": true,
-
-        "dns_config": {
-          "allow_stale": true,
-          "max_stale": "87600h",
-          "node_ttl": "10s",
-          "service_ttl": {
-            "*": "10s"
-          }
-        },
-
-        "leave_on_terminate" : false,
-
-        "log_level" : "info",
-
-        "skip_leave_on_interrupt" : true
+        "telemetry": {
+          "disable_hostname": true,
+          "statsd_address": "127.0.0.1:8125"
+        }
       }
     JSON
-    it 'creates consul_default.json in the consul ops directory' do
-      expect(chef_run).to create_file("#{consul_bin_path}/#{consul_config_file}").with_content(consul_default_config_content)
+    it 'creates metrics.json in the consul config directory' do
+      expect(chef_run).to create_file("#{consul_config_path}/metrics.json").with_content(consul_metrics_config_content)
     end
   end
 

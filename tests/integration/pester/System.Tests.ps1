@@ -24,8 +24,9 @@ Describe 'On the system' {
         }
 
         It 'should only have the default Administrator' {
-            $userNames.Length | Should Be 1
+            $userNames.Length | Should Be 2
             $userNames[0] | Should Be "$($env:COMPUTERNAME)\Administrator"
+            $userNames[1] | Should Be "$($env:COMPUTERNAME)\consul-template"
         }
     }
 
@@ -45,41 +46,6 @@ Describe 'On the system' {
         It 'has been removed' {
             $feature = Get-WindowsFeature -Name 'FS-SMB1' -ErrorAction SilentlyContinue
             $feature.InstallState | Should Be 'Available'
-        }
-    }
-
-    Context 'system metrics' {
-        It 'with binaries in c:\ops\scollector' {
-            'c:\ops\scollector\scollector.exe' | Should Exist
-        }
-
-        It 'with default configuration in c:\config\scollector\scollector.toml' {
-            'c:\config\scollector\scollector.toml' | Should Exist
-        }
-
-        $expectedContent = @'
-Host = "http://opentsdb.metrics.service.integrationtest:4242"
-
-[Tags]
-    environment = "test-integration"
-    os = "windows"
-
-'@
-        $scollectorConfigContent = Get-Content 'c:\config\scollector\scollector.toml' | Out-String
-        It 'with the expected content in the configuration file' {
-            $scollectorConfigContent | Should Be $expectedContent
-        }
-    }
-
-    Context 'has been turned into a service' {
-        $service = Get-Service scollector
-
-        It 'that is enabled' {
-            $service.StartType | Should Match 'Automatic'
-        }
-
-        It 'and is running' {
-            #$service.Status | Should Match 'Running'
         }
     }
 }

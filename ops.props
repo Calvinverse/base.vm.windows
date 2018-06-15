@@ -401,7 +401,7 @@
             <ReplacementValue>$(IsoFile.Replace('\', '/'))</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="IsoFileHash">
-            <ReplacementValue>BBEFA23F3B39E9266127EE7FA1BF774BC32EBA8F90267943D98F49731B1D198E</ReplacementValue>
+            <ReplacementValue>8A3B22700CB6F59B54742D2AF1222DFF47E0D0E345FBA8F8571BF030D3018C61</ReplacementValue>
         </TemplateTokens>
 
         <TemplateTokens Include="NameCookbook">
@@ -446,16 +446,7 @@
 
         <!-- Tool versions -->
         <TemplateTokens Include="VersionChef">
-            <ReplacementValue>13.1.31</ReplacementValue>
-        </TemplateTokens>
-        <TemplateTokens Include="VersionConsul">
-            <ReplacementValue>1.0.2</ReplacementValue>
-        </TemplateTokens>
-        <TemplateTokens Include="VersionConsulTemplate">
-            <ReplacementValue>0.19.4</ReplacementValue>
-        </TemplateTokens>
-        <TemplateTokens Include="VersionWinSw">
-            <ReplacementValue>2.1.2</ReplacementValue>
+            <ReplacementValue>13.9.1</ReplacementValue>
         </TemplateTokens>
     </ItemGroup>
 
@@ -487,7 +478,7 @@
             The full path and version to the packer command line executable. If not defined the packages directory is searched.
         -->
         <ToolsExternalPackerPath>UNDEFINED</ToolsExternalPackerPath>
-        <ToolsExternalPackerVersion>1.1.1</ToolsExternalPackerVersion>
+        <ToolsExternalPackerVersion>1.2.4</ToolsExternalPackerVersion>
     </PropertyGroup>
 
 

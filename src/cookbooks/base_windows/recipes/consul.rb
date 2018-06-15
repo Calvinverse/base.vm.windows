@@ -102,7 +102,7 @@ end
 #
 
 service_name = node['consul']['service']['name']
-consul_bin_path = "#{node['paths']['ops']}/#{service_name}"
+consul_bin_path = node['consul']['path']['bin']
 directory consul_bin_path do
   action :create
   rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
@@ -114,10 +114,17 @@ directory consul_config_path do
   rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
 end
 
-consul_exe = 'consul.exe'
-cookbook_file "#{consul_bin_path}/#{consul_exe}" do
+consul_zip_path = "#{node['paths']['temp']}/consul.zip"
+remote_file consul_zip_path do
   action :create
-  source consul_exe
+  source node['consul']['url']
+end
+
+consul_exe_path = node['consul']['path']['exe']
+seven_zip_archive consul_bin_path do
+  overwrite true
+  source consul_zip_path
+  timeout 30
 end
 
 # We need to multiple-escape the escape character because of ruby string and regex etc. etc. See here: http://stackoverflow.com/a/6209532/539846
@@ -125,25 +132,61 @@ consul_config_file = 'consul_base.json'
 file "#{consul_bin_path}/#{consul_config_file}" do
   content <<~JSON
     {
+      "addresses": {
+        "http": "0.0.0.0"
+      },
+      "client_addr": "127.0.0.1",
+
       "data_dir": "#{consul_bin_path}/data",
 
+      "disable_host_node_id": true,
       "disable_remote_exec": true,
       "disable_update_check": true,
 
       "dns_config": {
         "allow_stale": true,
         "max_stale": "87600h",
-        "node_ttl": "10s",
+        "node_ttl": "30s",
         "service_ttl": {
-          "*": "10s"
+          "*": "30s"
         }
       },
 
       "leave_on_terminate" : false,
 
-      "log_level" : "info",
+      "log_level" : "INFO",
 
-      "skip_leave_on_interrupt" : true
+      "ports": {
+        "dns": 8600,
+        "http": 8500,
+        "serf_lan": 8301,
+        "serf_wan": 8302,
+        "server": 8300
+      },
+
+      "server": false,
+
+      "skip_leave_on_interrupt" : true,
+
+      "verify_incoming" : false,
+      "verify_outgoing": false
+    }
+  JSON
+end
+
+#
+# CONFIGURATION
+#
+
+telegraf_statsd_port = node['telegraf']['statsd']['port']
+file "#{consul_config_path}/metrics.json" do
+  action :create
+  content <<~JSON
+    {
+      "telemetry": {
+        "disable_hostname": true,
+        "statsd_address": "127.0.0.1:#{telegraf_statsd_port}"
+      }
     }
   JSON
 end
@@ -159,12 +202,13 @@ directory consul_logs_path do
 end
 
 service_exe_name = node['consul']['service']['exe']
-cookbook_file "#{consul_bin_path}/#{service_exe_name}.exe" do
-  source 'WinSW.NET4.exe'
+remote_file "#{consul_bin_path}/#{service_exe_name}.exe" do
   action :create
+  source node['winsw']['url']
 end
 
 file "#{consul_bin_path}/#{service_exe_name}.exe.config" do
+  action :create
   content <<~XML
     <configuration>
         <runtime>
@@ -172,7 +216,6 @@ file "#{consul_bin_path}/#{service_exe_name}.exe.config" do
         </runtime>
     </configuration>
   XML
-  action :create
 end
 
 file "#{consul_bin_path}/#{service_exe_name}.xml" do
@@ -183,8 +226,10 @@ file "#{consul_bin_path}/#{service_exe_name}.xml" do
         <name>#{service_name}</name>
         <description>This service runs the consul agent.</description>
 
-        <executable>#{consul_bin_path}/#{consul_exe}</executable>
-        <arguments>agent -config-file=#{consul_bin_path}/#{consul_config_file} -config-dir=#{consul_config_path}</arguments>
+        <executable>#{consul_exe_path}</executable>
+        <argument>agent</argument>
+        <argument>-config-file=#{consul_bin_path}/#{consul_config_file}</argument>
+        <argument>-config-dir=#{consul_config_path}</argument>
         <priority>high</priority>
 
         <logpath>#{consul_logs_path}</logpath>
