@@ -87,6 +87,7 @@ default['telegraf']['shasums'] = 'ee9a163e17fe3a58f22d29ca789a62965f75aaa277f26a
 default['telegraf']['download_urls'] = "https://dl.influxdata.com/telegraf/releases/telegraf-#{node['telegraf']['version']}_windows_amd64.zip"
 
 default['telegraf']['consul_template_file'] = 'telegraf.ctmpl'
+default['telegraf']['consul_template_metrics_file'] = 'telegraf_metrics.ctmpl'
 default['telegraf']['config_file_path'] = "#{ops_path}/#{node['telegraf']['service']['name']}/telegraf.conf"
 default['telegraf']['config_directory'] = "#{config_path}/#{node['telegraf']['service']['name']}"
 
