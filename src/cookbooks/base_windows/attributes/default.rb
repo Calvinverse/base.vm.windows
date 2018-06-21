@@ -88,6 +88,7 @@ default['telegraf']['download_urls'] = "https://dl.influxdata.com/telegraf/relea
 
 default['telegraf']['consul_template_file'] = 'telegraf.ctmpl'
 default['telegraf']['consul_template_metrics_file'] = 'telegraf_metrics.ctmpl'
+default['telegraf']['consul_template_logs_file'] = 'telegraf_logs.ctmpl'
 default['telegraf']['config_file_path'] = "#{ops_path}/#{node['telegraf']['service']['name']}/telegraf.conf"
 default['telegraf']['config_directory'] = "#{config_path}/#{node['telegraf']['service']['name']}"
 
