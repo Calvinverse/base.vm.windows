@@ -39,8 +39,8 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
       ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
       ##   /var/log/apache.log -> only tail the apache log file
       files = [
-          "#{consul_logs_path}/consul.out.log",
-          "#{consul_logs_path}/consul.err.log"
+          "#{consul_logs_path}/consul_service.out.log",
+          "#{consul_logs_path}/consul_service.err.log"
       ]
 
       ## Read files that currently exist from the beginning. Files that are created
@@ -94,8 +94,8 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
       ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
       ##   /var/log/apache.log -> only tail the apache log file
       files = [
-          "#{consul_template_logs_path}/consul-template.out.log",
-          "#{consul_template_logs_path}/consul-template.err.log"
+          "#{consul_template_logs_path}/consul-template-service.out.log",
+          "#{consul_template_logs_path}/consul-template-service.err.log"
       ]
 
       ## Read files that currently exist from the beginning. Files that are created
@@ -149,8 +149,8 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
       ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
       ##   /var/log/apache.log -> only tail the apache log file
       files = [
-          "#{provisioning_logs_path}/provisioning.out.log",
-          "#{provisioning_logs_path}/provisioning.err.log"
+          "#{provisioning_logs_path}/provisioning-service.out.log",
+          "#{provisioning_logs_path}/provisioning-service.err.log"
       ]
 
       ## Read files that currently exist from the beginning. Files that are created
@@ -204,8 +204,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
       ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
       ##   /var/log/apache.log -> only tail the apache log file
       files = [
-          "#{telegraf_logs_path}/telegraf.out.log",
-          "#{telegraf_logs_path}/telegraf.err.log"
+          "#{telegraf_logs_path}/telegraf.log"
       ]
 
       ## Read files that currently exist from the beginning. Files that are created
