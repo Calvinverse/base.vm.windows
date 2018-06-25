@@ -235,7 +235,7 @@ file "#{consul_bin_path}/#{service_exe_name}.xml" do
         <logpath>#{consul_logs_path}</logpath>
         <log mode="roll-by-size">
             <sizeThreshold>10240</sizeThreshold>
-            <keepFiles>8</keepFiles>
+            <keepFiles>1</keepFiles>
         </log>
         <onfailure action="restart"/>
     </service>

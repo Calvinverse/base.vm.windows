@@ -66,7 +66,7 @@ describe 'base_windows::provisioning' do
           <logpath>#{provisioning_logs_path}</logpath>
           <log mode="roll-by-size">
               <sizeThreshold>10240</sizeThreshold>
-              <keepFiles>8</keepFiles>
+              <keepFiles>1</keepFiles>
           </log>
           <onfailure action="none"/>
       </service>

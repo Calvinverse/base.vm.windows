@@ -225,7 +225,7 @@ describe 'base_windows::consul_template' do
           <logpath>#{consul_template_logs_path}</logpath>
           <log mode="roll-by-size">
               <sizeThreshold>10240</sizeThreshold>
-              <keepFiles>8</keepFiles>
+              <keepFiles>1</keepFiles>
           </log>
           <onfailure action="restart"/>
       </service>
