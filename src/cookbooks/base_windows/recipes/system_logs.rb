@@ -7,17 +7,21 @@
 # Copyright 2018, P. van der Velde
 #
 
-telegraf_config_path = node['telegraf']['config_directory']
+service_name = node['telegraf']['service']['name']
+telegraf_config_directory = node['telegraf']['config_directory']
+consul_template_template_path = node['consul_template']['template_path']
+consul_template_config_path = node['consul_template']['config_path']
 
 consul_logs_path = "#{node['paths']['logs']}/#{node['consul']['service']['name']}"
 consul_template_logs_path = "#{node['paths']['logs']}/#{node['consul_template']['service']['name']}"
 provisioning_logs_path = "#{node['paths']['logs']}/#{node['provisioning']['service']['name']}"
 telegraf_logs_path = "#{node['paths']['logs']}/#{node['telegraf']['service']['name']}"
 unbound_logs_path = "#{node['paths']['logs']}/#{node['unbound']['service']['name']}"
-firewall_logs_path = ""
+# firewall_logs_path = ""
 
 # The configuration file for telegraf is dropped in the configuration path
 # when the resource is provisioned because it contains environment specific information
+# rubocop:disable Style/FormatStringToken
 telegraf_logs_template_file = node['telegraf']['consul_template_logs_file']
 file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
   action :create
@@ -39,8 +43,155 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
       ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
       ##   /var/log/apache.log -> only tail the apache log file
       files = [
-          "#{consul_logs_path}/consul_service.out.log",
-          "#{consul_logs_path}/consul_service.err.log"
+        "#{consul_logs_path}/consul-service.out.log"
+      ]
+
+      ## Read files that currently exist from the beginning. Files that are created
+      ## while telegraf is running (and that match the "files" globs) will always
+      ## be read from the beginning.
+      from_beginning = false
+
+      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
+      # watch_method = "inotify"
+
+      ## Parse logstash-style "grok" patterns:
+      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
+      [inputs.logparser.grok]
+        ## This is a list of patterns to check the given log file(s) for.
+        ## Note that adding patterns here increases processing time. The most
+        ## efficient configuration is to have one pattern per logparser.
+        ## Other common built-in patterns are:
+        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
+        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
+        patterns = ["%{DATESTAMP:timestamp} \\[%{LOGLEVEL:logLevel}\\] %{GREEDYDATA:message}"]
+
+        ## Name of the outputted measurement name.
+        measurement = "consul_output_log"
+
+        ## Timezone allows you to provide an override for timestamps that
+        ## don't already include an offset
+        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
+        ##
+        ## Default: "" which renders UTC
+        ## Options are as follows:
+        ##   1. Local             -- interpret based on machine localtime
+        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
+        timezone = "UTC"
+
+    [[inputs.logparser]]
+      [inputs.logparser.tags]
+      rabbitmq_exchange = "logs.file"
+
+      ## Log files to parse.
+      ## These accept standard unix glob matching rules, but with the addition of
+      ## ** as a "super asterisk". ie:
+      ##   /var/log/**.log     -> recursively find all .log files in /var/log
+      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
+      ##   /var/log/apache.log -> only tail the apache log file
+      files = [
+        "#{consul_logs_path}/consul-service.err.log"
+      ]
+
+      ## Read files that currently exist from the beginning. Files that are created
+      ## while telegraf is running (and that match the "files" globs) will always
+      ## be read from the beginning.
+      from_beginning = false
+
+      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
+      # watch_method = "inotify"
+
+      ## Parse logstash-style "grok" patterns:
+      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
+      [inputs.logparser.grok]
+        ## This is a list of patterns to check the given log file(s) for.
+        ## Note that adding patterns here increases processing time. The most
+        ## efficient configuration is to have one pattern per logparser.
+        ## Other common built-in patterns are:
+        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
+        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
+        patterns = ["%{GREEDYDATA:message}"]
+
+        ## Name of the outputted measurement name.
+        measurement = "consul_output_log"
+
+        ## Timezone allows you to provide an override for timestamps that
+        ## don't already include an offset
+        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
+        ##
+        ## Default: "" which renders UTC
+        ## Options are as follows:
+        ##   1. Local             -- interpret based on machine localtime
+        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
+        timezone = "UTC"
+
+    [[inputs.logparser]]
+      [inputs.logparser.tags]
+      rabbitmq_exchange = "logs.file"
+
+      ## Log files to parse.
+      ## These accept standard unix glob matching rules, but with the addition of
+      ## ** as a "super asterisk". ie:
+      ##   /var/log/**.log     -> recursively find all .log files in /var/log
+      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
+      ##   /var/log/apache.log -> only tail the apache log file
+      files = [
+        "#{consul_template_logs_path}/consul-template.err.log"
+      ]
+
+      ## Read files that currently exist from the beginning. Files that are created
+      ## while telegraf is running (and that match the "files" globs) will always
+      ## be read from the beginning.
+      from_beginning = false
+
+      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
+      # watch_method = "inotify"
+
+      ## Parse logstash-style "grok" patterns:
+      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
+      [inputs.logparser.grok]
+        ## This is a list of patterns to check the given log file(s) for.
+        ## Note that adding patterns here increases processing time. The most
+        ## efficient configuration is to have one pattern per logparser.
+        ## Other common built-in patterns are:
+        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
+        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
+        patterns = ["%{DATESTAMP:timestamp} \\[%{LOGLEVEL:logLevel}\\] %{GREEDYDATA:message}"]
+
+        ## Name of the outputted measurement name.
+        measurement = "apache_access_log"
+
+        ## Full path(s) to custom pattern files.
+        custom_pattern_files = []
+
+        ## Custom patterns can also be defined here. Put one pattern per line.
+        custom_patterns = '''
+        '''
+
+        ## Timezone allows you to provide an override for timestamps that
+        ## don't already include an offset
+        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
+        ##
+        ## Default: "" which renders UTC
+        ## Options are as follows:
+        ##   1. Local             -- interpret based on machine localtime
+        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
+        timezone = "UTC"
+
+    [[inputs.logparser]]
+      [inputs.logparser.tags]
+      rabbitmq_exchange = "logs.file"
+
+      ## Log files to parse.
+      ## These accept standard unix glob matching rules, but with the addition of
+      ## ** as a "super asterisk". ie:
+      ##   /var/log/**.log     -> recursively find all .log files in /var/log
+      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
+      ##   /var/log/apache.log -> only tail the apache log file
+      files = [
+        "#{telegraf_logs_path}/telegraf.log"
       ]
 
       ## Read files that currently exist from the beginning. Files that are created
@@ -94,172 +245,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
       ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
       ##   /var/log/apache.log -> only tail the apache log file
       files = [
-          "#{consul_template_logs_path}/consul-template-service.out.log",
-          "#{consul_template_logs_path}/consul-template-service.err.log"
-      ]
-
-      ## Read files that currently exist from the beginning. Files that are created
-      ## while telegraf is running (and that match the "files" globs) will always
-      ## be read from the beginning.
-      from_beginning = false
-
-      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-      # watch_method = "inotify"
-
-      ## Parse logstash-style "grok" patterns:
-      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-      [inputs.logparser.grok]
-        ## This is a list of patterns to check the given log file(s) for.
-        ## Note that adding patterns here increases processing time. The most
-        ## efficient configuration is to have one pattern per logparser.
-        ## Other common built-in patterns are:
-        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{COMBINED_LOG_FORMAT}"]
-
-        ## Name of the outputted measurement name.
-        measurement = "apache_access_log"
-
-        ## Full path(s) to custom pattern files.
-        custom_pattern_files = []
-
-        ## Custom patterns can also be defined here. Put one pattern per line.
-        custom_patterns = '''
-        '''
-
-        ## Timezone allows you to provide an override for timestamps that
-        ## don't already include an offset
-        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-        ##
-        ## Default: "" which renders UTC
-        ## Options are as follows:
-        ##   1. Local             -- interpret based on machine localtime
-        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-        timezone = "UTC"
-
-    [[inputs.logparser]]
-      [inputs.logparser.tags]
-      rabbitmq_exchange = "logs.file"
-
-      ## Log files to parse.
-      ## These accept standard unix glob matching rules, but with the addition of
-      ## ** as a "super asterisk". ie:
-      ##   /var/log/**.log     -> recursively find all .log files in /var/log
-      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-      ##   /var/log/apache.log -> only tail the apache log file
-      files = [
-          "#{provisioning_logs_path}/provisioning-service.out.log",
-          "#{provisioning_logs_path}/provisioning-service.err.log"
-      ]
-
-      ## Read files that currently exist from the beginning. Files that are created
-      ## while telegraf is running (and that match the "files" globs) will always
-      ## be read from the beginning.
-      from_beginning = false
-
-      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-      # watch_method = "inotify"
-
-      ## Parse logstash-style "grok" patterns:
-      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-      [inputs.logparser.grok]
-        ## This is a list of patterns to check the given log file(s) for.
-        ## Note that adding patterns here increases processing time. The most
-        ## efficient configuration is to have one pattern per logparser.
-        ## Other common built-in patterns are:
-        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{COMBINED_LOG_FORMAT}"]
-
-        ## Name of the outputted measurement name.
-        measurement = "apache_access_log"
-
-        ## Full path(s) to custom pattern files.
-        custom_pattern_files = []
-
-        ## Custom patterns can also be defined here. Put one pattern per line.
-        custom_patterns = '''
-        '''
-
-        ## Timezone allows you to provide an override for timestamps that
-        ## don't already include an offset
-        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-        ##
-        ## Default: "" which renders UTC
-        ## Options are as follows:
-        ##   1. Local             -- interpret based on machine localtime
-        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-        timezone = "UTC"
-
-    [[inputs.logparser]]
-      [inputs.logparser.tags]
-      rabbitmq_exchange = "logs.file"
-
-      ## Log files to parse.
-      ## These accept standard unix glob matching rules, but with the addition of
-      ## ** as a "super asterisk". ie:
-      ##   /var/log/**.log     -> recursively find all .log files in /var/log
-      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-      ##   /var/log/apache.log -> only tail the apache log file
-      files = [
-          "#{telegraf_logs_path}/telegraf.log"
-      ]
-
-      ## Read files that currently exist from the beginning. Files that are created
-      ## while telegraf is running (and that match the "files" globs) will always
-      ## be read from the beginning.
-      from_beginning = false
-
-      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-      # watch_method = "inotify"
-
-      ## Parse logstash-style "grok" patterns:
-      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-      [inputs.logparser.grok]
-        ## This is a list of patterns to check the given log file(s) for.
-        ## Note that adding patterns here increases processing time. The most
-        ## efficient configuration is to have one pattern per logparser.
-        ## Other common built-in patterns are:
-        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{COMBINED_LOG_FORMAT}"]
-
-        ## Name of the outputted measurement name.
-        measurement = "apache_access_log"
-
-        ## Full path(s) to custom pattern files.
-        custom_pattern_files = []
-
-        ## Custom patterns can also be defined here. Put one pattern per line.
-        custom_patterns = '''
-        '''
-
-        ## Timezone allows you to provide an override for timestamps that
-        ## don't already include an offset
-        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-        ##
-        ## Default: "" which renders UTC
-        ## Options are as follows:
-        ##   1. Local             -- interpret based on machine localtime
-        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-        timezone = "UTC"
-
-    [[inputs.logparser]]
-      [inputs.logparser.tags]
-      rabbitmq_exchange = "logs.file"
-
-      ## Log files to parse.
-      ## These accept standard unix glob matching rules, but with the addition of
-      ## ** as a "super asterisk". ie:
-      ##   /var/log/**.log     -> recursively find all .log files in /var/log
-      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-      ##   /var/log/apache.log -> only tail the apache log file
-      files = [
-          "#{unbound_logs_path}/unbound.out.log",
-          "#{unbound_logs_path}/unbound.err.log"
+        "#{unbound_logs_path}/unbound.log"
       ]
 
       ## Read files that currently exist from the beginning. Files that are created
@@ -400,7 +386,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
   CONF
   mode '755'
 end
-
+# rubocop:enable Style/FormatStringToken
 
 # Create the consul-template configuration file
 file "#{consul_template_config_path}/telegraf_logs.hcl" do
