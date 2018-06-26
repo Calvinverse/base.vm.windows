@@ -300,7 +300,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
       ## will be selected anytime a connection is established.  This can be
       ## helpful for load balancing when not using a dedicated load balancer.
       brokers = [
-        "amqp://{{ key "config/services/queue/protocols/amqp/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/queue/protocols/amqp/port" "5672" }}/{{ keyOrDefault "config/services/queue/logs/file/vhost" "unknown" }}"
+        "amqp://{{ keyOrDefault "config/services/queue/protocols/amqp/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/queue/protocols/amqp/port" "5672" }}/{{ keyOrDefault "config/services/queue/logs/file/vhost" "unknown" }}"
       ]
 
       ## Maximum messages to send over a connection. Once this is reached, the
@@ -309,7 +309,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
       # max_messages = 0
 
       ## Exchange to declare and publish to.
-      exchange = ""
+      exchange = "{{ keyOrDefault "config/services/queue/logs/file/exchange" "" }}"
 
       ## Exchange type; common types are "direct", "fanout", "topic", "header", "x-consistent-hash".
       # exchange_type = "topic"
