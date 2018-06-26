@@ -251,7 +251,7 @@ file "#{consul_template_template_path}/#{telegraf_template_file}" do
 
       ## Logging configuration:
       ## Run telegraf with debug log messages.
-      debug = false
+      debug = true
       ## Run telegraf in quiet mode (error log messages only).
       quiet = false
       ## Specify the log file name. The empty string means to log to stderr.
