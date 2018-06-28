@@ -5,7 +5,7 @@ require 'spec_helper'
 describe 'base_windows::system_logs' do
   consul_logs_path = 'c:/logs/consul'
   consul_template_logs_path = 'c:/logs/consul-template'
-  provisioning_logs_path = 'c:/logs/provisioning'
+  firewall_logs_path = 'c:/logs/firewall'
   telegraf_logs_path = 'c:/logs/telegraf'
   unbound_logs_path = 'c:/logs/unbound'
 
@@ -31,7 +31,53 @@ describe 'base_windows::system_logs' do
         ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
         ##   /var/log/apache.log -> only tail the apache log file
         files = [
-          "#{consul_logs_path}/consul-service.out.log",
+          "#{consul_logs_path}/consul-service.out.log"
+        ]
+
+        ## Read files that currently exist from the beginning. Files that are created
+        ## while telegraf is running (and that match the "files" globs) will always
+        ## be read from the beginning.
+        from_beginning = false
+
+        ## Method used to watch for file updates.  Can be either "inotify" or "poll".
+        # watch_method = "inotify"
+
+        ## Parse logstash-style "grok" patterns:
+        ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
+        [inputs.logparser.grok]
+          ## This is a list of patterns to check the given log file(s) for.
+          ## Note that adding patterns here increases processing time. The most
+          ## efficient configuration is to have one pattern per logparser.
+          ## Other common built-in patterns are:
+          ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
+          ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
+          patterns = ["%{DATESTAMP:timestamp} \\[%{LOGLEVEL:logLevel}\\] %{GREEDYDATA:message}"]
+
+          ## Name of the outputted measurement name.
+          measurement = "consul_output_log"
+
+          ## Timezone allows you to provide an override for timestamps that
+          ## don't already include an offset
+          ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
+          ##
+          ## Default: "" which renders UTC
+          ## Options are as follows:
+          ##   1. Local             -- interpret based on machine localtime
+          ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+          ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
+          timezone = "UTC"
+
+      [[inputs.logparser]]
+        [inputs.logparser.tags]
+        rabbitmq_exchange = "logs.file"
+
+        ## Log files to parse.
+        ## These accept standard unix glob matching rules, but with the addition of
+        ## ** as a "super asterisk". ie:
+        ##   /var/log/**.log     -> recursively find all .log files in /var/log
+        ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
+        ##   /var/log/apache.log -> only tail the apache log file
+        files = [
           "#{consul_logs_path}/consul-service.err.log"
         ]
 
@@ -52,17 +98,10 @@ describe 'base_windows::system_logs' do
           ## Other common built-in patterns are:
           ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
           ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-          patterns = ["%{COMBINED_LOG_FORMAT}"]
+          patterns = ["%{GREEDYDATA:message}"]
 
           ## Name of the outputted measurement name.
-          measurement = "apache_access_log"
-
-          ## Full path(s) to custom pattern files.
-          custom_pattern_files = []
-
-          ## Custom patterns can also be defined here. Put one pattern per line.
-          custom_patterns = '''
-          '''
+          measurement = "consul_error_log"
 
           ## Timezone allows you to provide an override for timestamps that
           ## don't already include an offset
@@ -86,8 +125,7 @@ describe 'base_windows::system_logs' do
         ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
         ##   /var/log/apache.log -> only tail the apache log file
         files = [
-          "#{consul_template_logs_path}/consul-template-service.out.log",
-          "#{consul_template_logs_path}/consul-template-service.err.log"
+          "#{consul_template_logs_path}/consul-template.err.log"
         ]
 
         ## Read files that currently exist from the beginning. Files that are created
@@ -107,65 +145,10 @@ describe 'base_windows::system_logs' do
           ## Other common built-in patterns are:
           ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
           ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-          patterns = ["%{COMBINED_LOG_FORMAT}"]
+          patterns = ["%{DATESTAMP:timestamp} \\[%{LOGLEVEL:logLevel}\\] %{GREEDYDATA:message}"]
 
           ## Name of the outputted measurement name.
-          measurement = "apache_access_log"
-
-          ## Full path(s) to custom pattern files.
-          custom_pattern_files = []
-
-          ## Custom patterns can also be defined here. Put one pattern per line.
-          custom_patterns = '''
-          '''
-
-          ## Timezone allows you to provide an override for timestamps that
-          ## don't already include an offset
-          ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-          ##
-          ## Default: "" which renders UTC
-          ## Options are as follows:
-          ##   1. Local             -- interpret based on machine localtime
-          ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-          ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-          timezone = "UTC"
-
-      [[inputs.logparser]]
-        [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
-
-        ## Log files to parse.
-        ## These accept standard unix glob matching rules, but with the addition of
-        ## ** as a "super asterisk". ie:
-        ##   /var/log/**.log     -> recursively find all .log files in /var/log
-        ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-        ##   /var/log/apache.log -> only tail the apache log file
-        files = [
-          "#{provisioning_logs_path}/provisioning-service.out.log",
-          "#{provisioning_logs_path}/provisioning-service.err.log"
-        ]
-
-        ## Read files that currently exist from the beginning. Files that are created
-        ## while telegraf is running (and that match the "files" globs) will always
-        ## be read from the beginning.
-        from_beginning = false
-
-        ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-        # watch_method = "inotify"
-
-        ## Parse logstash-style "grok" patterns:
-        ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-        [inputs.logparser.grok]
-          ## This is a list of patterns to check the given log file(s) for.
-          ## Note that adding patterns here increases processing time. The most
-          ## efficient configuration is to have one pattern per logparser.
-          ## Other common built-in patterns are:
-          ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-          ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-          patterns = ["%{COMBINED_LOG_FORMAT}"]
-
-          ## Name of the outputted measurement name.
-          measurement = "apache_access_log"
+          measurement = "consul_template_log"
 
           ## Full path(s) to custom pattern files.
           custom_pattern_files = []
@@ -216,10 +199,10 @@ describe 'base_windows::system_logs' do
           ## Other common built-in patterns are:
           ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
           ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-          patterns = ["%{COMBINED_LOG_FORMAT}"]
+          patterns = ["%{TIMESTAMP_ISO8601:timestamp} %{WORD:logLevel}\\! %{GREEDYDATA:message}"]
 
           ## Name of the outputted measurement name.
-          measurement = "apache_access_log"
+          measurement = "telegraf_log"
 
           ## Full path(s) to custom pattern files.
           custom_pattern_files = []
@@ -250,8 +233,63 @@ describe 'base_windows::system_logs' do
         ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
         ##   /var/log/apache.log -> only tail the apache log file
         files = [
-          "#{unbound_logs_path}/unbound.out.log",
-          "#{unbound_logs_path}/unbound.err.log"
+          "#{unbound_logs_path}/unbound.log"
+        ]
+
+        ## Read files that currently exist from the beginning. Files that are created
+        ## while telegraf is running (and that match the "files" globs) will always
+        ## be read from the beginning.
+        from_beginning = false
+
+        ## Method used to watch for file updates.  Can be either "inotify" or "poll".
+        # watch_method = "inotify"
+
+        ## Parse logstash-style "grok" patterns:
+        ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
+        [inputs.logparser.grok]
+          ## This is a list of patterns to check the given log file(s) for.
+          ## Note that adding patterns here increases processing time. The most
+          ## efficient configuration is to have one pattern per logparser.
+          ## Other common built-in patterns are:
+          ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
+          ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
+          patterns = ["%{CATALINA_DATESTAMP:timestamp} %{PROG:application}%{SYSLOG_PID:pid} %{LOGLEVEL:loglevel}: %{GREEDYDATA:message}"]
+
+          ## Name of the outputted measurement name.
+          measurement = "unbound_log"
+
+          ## Full path(s) to custom pattern files.
+          custom_pattern_files = []
+
+          ## Custom patterns can also be defined here. Put one pattern per line.
+          custom_patterns = '''
+            CATALINA_DATESTAMP %{DATE_EU} %{TIME} (?:AM|PM)
+            SYSLOG_PID (?:\\[.*\\])?
+          '''
+
+          ## Timezone allows you to provide an override for timestamps that
+          ## don't already include an offset
+          ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
+          ##
+          ## Default: "" which renders UTC
+          ## Options are as follows:
+          ##   1. Local             -- interpret based on machine localtime
+          ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+          ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
+          timezone = "UTC"
+
+      [[inputs.logparser]]
+        [inputs.logparser.tags]
+        rabbitmq_exchange = "logs.file"
+
+        ## Log files to parse.
+        ## These accept standard unix glob matching rules, but with the addition of
+        ## ** as a "super asterisk". ie:
+        ##   /var/log/**.log     -> recursively find all .log files in /var/log
+        ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
+        ##   /var/log/apache.log -> only tail the apache log file
+        files = [
+          "#{firewall_logs_path}/domain.log"
         ]
 
         ## Read files that currently exist from the beginning. Files that are created
@@ -274,7 +312,115 @@ describe 'base_windows::system_logs' do
           patterns = ["%{COMBINED_LOG_FORMAT}"]
 
           ## Name of the outputted measurement name.
-          measurement = "apache_access_log"
+          measurement = "firewall_domain_log"
+
+          ## Full path(s) to custom pattern files.
+          custom_pattern_files = []
+
+          ## Custom patterns can also be defined here. Put one pattern per line.
+          custom_patterns = '''
+          '''
+
+          ## Timezone allows you to provide an override for timestamps that
+          ## don't already include an offset
+          ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
+          ##
+          ## Default: "" which renders UTC
+          ## Options are as follows:
+          ##   1. Local             -- interpret based on machine localtime
+          ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+          ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
+          timezone = "UTC"
+
+      [[inputs.logparser]]
+        [inputs.logparser.tags]
+        rabbitmq_exchange = "logs.file"
+
+        ## Log files to parse.
+        ## These accept standard unix glob matching rules, but with the addition of
+        ## ** as a "super asterisk". ie:
+        ##   /var/log/**.log     -> recursively find all .log files in /var/log
+        ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
+        ##   /var/log/apache.log -> only tail the apache log file
+        files = [
+          "#{firewall_logs_path}/private.log"
+        ]
+
+        ## Read files that currently exist from the beginning. Files that are created
+        ## while telegraf is running (and that match the "files" globs) will always
+        ## be read from the beginning.
+        from_beginning = false
+
+        ## Method used to watch for file updates.  Can be either "inotify" or "poll".
+        # watch_method = "inotify"
+
+        ## Parse logstash-style "grok" patterns:
+        ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
+        [inputs.logparser.grok]
+          ## This is a list of patterns to check the given log file(s) for.
+          ## Note that adding patterns here increases processing time. The most
+          ## efficient configuration is to have one pattern per logparser.
+          ## Other common built-in patterns are:
+          ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
+          ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
+          patterns = ["%{COMBINED_LOG_FORMAT}"]
+
+          ## Name of the outputted measurement name.
+          measurement = "firewall_private_log"
+
+          ## Full path(s) to custom pattern files.
+          custom_pattern_files = []
+
+          ## Custom patterns can also be defined here. Put one pattern per line.
+          custom_patterns = '''
+          '''
+
+          ## Timezone allows you to provide an override for timestamps that
+          ## don't already include an offset
+          ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
+          ##
+          ## Default: "" which renders UTC
+          ## Options are as follows:
+          ##   1. Local             -- interpret based on machine localtime
+          ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+          ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
+          timezone = "UTC"
+
+      [[inputs.logparser]]
+        [inputs.logparser.tags]
+        rabbitmq_exchange = "logs.file"
+
+        ## Log files to parse.
+        ## These accept standard unix glob matching rules, but with the addition of
+        ## ** as a "super asterisk". ie:
+        ##   /var/log/**.log     -> recursively find all .log files in /var/log
+        ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
+        ##   /var/log/apache.log -> only tail the apache log file
+        files = [
+          "#{firewall_logs_path}/public.log"
+        ]
+
+        ## Read files that currently exist from the beginning. Files that are created
+        ## while telegraf is running (and that match the "files" globs) will always
+        ## be read from the beginning.
+        from_beginning = false
+
+        ## Method used to watch for file updates.  Can be either "inotify" or "poll".
+        # watch_method = "inotify"
+
+        ## Parse logstash-style "grok" patterns:
+        ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
+        [inputs.logparser.grok]
+          ## This is a list of patterns to check the given log file(s) for.
+          ## Note that adding patterns here increases processing time. The most
+          ## efficient configuration is to have one pattern per logparser.
+          ## Other common built-in patterns are:
+          ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
+          ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
+          patterns = ["%{COMBINED_LOG_FORMAT}"]
+
+          ## Name of the outputted measurement name.
+          measurement = "firewall_public_log"
 
           ## Full path(s) to custom pattern files.
           custom_pattern_files = []
@@ -306,7 +452,7 @@ describe 'base_windows::system_logs' do
         ## will be selected anytime a connection is established.  This can be
         ## helpful for load balancing when not using a dedicated load balancer.
         brokers = [
-          "amqp://{{ key "config/services/queue/protocols/amqp/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/queue/protocols/amqp/port" "5672" }}/{{ keyOrDefault "config/services/queue/logs/file/vhost" "unknown" }}"
+          "amqp://{{ keyOrDefault "config/services/queue/protocols/amqp/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/queue/protocols/amqp/port" "5672" }}/{{ keyOrDefault "config/services/queue/logs/file/vhost" "unknown" }}"
         ]
 
         ## Maximum messages to send over a connection. Once this is reached, the
@@ -315,7 +461,7 @@ describe 'base_windows::system_logs' do
         # max_messages = 0
 
         ## Exchange to declare and publish to.
-        exchange = ""
+        exchange = "{{ keyOrDefault "config/services/queue/logs/file/exchange" "" }}"
 
         ## Exchange type; common types are "direct", "fanout", "topic", "header", "x-consistent-hash".
         # exchange_type = "topic"
