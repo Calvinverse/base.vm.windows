@@ -14,7 +14,6 @@ consul_template_config_path = node['consul_template']['config_path']
 
 consul_logs_path = "#{node['paths']['logs']}/#{node['consul']['service']['name']}"
 consul_template_logs_path = "#{node['paths']['logs']}/#{node['consul_template']['service']['name']}"
-provisioning_logs_path = "#{node['paths']['logs']}/#{node['provisioning']['service']['name']}"
 telegraf_logs_path = "#{node['paths']['logs']}/#{node['telegraf']['service']['name']}"
 unbound_logs_path = "#{node['paths']['logs']}/#{node['unbound']['service']['name']}"
 firewall_logs_path = node['firewall']['paths']['logs']
@@ -63,7 +62,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
         ## Other common built-in patterns are:
         ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
         ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{DATESTAMP:timestamp} \\[%{LOGLEVEL:logLevel}\\] %{GREEDYDATA:message}"]
+        patterns = ["%{DATESTAMP:timestamp} \\\\[%{LOGLEVEL:logLevel}\\\\] %{GREEDYDATA:message}"]
 
         ## Name of the outputted measurement name.
         measurement = "consul_output_log"
@@ -157,7 +156,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
         ## Other common built-in patterns are:
         ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
         ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{DATESTAMP:timestamp} \\[%{LOGLEVEL:logLevel}\\] %{GREEDYDATA:message}"]
+        patterns = ["%{DATESTAMP:timestamp} \\\\[%{LOGLEVEL:logLevel}\\\\] %{GREEDYDATA:message}"]
 
         ## Name of the outputted measurement name.
         measurement = "consul_template_log"
@@ -211,7 +210,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
         ## Other common built-in patterns are:
         ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
         ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{TIMESTAMP_ISO8601:timestamp} %{WORD:logLevel}\\! %{GREEDYDATA:message}"]
+        patterns = ["%{TIMESTAMP_ISO8601:timestamp} %{WORD:logLevel}\\\\! %{GREEDYDATA:message}"]
 
         ## Name of the outputted measurement name.
         measurement = "telegraf_log"
@@ -276,7 +275,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
         ## Custom patterns can also be defined here. Put one pattern per line.
         custom_patterns = '''
           CATALINA_DATESTAMP %{DATE_EU} %{TIME} (?:AM|PM)
-          SYSLOG_PID (?:\\[.*\\])?
+          SYSLOG_PID (?:\\\\[.*\\\\])?
         '''
 
         ## Timezone allows you to provide an override for timestamps that
@@ -491,8 +490,8 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
       ## Authentication credentials for the PLAIN auth_method.
       {{ with secret "rabbitmq/creds/write.vhost.logs.file" }}
         {{ if .Data.password }}
-      # username = "{{ .Data.username }}"
-      # password = "{{ .Data.password }}"
+      username = "{{ .Data.username }}"
+      password = "{{ .Data.password }}"
         {{ end }}
       {{ end }}
 
