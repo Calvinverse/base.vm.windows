@@ -114,12 +114,12 @@ describe 'base_windows::consul_template' do
       function Invoke-Script
       {
         Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Searching for the Vault key for Consul-Template in the Consul k-v ... "
-        $hostname = $env:ComputerName
+        $hostname = ($env:ComputerName).ToLowerInvariant()
         $vaultKeyPath = "auth/services/templates/$($hostname)/secrets"
         $vaultKey = Get-KeyFromConsulKv -key $vaultKeyPath
 
-        $envVars=""
-        $vaultOptions=""
+        $envVars = ""
+        $vaultOptions = ""
 
         $startInfo = New-Object System.Diagnostics.ProcessStartInfo
         $startInfo.FileName = "c:/ops/consul-template/consul-template.exe"
@@ -138,9 +138,9 @@ describe 'base_windows::consul_template' do
           $startInfo.EnvironmentVariables.Add('VAULT_TOKEN', $vaultKey)
 
           $serviceName = Get-KeyFromConsulKv -key 'config/services/secrets/protocols/http/host'
-          $domain= Get-KeyFromConsulKv -key 'config/services/consul/domain'
-          $ort= Get-KeyFromConsulKv -key 'config/services/secrets/protocols/http/port'
-          $vaultOptions="-vault-addr=http://$($serviceName).service.$($domain):$($port) -vault-unwrap-token -vault-renew-token -vault-retry"
+          $domain = Get-KeyFromConsulKv -key 'config/services/consul/domain'
+          $port = Get-KeyFromConsulKv -key 'config/services/secrets/protocols/http/port'
+          $vaultOptions = "-vault-addr=http://$($serviceName).service.$($domain):$($port) -vault-unwrap-token -vault-renew-token -vault-retry"
         }
 
         $startInfo.Arguments = "-config=""c:/config/consul-template/config"" $($vaultOptions)"
@@ -402,6 +402,81 @@ describe 'base_windows::consul_template' do
     HCL
     it 'creates default.hcl in the consul-template config directory' do
       expect(chef_run).to create_file("#{consul_template_config_config_path}/#{consul_template_config_file}").with_content(consul_template_default_config_content)
+    end
+  end
+
+  context 'create the template files for consul-template vault connection' do
+    let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
+
+    consul_template_vault_content = <<~CONF
+      # This block defines the configuration for a template. Unlike other blocks,
+      # this block may be specified multiple times to configure multiple templates.
+      # It is also possible to configure templates via the CLI directly.
+      template {
+        # This option allows embedding the contents of a template in the configuration
+        # file rather then supplying the `source` path to the template file. This is
+        # useful for short templates. This option is mutually exclusive with the
+        # `source` option.
+        contents = "{{ $hostname := (env \\"COMPUTERNAME\\" | trimSpace | toLower ) }}{{ key (printf \\"auth/services/templates/%s/secrets\\" $hostname) }}"
+
+        # This is the destination path on disk where the source template will render.
+        # If the parent directories do not exist, Consul Template will attempt to
+        # create them, unless create_dest_dirs is false.
+        destination = "c:/users/consul-template/AppData/Local/Temp/consul_template_donotcare.txt"
+
+        # This options tells Consul Template to create the parent directories of the
+        # destination path if they do not exist. The default value is true.
+        create_dest_dirs = false
+
+        # This is the optional command to run when the template is rendered. The
+        # command will only run if the resulting template changes. The command must
+        # return within 30s (configurable), and it must have a successful exit code.
+        # Consul Template is not a replacement for a process monitor or init system.
+        command = "powershell.exe -noprofile -nologo -noninteractive -command \\"Restart-Service consul-template\\" "
+
+        # This is the maximumS amount of time to wait for the optional command to
+        # return. Default is 30s.
+        command_timeout = "90s"
+
+        # Exit with an error when accessing a struct or map field/key that does not
+        # exist. The default behavior will print "<no value>" when accessing a field
+        # that does not exist. It is highly recommended you set this to "true" when
+        # retrieving secrets from Vault.
+        error_on_missing_key = false
+
+        # This is the permission to render the file. If this option is left
+        # unspecified, Consul Template will attempt to match the permissions of the
+        # file that already exists at the destination path. If no file exists at that
+        # path, the permissions are 0644.
+        perms = 0755
+
+        # This option backs up the previously rendered template at the destination
+        # path before writing a new one. It keeps exactly one backup. This option is
+        # useful for preventing accidental changes to the data without having a
+        # rollback strategy.
+        backup = false
+
+        # These are the delimiters to use in the template. The default is "{{" and
+        # "}}", but for some templates, it may be easier to use a different delimiter
+        # that does not conflict with the output file itself.
+        left_delimiter  = "{{"
+        right_delimiter = "}}"
+
+        # This is the `minimum(:maximum)` to wait before rendering a new template to
+        # disk and triggering a command, separated by a colon (`:`). If the optional
+        # maximum value is omitted, it is assumed to be 4x the required minimum value.
+        # This is a numeric time with a unit suffix ("5s"). There is no default value.
+        # The wait value for a template takes precedence over any globally-configured
+        # wait.
+        wait {
+          min = "2s"
+          max = "10s"
+        }
+      }
+    CONF
+    it 'creates consul_template_vault.hcl in the consul-template template directory' do
+      expect(chef_run).to create_file('c:/config/consul-template/config/consul_template_vault.hcl')
+        .with_content(consul_template_vault_content)
     end
   end
 end
