@@ -146,6 +146,7 @@ describe 'base_windows::consul_template' do
         $startInfo.Arguments = "-config=""c:/config/consul-template/config"" $($vaultOptions)"
 
         Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Starting Consul-Template ... "
+        Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Using arguments: $($startInfo.Arguments)"
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo = $startInfo
 
@@ -434,7 +435,7 @@ describe 'base_windows::consul_template' do
         # Consul Template is not a replacement for a process monitor or init system.
         command = "powershell.exe -noprofile -nologo -noninteractive -command \\"Restart-Service consul-template\\" "
 
-        # This is the maximumS amount of time to wait for the optional command to
+        # This is the maximum amount of time to wait for the optional command to
         # return. Default is 30s.
         command_timeout = "90s"
 
