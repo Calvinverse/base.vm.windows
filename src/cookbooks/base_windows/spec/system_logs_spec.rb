@@ -309,7 +309,7 @@ describe 'base_windows::system_logs' do
           ## Other common built-in patterns are:
           ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
           ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-          patterns = ["%{COMBINED_LOG_FORMAT}"]
+          patterns = ["%{DATESTAMP:timestamp} %{WORD:action} %{WORD:protocol} %{IP:sourceip} %{IP:destinationip} %{POSINT:sourceport} %{POSINT:destinationport} %{GREEDYDATA:message}"]
 
           ## Name of the outputted measurement name.
           measurement = "firewall_domain_log"
@@ -363,7 +363,7 @@ describe 'base_windows::system_logs' do
           ## Other common built-in patterns are:
           ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
           ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-          patterns = ["%{COMBINED_LOG_FORMAT}"]
+          patterns = ["%{DATESTAMP:timestamp} %{WORD:action} %{WORD:protocol} %{IP:sourceip} %{IP:destinationip} %{POSINT:sourceport} %{POSINT:destinationport} %{GREEDYDATA:message}"]
 
           ## Name of the outputted measurement name.
           measurement = "firewall_private_log"
@@ -417,7 +417,7 @@ describe 'base_windows::system_logs' do
           ## Other common built-in patterns are:
           ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
           ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-          patterns = ["%{COMBINED_LOG_FORMAT}"]
+          patterns = ["%{DATESTAMP:timestamp} %{WORD:action} %{WORD:protocol} %{IP:sourceip} %{IP:destinationip} %{POSINT:sourceport} %{POSINT:destinationport} %{GREEDYDATA:message}"]
 
           ## Name of the outputted measurement name.
           measurement = "firewall_public_log"

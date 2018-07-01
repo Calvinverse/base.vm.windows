@@ -28,16 +28,8 @@ describe 'base_windows::firewall' do
       expect(chef_run).to create_directory(firewall_logs_path)
     end
 
-    it 'sets the domain profile logs' do
-      expect(chef_run).to run_powershell_script('firewall_logging_for_domain_profile')
-    end
-
-    it 'sets the private profile logs' do
-      expect(chef_run).to run_powershell_script('firewall_logging_for_private_profile')
-    end
-
-    it 'sets the public profile logs' do
-      expect(chef_run).to run_powershell_script('firewall_logging_for_public_profile')
+    it 'sets the log file locations' do
+      expect(chef_run).to run_powershell_script('firewall_logging')
     end
   end
 end

@@ -66,7 +66,7 @@ default['firewall']['allow_ssh'] = false
 # No communication via IPv6 at all
 default['firewall']['ipv6_enabled'] = false
 
-default['paths']['logs']['firewall'] = "#{logs_path}/firewall"
+default['firewall']['paths']['logs'] = "#{logs_path}/firewall"
 
 #
 # PROVISIONING

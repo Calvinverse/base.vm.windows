@@ -17,7 +17,7 @@ consul_template_logs_path = "#{node['paths']['logs']}/#{node['consul_template'][
 provisioning_logs_path = "#{node['paths']['logs']}/#{node['provisioning']['service']['name']}"
 telegraf_logs_path = "#{node['paths']['logs']}/#{node['telegraf']['service']['name']}"
 unbound_logs_path = "#{node['paths']['logs']}/#{node['unbound']['service']['name']}"
-firewall_logs_path = ""
+firewall_logs_path = node['firewall']['paths']['logs']
 
 # The configuration file for telegraf is dropped in the configuration path
 # when the resource is provisioned because it contains environment specific information
@@ -321,7 +321,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
         ## Other common built-in patterns are:
         ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
         ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{COMBINED_LOG_FORMAT}"]
+        patterns = ["%{DATESTAMP:timestamp} %{WORD:action} %{WORD:protocol} %{IP:sourceip} %{IP:destinationip} %{POSINT:sourceport} %{POSINT:destinationport} %{GREEDYDATA:message}"]
 
         ## Name of the outputted measurement name.
         measurement = "firewall_domain_log"
@@ -375,7 +375,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
         ## Other common built-in patterns are:
         ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
         ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{COMBINED_LOG_FORMAT}"]
+        patterns = ["%{DATESTAMP:timestamp} %{WORD:action} %{WORD:protocol} %{IP:sourceip} %{IP:destinationip} %{POSINT:sourceport} %{POSINT:destinationport} %{GREEDYDATA:message}"]
 
         ## Name of the outputted measurement name.
         measurement = "firewall_private_log"
@@ -429,7 +429,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
         ## Other common built-in patterns are:
         ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
         ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{COMBINED_LOG_FORMAT}"]
+        patterns = ["%{DATESTAMP:timestamp} %{WORD:action} %{WORD:protocol} %{IP:sourceip} %{IP:destinationip} %{POSINT:sourceport} %{POSINT:destinationport} %{GREEDYDATA:message}"]
 
         ## Name of the outputted measurement name.
         measurement = "firewall_public_log"

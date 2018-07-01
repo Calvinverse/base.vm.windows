@@ -18,50 +18,49 @@ firewall_rule 'winrm' do
   direction :in
 end
 
-firewall_logs_path = "#{node['paths']['logs']['firewall']}"
+firewall_logs_path = node['firewall']['paths']['logs']
 directory firewall_logs_path do
   action :create
   rights :modify, 'NT SERVICE\MPSSVC', applies_to_children: true, applies_to_self: false
 end
 
-powershell_script 'firewall_logging_for_domain_profile' do
+# Normally powershell doesn't care about '/' vs '\' but apparently the windows firewall does care
+# so the log path needs to be a proper windows path, sigh
+powershell_script 'firewall_logging' do
   code <<~POWERSHELL
     $ErrorActionPreference = 'Stop'
 
     Set-NetFirewallProfile `
-      -Profile Domain `
-      -LogFileName #{firewall_logs_path}/domain.log `
+      -Name Domain `
+      -AllowInboundRules True `
+      -DefaultInboundAction Block `
+      -DefaultOutboundAction Allow `
+      -LogFileName #{firewall_logs_path.gsub('/', '\\\\')}\\domain.log `
       -LogMaxSizeKilobytes 4096 `
-      -LogAllowed true `
-      -LogBlocked true `
-      -LogIgnored true
-  POWERSHELL
-end
-
-powershell_script 'firewall_logging_for_private_profile' do
-  code <<~POWERSHELL
-    $ErrorActionPreference = 'Stop'
+      -LogAllowed True `
+      -LogBlocked True `
+      -LogIgnored True
 
     Set-NetFirewallProfile `
-      -Profile Private `
-      -LogFileName #{firewall_logs_path}/private.log `
+      -Name Private `
+      -AllowInboundRules True `
+      -DefaultInboundAction Block `
+      -DefaultOutboundAction Allow `
+      -LogFileName #{firewall_logs_path.gsub('/', '\\\\')}\\private.log `
       -LogMaxSizeKilobytes 4096 `
-      -LogAllowed true `
-      -LogBlocked true `
-      -LogIgnored true
-  POWERSHELL
-end
-
-powershell_script 'firewall_logging_for_public_profile' do
-  code <<~POWERSHELL
-    $ErrorActionPreference = 'Stop'
+      -LogAllowed True `
+      -LogBlocked True `
+      -LogIgnored True
 
     Set-NetFirewallProfile `
-      -Profile Public `
-      -LogFileName #{firewall_logs_path}/public.log `
+      -Name Public `
+      -AllowInboundRules True `
+      -DefaultInboundAction Block `
+      -DefaultOutboundAction Allow `
+      -LogFileName #{firewall_logs_path.gsub('/', '\\\\')}\\public.log `
       -LogMaxSizeKilobytes 4096 `
-      -LogAllowed true `
-      -LogBlocked true `
-      -LogIgnored true
+      -LogAllowed True `
+      -LogBlocked True `
+      -LogIgnored True
   POWERSHELL
 end
