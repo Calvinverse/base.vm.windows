@@ -21,9 +21,6 @@ describe 'base_windows::system_logs' do
       ###############################################################################
 
       [[inputs.logparser]]
-        [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
-
         ## Log files to parse.
         ## These accept standard unix glob matching rules, but with the addition of
         ## ** as a "super asterisk". ie:
@@ -41,6 +38,9 @@ describe 'base_windows::system_logs' do
 
         ## Method used to watch for file updates.  Can be either "inotify" or "poll".
         # watch_method = "inotify"
+
+        [inputs.logparser.tags]
+          rabbitmq_exchange = "logs.file"
 
         ## Parse logstash-style "grok" patterns:
         ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
@@ -68,9 +68,6 @@ describe 'base_windows::system_logs' do
           timezone = "UTC"
 
       [[inputs.logparser]]
-        [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
-
         ## Log files to parse.
         ## These accept standard unix glob matching rules, but with the addition of
         ## ** as a "super asterisk". ie:
@@ -88,6 +85,9 @@ describe 'base_windows::system_logs' do
 
         ## Method used to watch for file updates.  Can be either "inotify" or "poll".
         # watch_method = "inotify"
+
+        [inputs.logparser.tags]
+          rabbitmq_exchange = "logs.file"
 
         ## Parse logstash-style "grok" patterns:
         ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
@@ -115,9 +115,6 @@ describe 'base_windows::system_logs' do
           timezone = "UTC"
 
       [[inputs.logparser]]
-        [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
-
         ## Log files to parse.
         ## These accept standard unix glob matching rules, but with the addition of
         ## ** as a "super asterisk". ie:
@@ -135,6 +132,9 @@ describe 'base_windows::system_logs' do
 
         ## Method used to watch for file updates.  Can be either "inotify" or "poll".
         # watch_method = "inotify"
+
+        [inputs.logparser.tags]
+          rabbitmq_exchange = "logs.file"
 
         ## Parse logstash-style "grok" patterns:
         ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
@@ -169,9 +169,6 @@ describe 'base_windows::system_logs' do
           timezone = "UTC"
 
       [[inputs.logparser]]
-        [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
-
         ## Log files to parse.
         ## These accept standard unix glob matching rules, but with the addition of
         ## ** as a "super asterisk". ie:
@@ -189,6 +186,9 @@ describe 'base_windows::system_logs' do
 
         ## Method used to watch for file updates.  Can be either "inotify" or "poll".
         # watch_method = "inotify"
+
+        [inputs.logparser.tags]
+          rabbitmq_exchange = "logs.file"
 
         ## Parse logstash-style "grok" patterns:
         ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
@@ -223,9 +223,6 @@ describe 'base_windows::system_logs' do
           timezone = "UTC"
 
       [[inputs.logparser]]
-        [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
-
         ## Log files to parse.
         ## These accept standard unix glob matching rules, but with the addition of
         ## ** as a "super asterisk". ie:
@@ -243,6 +240,9 @@ describe 'base_windows::system_logs' do
 
         ## Method used to watch for file updates.  Can be either "inotify" or "poll".
         # watch_method = "inotify"
+
+        [inputs.logparser.tags]
+          rabbitmq_exchange = "logs.file"
 
         ## Parse logstash-style "grok" patterns:
         ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
@@ -279,9 +279,6 @@ describe 'base_windows::system_logs' do
           timezone = "UTC"
 
       [[inputs.logparser]]
-        [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
-
         ## Log files to parse.
         ## These accept standard unix glob matching rules, but with the addition of
         ## ** as a "super asterisk". ie:
@@ -289,114 +286,8 @@ describe 'base_windows::system_logs' do
         ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
         ##   /var/log/apache.log -> only tail the apache log file
         files = [
-          "#{firewall_logs_path}/domain.log"
-        ]
-
-        ## Read files that currently exist from the beginning. Files that are created
-        ## while telegraf is running (and that match the "files" globs) will always
-        ## be read from the beginning.
-        from_beginning = false
-
-        ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-        # watch_method = "inotify"
-
-        ## Parse logstash-style "grok" patterns:
-        ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-        [inputs.logparser.grok]
-          ## This is a list of patterns to check the given log file(s) for.
-          ## Note that adding patterns here increases processing time. The most
-          ## efficient configuration is to have one pattern per logparser.
-          ## Other common built-in patterns are:
-          ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-          ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-          patterns = ["%{DATESTAMP:timestamp} %{WORD:action} %{WORD:protocol} %{IP:sourceip} %{IP:destinationip} %{POSINT:sourceport} %{POSINT:destinationport} %{GREEDYDATA:message}"]
-
-          ## Name of the outputted measurement name.
-          measurement = "firewall_domain_log"
-
-          ## Full path(s) to custom pattern files.
-          custom_pattern_files = []
-
-          ## Custom patterns can also be defined here. Put one pattern per line.
-          custom_patterns = '''
-          '''
-
-          ## Timezone allows you to provide an override for timestamps that
-          ## don't already include an offset
-          ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-          ##
-          ## Default: "" which renders UTC
-          ## Options are as follows:
-          ##   1. Local             -- interpret based on machine localtime
-          ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-          ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-          timezone = "UTC"
-
-      [[inputs.logparser]]
-        [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
-
-        ## Log files to parse.
-        ## These accept standard unix glob matching rules, but with the addition of
-        ## ** as a "super asterisk". ie:
-        ##   /var/log/**.log     -> recursively find all .log files in /var/log
-        ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-        ##   /var/log/apache.log -> only tail the apache log file
-        files = [
-          "#{firewall_logs_path}/private.log"
-        ]
-
-        ## Read files that currently exist from the beginning. Files that are created
-        ## while telegraf is running (and that match the "files" globs) will always
-        ## be read from the beginning.
-        from_beginning = false
-
-        ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-        # watch_method = "inotify"
-
-        ## Parse logstash-style "grok" patterns:
-        ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-        [inputs.logparser.grok]
-          ## This is a list of patterns to check the given log file(s) for.
-          ## Note that adding patterns here increases processing time. The most
-          ## efficient configuration is to have one pattern per logparser.
-          ## Other common built-in patterns are:
-          ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-          ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-          patterns = ["%{DATESTAMP:timestamp} %{WORD:action} %{WORD:protocol} %{IP:sourceip} %{IP:destinationip} %{POSINT:sourceport} %{POSINT:destinationport} %{GREEDYDATA:message}"]
-
-          ## Name of the outputted measurement name.
-          measurement = "firewall_private_log"
-
-          ## Full path(s) to custom pattern files.
-          custom_pattern_files = []
-
-          ## Custom patterns can also be defined here. Put one pattern per line.
-          custom_patterns = '''
-          '''
-
-          ## Timezone allows you to provide an override for timestamps that
-          ## don't already include an offset
-          ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-          ##
-          ## Default: "" which renders UTC
-          ## Options are as follows:
-          ##   1. Local             -- interpret based on machine localtime
-          ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-          ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-          timezone = "UTC"
-
-      [[inputs.logparser]]
-        [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
-
-        ## Log files to parse.
-        ## These accept standard unix glob matching rules, but with the addition of
-        ## ** as a "super asterisk". ie:
-        ##   /var/log/**.log     -> recursively find all .log files in /var/log
-        ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-        ##   /var/log/apache.log -> only tail the apache log file
-        files = [
+          "#{firewall_logs_path}/domain.log",
+          "#{firewall_logs_path}/private.log",
           "#{firewall_logs_path}/public.log"
         ]
 
@@ -408,6 +299,9 @@ describe 'base_windows::system_logs' do
         ## Method used to watch for file updates.  Can be either "inotify" or "poll".
         # watch_method = "inotify"
 
+        [inputs.logparser.tags]
+          rabbitmq_exchange = "logs.file"
+
         ## Parse logstash-style "grok" patterns:
         ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
         [inputs.logparser.grok]
@@ -420,7 +314,7 @@ describe 'base_windows::system_logs' do
           patterns = ["%{DATESTAMP:timestamp} %{WORD:action} %{WORD:protocol} %{IP:sourceip} %{IP:destinationip} %{POSINT:sourceport} %{POSINT:destinationport} %{GREEDYDATA:message}"]
 
           ## Name of the outputted measurement name.
-          measurement = "firewall_public_log"
+          measurement = "firewall_log"
 
           ## Full path(s) to custom pattern files.
           custom_pattern_files = []
