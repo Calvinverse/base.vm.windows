@@ -84,8 +84,8 @@ default['telegraf']['service']['name'] = 'telegraf'
 default['telegraf']['service']['user_name'] = 'telegraf_user'
 default['telegraf']['service']['user_password'] = SecureRandom.uuid
 
-default['telegraf']['version'] = '1.6.3'
-default['telegraf']['shasums'] = 'ee9a163e17fe3a58f22d29ca789a62965f75aaa277f26ad2f98514dbdba15ec0'
+default['telegraf']['version'] = '1.7.0'
+default['telegraf']['shasums'] = '4407084b54d42446a1b5c937cf901570410e26cac241e7b7c3d7cff0e578ae58'
 default['telegraf']['download_urls'] = "https://dl.influxdata.com/telegraf/releases/telegraf-#{node['telegraf']['version']}_windows_amd64.zip"
 
 default['telegraf']['consul_template_file'] = 'telegraf.ctmpl'
