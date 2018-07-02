@@ -203,6 +203,9 @@ describe 'base_windows::consul_template' do
 
       # Fire up
       Invoke-Script
+
+      # Exit with a non-zero exit code so that the service never stops(?)
+      exit(1)
     POWERSHELL
     it 'creates Invoke-ConsulTemplate.ps1 script in the consul-template ops directory' do
       expect(chef_run).to create_file("#{consul_template_bin_path}/Invoke-ConsulTemplate.ps1").with_content(consul_template_service_script_content)
@@ -433,7 +436,7 @@ describe 'base_windows::consul_template' do
         # command will only run if the resulting template changes. The command must
         # return within 30s (configurable), and it must have a successful exit code.
         # Consul Template is not a replacement for a process monitor or init system.
-        command = "powershell.exe -noprofile -nologo -noninteractive -command \\"Restart-Service consul-template\\" "
+        command = "powershell.exe -noprofile -nologo -noninteractive -command \\"$pid = Get-Content -Path 'c:/logs/consul-template/pid.txt'; Stop-Process -Force -Id $pid\\" "
 
         # This is the maximum amount of time to wait for the optional command to
         # return. Default is 30s.
