@@ -11,13 +11,15 @@
 # Include the local recipes
 #
 
+# Need to define the metrics user first so that other recipes can grant that user access to logs
+include_recipe 'base_windows::system_metrics_user'
+
 include_recipe 'base_windows::filesystem'
 include_recipe 'base_windows::firewall'
 
 include_recipe 'base_windows::meta'
 
 include_recipe 'base_windows::seven_zip'
-include_recipe 'base_windows::winsw'
 
 include_recipe 'base_windows::consul'
 include_recipe 'base_windows::consul_template'

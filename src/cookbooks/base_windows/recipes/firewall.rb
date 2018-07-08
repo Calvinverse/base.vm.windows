@@ -18,10 +18,13 @@ firewall_rule 'winrm' do
   direction :in
 end
 
+telegraf_service_username = node['telegraf']['service']['user_name']
+
 firewall_logs_path = node['firewall']['paths']['logs']
 directory firewall_logs_path do
   action :create
   rights :modify, 'NT SERVICE\MPSSVC', applies_to_children: true, applies_to_self: false
+  rights :read, telegraf_service_username, applies_to_children: true, applies_to_self: true
 end
 
 # Normally powershell doesn't care about '/' vs '\' but apparently the windows firewall does care

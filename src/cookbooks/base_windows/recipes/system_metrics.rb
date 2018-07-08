@@ -11,28 +11,6 @@
 service_username = node['telegraf']['service']['user_name']
 service_password = node['telegraf']['service']['user_password']
 
-# Configure the service user under which consul-template will be run
-# Make sure that the user password doesn't expire. The password is a random GUID, so it is unlikely that
-# it will ever be guessed. And the user is a normal user who can't do anything so we don't really care about it
-powershell_script 'telegraf_user_with_password_that_does_not_expire' do
-  code <<~POWERSHELL
-    $userName = '#{service_username}'
-    $password = ConvertTo-SecureString -String '#{service_password}' -AsPlainText -Force
-    $localUser = New-LocalUser `
-      -Name $userName `
-      -Password $password `
-      -PasswordNeverExpires `
-      -UserMayNotChangePassword `
-      -AccountNeverExpires `
-      -Verbose
-
-    Add-LocalGroupMember `
-      -Group 'Performance Monitor Users' `
-      -Member $localUser.Name `
-      -Verbose
-  POWERSHELL
-end
-
 # Grant the user the LogOnAsService permission. Following this anwer on SO: http://stackoverflow.com/a/21235462/539846
 # With some additional bug fixes to get the correct line from the export file and to put the correct text in the import file
 powershell_script 'telegraf_user_grant_service_logon_rights' do

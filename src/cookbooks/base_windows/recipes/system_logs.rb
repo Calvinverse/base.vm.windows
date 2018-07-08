@@ -366,13 +366,13 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
       # max_messages = 0
 
       ## Exchange to declare and publish to.
-      exchange = "{{ keyOrDefault "config/services/queue/logs/file/exchange" "" }}"
+      exchange = "telegraf"
 
       ## Exchange type; common types are "direct", "fanout", "topic", "header", "x-consistent-hash".
-      # exchange_type = "topic"
+      exchange_type = "direct"
 
       ## If true, exchange will be passively declared.
-      exchange_declare_passive = true
+      # exchange_declare_passive = true
 
       ## If true, exchange will be created as a durable exchange.
       # exchange_durable = true
@@ -405,7 +405,7 @@ file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
 
       ## Delivery Mode controls if a published message is persistent.
       ##   One of "transient" or "persistent".
-      # delivery_mode = "transient"
+      # delivery_mode = "persistent"
 
       ## Static headers added to each published message.
       # headers = { }
