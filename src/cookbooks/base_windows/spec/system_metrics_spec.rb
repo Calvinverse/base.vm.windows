@@ -7,6 +7,14 @@ describe 'base_windows::system_metrics' do
   telegraf_logs_path = 'c:/logs/telegraf'
   telegraf_bin_path = 'c:/ops/telegraf'
 
+  context 'create the user to run the service with' do
+    let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
+
+    it 'creates the telegraf user' do
+      expect(chef_run).to run_powershell_script('telegraf_user_with_password_that_does_not_expire')
+    end
+  end
+
   context 'create the log locations' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
 

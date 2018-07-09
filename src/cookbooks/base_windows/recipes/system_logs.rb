@@ -7,446 +7,510 @@
 # Copyright 2018, P. van der Velde
 #
 
-service_name = node['telegraf']['service']['name']
-telegraf_config_directory = node['telegraf']['config_directory']
+# Configure the service user under which filebeat will be run
+service_username = node['filebeat']['service']['user_name']
+service_password = node['filebeat']['service']['user_password']
+
+# Configure the service user under which filebeat will be run
+# Make sure that the user password doesn't expire. The password is a random GUID, so it is unlikely that
+# it will ever be guessed.
+powershell_script 'filebeat_user_with_password_that_does_not_expire' do
+  code <<~POWERSHELL
+    $userName = '#{service_username}'
+    $password = ConvertTo-SecureString -String '#{service_password}' -AsPlainText -Force
+    $localUser = New-LocalUser `
+      -Name $userName `
+      -Password $password `
+      -PasswordNeverExpires `
+      -UserMayNotChangePassword `
+      -AccountNeverExpires `
+      -Verbose
+
+    Add-LocalGroupMember `
+      -Group 'Administrators' `
+      -Member $localUser.Name `
+      -Verbose
+  POWERSHELL
+end
+
+# Grant the user the LogOnAsService permission. Following this anwer on SO: http://stackoverflow.com/a/21235462/539846
+# With some additional bug fixes to get the correct line from the export file and to put the correct text in the import file
+powershell_script 'filebeat_user_grant_service_logon_rights' do
+  code <<~POWERSHELL
+    $ErrorActionPreference = 'Stop'
+
+    $userName = '#{service_username}'
+
+    $tempPath = "c:\\temp"
+    if (-not (Test-Path $tempPath))
+    {
+        New-Item -Path $tempPath -ItemType Directory | Out-Null
+    }
+
+    $import = Join-Path -Path $tempPath -ChildPath "import.inf"
+    if(Test-Path $import)
+    {
+        Remove-Item -Path $import -Force
+    }
+
+    $export = Join-Path -Path $tempPath -ChildPath "export.inf"
+    if(Test-Path $export)
+    {
+        Remove-Item -Path $export -Force
+    }
+
+    $secedt = Join-Path -Path $tempPath -ChildPath "secedt.sdb"
+    if(Test-Path $secedt)
+    {
+        Remove-Item -Path $secedt -Force
+    }
+
+    $sid = ((New-Object System.Security.Principal.NTAccount($userName)).Translate([System.Security.Principal.SecurityIdentifier])).Value
+
+    secedit /export /cfg $export
+    $line = (Select-String $export -Pattern "SeServiceLogonRight").Line
+    $sids = $line.Substring($line.IndexOf('=') + 1).Trim()
+
+    if (-not ($sids.Contains($sid)))
+    {
+        Write-Host ("Granting SeServiceLogonRight to user account: {0} on host: {1}." -f $userName, $computerName)
+        $lines = @(
+                "[Unicode]",
+                "Unicode=yes",
+                "[System Access]",
+                "[Event Audit]",
+                "[Registry Values]",
+                "[Version]",
+                "signature=`"`$CHICAGO$`"",
+                "Revision=1",
+                "[Profile Description]",
+                "Description=GrantLogOnAsAService security template",
+                "[Privilege Rights]",
+                "SeServiceLogonRight = $sids,*$sid"
+            )
+        foreach ($line in $lines)
+        {
+            Add-Content $import $line
+        }
+
+        secedit /import /db $secedt /cfg $import
+        secedit /configure /db $secedt
+        gpupdate /force
+    }
+    else
+    {
+        Write-Host ("User account: {0} on host: {1} already has SeServiceLogonRight." -f $userName, $computerName)
+    }
+  POWERSHELL
+end
+
+#
+# INSTALL FILEBEAT
+#
+
+service_name = node['filebeat']['service']['name']
+
+filebeat_bin_path = "#{node['paths']['ops']}/#{service_name}"
+filebeat_config_path = node['filebeat']['config_directory']
+%W[#{filebeat_bin_path} #{filebeat_config_path}].each do |path|
+  directory path do
+    action :create
+    rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
+  end
+end
+
+filebeat_logs_path = "#{node['paths']['logs']}/#{service_name}"
+directory filebeat_logs_path do
+  action :create
+  rights :modify, service_username, applies_to_children: true, applies_to_self: false
+end
+
+filebeat_exe = 'filebeat.exe'
+filebeat_exe_path = "#{filebeat_bin_path}/#{filebeat_exe}"
+remote_file filebeat_exe_path do
+  action :create
+  source node['filebeat']['url']
+end
+
+#
+# WINDOWS SERVICE
+#
+
+service_name = node['filebeat']['service']['name']
+filebeat_config_file = node['filebeat']['config_file_path']
+filebeat_config_directory = node['filebeat']['config_directory']
+powershell_script 'filebeat_as_service' do
+  code <<~POWERSHELL
+    $ErrorActionPreference = 'Stop'
+
+    $securePassword = ConvertTo-SecureString "#{service_password}" -AsPlainText -Force
+
+    # Note the .\\ is to get the local machine account as per here:
+    # http://stackoverflow.com/questions/313622/powershell-script-to-change-service-account#comment14535084_315616
+    $credential = New-Object pscredential((".\\" + "#{service_username}"), $securePassword)
+
+    $service = Get-Service -Name '#{service_name}' -ErrorAction SilentlyContinue
+    if ($service -eq $null)
+    {
+        New-Service `
+            -Name '#{service_name}' `
+            -BinaryPathName '#{filebeat_exe_path} -c "#{filebeat_config_file}" -path.home "#{filebeat_bin_path}" -path.data "C:/ProgramData/filebeat" -path.logs "#{filebeat_logs_path}" ' `
+            -Credential $credential `
+            -DisplayName '#{service_name}' `
+            -StartupType Automatic
+    }
+
+    # Set the service to restart if it fails
+    # sc.exe failure #{service_name} reset=86400 actions=restart/5000
+  POWERSHELL
+end
+
+#
+# DEFAULT CONFIGURATION
+#
+
 consul_template_template_path = node['consul_template']['template_path']
 consul_template_config_path = node['consul_template']['config_path']
 
-consul_logs_path = "#{node['paths']['logs']}/#{node['consul']['service']['name']}"
-consul_template_logs_path = "#{node['paths']['logs']}/#{node['consul_template']['service']['name']}"
-telegraf_logs_path = "#{node['paths']['logs']}/#{node['telegraf']['service']['name']}"
-unbound_logs_path = "#{node['paths']['logs']}/#{node['unbound']['service']['name']}"
-firewall_logs_path = node['firewall']['paths']['logs']
-
-# The configuration file for telegraf is dropped in the configuration path
+# The configuration file for filebeat is dropped in the configuration path
 # when the resource is provisioned because it contains environment specific information
-# rubocop:disable Style/FormatStringToken
-telegraf_logs_template_file = node['telegraf']['consul_template_logs_file']
-file "#{consul_template_template_path}/#{telegraf_logs_template_file}" do
+filebeat_template_file = node['filebeat']['consul_template_file']
+file "#{consul_template_template_path}/#{filebeat_template_file}" do
   action :create
   content <<~CONF
-    # Telegraf Configuration
+    ######################## Filebeat Configuration ############################
 
-    ###############################################################################
-    #                            INPUT PLUGINS                                    #
-    ###############################################################################
+    #=========================== Filebeat inputs =============================
 
-    [[inputs.logparser]]
-      ## Log files to parse.
-      ## These accept standard unix glob matching rules, but with the addition of
-      ## ** as a "super asterisk". ie:
-      ##   /var/log/**.log     -> recursively find all .log files in /var/log
-      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-      ##   /var/log/apache.log -> only tail the apache log file
-      files = [
-        "#{consul_logs_path}/consul-service.out.log"
-      ]
+    # List of inputs to fetch data.
+    filebeat.inputs:
+    # Each - is an input. Most options can be set at the input level, so
+    # you can use different inputs for various configurations.
+    # Below are the input specific configurations.
 
-      ## Read files that currently exist from the beginning. Files that are created
-      ## while telegraf is running (and that match the "files" globs) will always
-      ## be read from the beginning.
-      from_beginning = false
+    # Type of the files. Based on this the way the file is read is decided.
+    # The different types cannot be mixed in one input
+    #
+    # Possible options are:
+    # * log: Reads every line of the log file (default)
+    # * stdin: Reads the standard in
 
-      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-      # watch_method = "inotify"
+    #------------------------------ Log input --------------------------------
+    - type: log
 
-      [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
+      # Change to true to enable this input configuration.
+      enabled: false
 
-      ## Parse logstash-style "grok" patterns:
-      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-      [inputs.logparser.grok]
-        ## This is a list of patterns to check the given log file(s) for.
-        ## Note that adding patterns here increases processing time. The most
-        ## efficient configuration is to have one pattern per logparser.
-        ## Other common built-in patterns are:
-        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{DATESTAMP:timestamp} \\\\[%{LOGLEVEL:logLevel}\\\\] %{GREEDYDATA:message}"]
+      # Paths that should be crawled and fetched. Glob based paths.
+      # To fetch all ".log" files from a specific level of subdirectories
+      # /var/log/*/*.log can be used.
+      # For each file found under this path, a harvester is started.
+      # Make sure not file is defined twice as this can lead to unexpected behaviour.
+      paths:
+        - #{node['paths']['logs']}/**/*.*
 
-        ## Name of the outputted measurement name.
-        measurement = "consul_output_log"
+      # Configure the file encoding for reading files with international characters
+      # following the W3C recommendation for HTML5 (http://www.w3.org/TR/encoding).
+      # Some sample encodings:
+      #   plain, utf-8, utf-16be-bom, utf-16be, utf-16le, big5, gb18030, gbk,
+      #    hz-gb-2312, euc-kr, euc-jp, iso-2022-jp, shift-jis, ...
+      #encoding: plain
 
-        ## Timezone allows you to provide an override for timestamps that
-        ## don't already include an offset
-        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-        ##
-        ## Default: "" which renders UTC
-        ## Options are as follows:
-        ##   1. Local             -- interpret based on machine localtime
-        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-        timezone = "UTC"
+      # Exclude lines. A list of regular expressions to match. It drops the lines that are
+      # matching any regular expression from the list. The include_lines is called before
+      # exclude_lines. By default, no lines are dropped.
+      #exclude_lines: ['^DBG']
 
-    [[inputs.logparser]]
-      ## Log files to parse.
-      ## These accept standard unix glob matching rules, but with the addition of
-      ## ** as a "super asterisk". ie:
-      ##   /var/log/**.log     -> recursively find all .log files in /var/log
-      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-      ##   /var/log/apache.log -> only tail the apache log file
-      files = [
-        "#{consul_logs_path}/consul-service.err.log"
-      ]
+      # Include lines. A list of regular expressions to match. It exports the lines that are
+      # matching any regular expression from the list. The include_lines is called before
+      # exclude_lines. By default, all the lines are exported.
+      #include_lines: ['^ERR', '^WARN']
 
-      ## Read files that currently exist from the beginning. Files that are created
-      ## while telegraf is running (and that match the "files" globs) will always
-      ## be read from the beginning.
-      from_beginning = false
+      # Exclude files. A list of regular expressions to match. Filebeat drops the files that
+      # are matching any regular expression from the list. By default, no files are dropped.
+      exclude_files: ['.gz$']
 
-      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-      # watch_method = "inotify"
+      # Optional additional fields. These fields can be freely picked
+      # to add additional information to the crawled log files for filtering
+      #fields:
+      #  level: debug
+      #  review: 1
 
-      [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
+      # Set to true to store the additional fields as top level fields instead
+      # of under the "fields" sub-dictionary. In case of name conflicts with the
+      # fields added by Filebeat itself, the custom fields overwrite the default
+      # fields.
+      #fields_under_root: false
 
-      ## Parse logstash-style "grok" patterns:
-      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-      [inputs.logparser.grok]
-        ## This is a list of patterns to check the given log file(s) for.
-        ## Note that adding patterns here increases processing time. The most
-        ## efficient configuration is to have one pattern per logparser.
-        ## Other common built-in patterns are:
-        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{GREEDYDATA:message}"]
+      # Ignore files which were modified more then the defined timespan in the past.
+      # ignore_older is disabled by default, so no files are ignored by setting it to 0.
+      # Time strings like 2h (2 hours), 5m (5 minutes) can be used.
+      #ignore_older: 0
 
-        ## Name of the outputted measurement name.
-        measurement = "consul_error_log"
+      # How often the input checks for new files in the paths that are specified
+      # for harvesting. Specify 1s to scan the directory as frequently as possible
+      # without causing Filebeat to scan too frequently. Default: 10s.
+      #scan_frequency: 10s
 
-        ## Timezone allows you to provide an override for timestamps that
-        ## don't already include an offset
-        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-        ##
-        ## Default: "" which renders UTC
-        ## Options are as follows:
-        ##   1. Local             -- interpret based on machine localtime
-        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-        timezone = "UTC"
+      # Defines the buffer size every harvester uses when fetching the file
+      #harvester_buffer_size: 16384
 
-    [[inputs.logparser]]
-      ## Log files to parse.
-      ## These accept standard unix glob matching rules, but with the addition of
-      ## ** as a "super asterisk". ie:
-      ##   /var/log/**.log     -> recursively find all .log files in /var/log
-      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-      ##   /var/log/apache.log -> only tail the apache log file
-      files = [
-        "#{consul_template_logs_path}/consul-template.err.log"
-      ]
+      # Maximum number of bytes a single log event can have
+      # All bytes after max_bytes are discarded and not sent. The default is 10MB.
+      # This is especially useful for multiline log messages which can get large.
+      #max_bytes: 10485760
 
-      ## Read files that currently exist from the beginning. Files that are created
-      ## while telegraf is running (and that match the "files" globs) will always
-      ## be read from the beginning.
-      from_beginning = false
+      ### Recursive glob configuration
 
-      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-      # watch_method = "inotify"
+      # Expand "**" patterns into regular glob patterns.
+      recursive_glob.enabled: true
 
-      [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
+      ### JSON configuration
 
-      ## Parse logstash-style "grok" patterns:
-      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-      [inputs.logparser.grok]
-        ## This is a list of patterns to check the given log file(s) for.
-        ## Note that adding patterns here increases processing time. The most
-        ## efficient configuration is to have one pattern per logparser.
-        ## Other common built-in patterns are:
-        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{DATESTAMP:timestamp} \\\\[%{LOGLEVEL:logLevel}\\\\] %{GREEDYDATA:message}"]
+      # Decode JSON options. Enable this if your logs are structured in JSON.
+      # JSON key on which to apply the line filtering and multiline settings. This key
+      # must be top level and its value must be string, otherwise it is ignored. If
+      # no text key is defined, the line filtering and multiline features cannot be used.
+      #json.message_key:
 
-        ## Name of the outputted measurement name.
-        measurement = "consul_template_log"
+      # By default, the decoded JSON is placed under a "json" key in the output document.
+      # If you enable this setting, the keys are copied top level in the output document.
+      #json.keys_under_root: false
 
-        ## Full path(s) to custom pattern files.
-        custom_pattern_files = []
+      # If keys_under_root and this setting are enabled, then the values from the decoded
+      # JSON object overwrite the fields that Filebeat normally adds (type, source, offset, etc.)
+      # in case of conflicts.
+      #json.overwrite_keys: false
 
-        ## Custom patterns can also be defined here. Put one pattern per line.
-        custom_patterns = '''
-        '''
+      # If this setting is enabled, Filebeat adds a "error.message" and "error.key: json" key in case of JSON
+      # unmarshaling errors or when a text key is defined in the configuration but cannot
+      # be used.
+      #json.add_error_key: false
 
-        ## Timezone allows you to provide an override for timestamps that
-        ## don't already include an offset
-        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-        ##
-        ## Default: "" which renders UTC
-        ## Options are as follows:
-        ##   1. Local             -- interpret based on machine localtime
-        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-        timezone = "UTC"
+      ### Multiline options
 
-    [[inputs.logparser]]
-      ## Log files to parse.
-      ## These accept standard unix glob matching rules, but with the addition of
-      ## ** as a "super asterisk". ie:
-      ##   /var/log/**.log     -> recursively find all .log files in /var/log
-      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-      ##   /var/log/apache.log -> only tail the apache log file
-      files = [
-        "#{telegraf_logs_path}/telegraf.log"
-      ]
+      # Mutiline can be used for log messages spanning multiple lines. This is common
+      # for Java Stack Traces or C-Line Continuation
 
-      ## Read files that currently exist from the beginning. Files that are created
-      ## while telegraf is running (and that match the "files" globs) will always
-      ## be read from the beginning.
-      from_beginning = false
+      # The regexp Pattern that has to be matched. The example pattern matches all lines starting with [
+      #multiline.pattern: ^\[
 
-      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-      # watch_method = "inotify"
+      # Defines if the pattern set under pattern should be negated or not. Default is false.
+      #multiline.negate: false
 
-      [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
+      # Match can be set to "after" or "before". It is used to define if lines should be append to a pattern
+      # that was (not) matched before or after or as long as a pattern is not matched based on negate.
+      # Note: After is the equivalent to previous and before is the equivalent to to next in Logstash
+      #multiline.match: after
 
-      ## Parse logstash-style "grok" patterns:
-      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-      [inputs.logparser.grok]
-        ## This is a list of patterns to check the given log file(s) for.
-        ## Note that adding patterns here increases processing time. The most
-        ## efficient configuration is to have one pattern per logparser.
-        ## Other common built-in patterns are:
-        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{TIMESTAMP_ISO8601:timestamp} %{WORD:logLevel}\\\\! %{GREEDYDATA:message}"]
+      # The maximum number of lines that are combined to one event.
+      # In case there are more the max_lines the additional lines are discarded.
+      # Default is 500
+      #multiline.max_lines: 500
 
-        ## Name of the outputted measurement name.
-        measurement = "telegraf_log"
+      # After the defined timeout, an multiline event is sent even if no new pattern was found to start a new event
+      # Default is 5s.
+      #multiline.timeout: 5s
 
-        ## Full path(s) to custom pattern files.
-        custom_pattern_files = []
+      # Setting tail_files to true means filebeat starts reading new files at the end
+      # instead of the beginning. If this is used in combination with log rotation
+      # this can mean that the first entries of a new file are skipped.
+      #tail_files: false
 
-        ## Custom patterns can also be defined here. Put one pattern per line.
-        custom_patterns = '''
-        '''
+      # The Ingest Node pipeline ID associated with this input. If this is set, it
+      # overwrites the pipeline option from the Elasticsearch output.
+      #pipeline:
 
-        ## Timezone allows you to provide an override for timestamps that
-        ## don't already include an offset
-        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-        ##
-        ## Default: "" which renders UTC
-        ## Options are as follows:
-        ##   1. Local             -- interpret based on machine localtime
-        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-        timezone = "UTC"
+      # If symlinks is enabled, symlinks are opened and harvested. The harvester is openening the
+      # original for harvesting but will report the symlink name as source.
+      #symlinks: false
 
-    [[inputs.logparser]]
-      ## Log files to parse.
-      ## These accept standard unix glob matching rules, but with the addition of
-      ## ** as a "super asterisk". ie:
-      ##   /var/log/**.log     -> recursively find all .log files in /var/log
-      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-      ##   /var/log/apache.log -> only tail the apache log file
-      files = [
-        "#{unbound_logs_path}/unbound.log"
-      ]
+      # Backoff values define how aggressively filebeat crawls new files for updates
+      # The default values can be used in most cases. Backoff defines how long it is waited
+      # to check a file again after EOF is reached. Default is 1s which means the file
+      # is checked every second if new lines were added. This leads to a near real time crawling.
+      # Every time a new line appears, backoff is reset to the initial value.
+      #backoff: 1s
 
-      ## Read files that currently exist from the beginning. Files that are created
-      ## while telegraf is running (and that match the "files" globs) will always
-      ## be read from the beginning.
-      from_beginning = false
+      # Max backoff defines what the maximum backoff time is. After having backed off multiple times
+      # from checking the files, the waiting time will never exceed max_backoff independent of the
+      # backoff factor. Having it set to 10s means in the worst case a new line can be added to a log
+      # file after having backed off multiple times, it takes a maximum of 10s to read the new line
+      #max_backoff: 10s
 
-      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-      # watch_method = "inotify"
+      # The backoff factor defines how fast the algorithm backs off. The bigger the backoff factor,
+      # the faster the max_backoff value is reached. If this value is set to 1, no backoff will happen.
+      # The backoff value will be multiplied each time with the backoff_factor until max_backoff is reached
+      #backoff_factor: 2
 
-      [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
+      # Max number of harvesters that are started in parallel.
+      # Default is 0 which means unlimited
+      #harvester_limit: 0
 
-      ## Parse logstash-style "grok" patterns:
-      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-      [inputs.logparser.grok]
-        ## This is a list of patterns to check the given log file(s) for.
-        ## Note that adding patterns here increases processing time. The most
-        ## efficient configuration is to have one pattern per logparser.
-        ## Other common built-in patterns are:
-        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{CATALINA_DATESTAMP:timestamp} %{PROG:application}%{SYSLOG_PID:pid} %{LOGLEVEL:loglevel}: %{GREEDYDATA:message}"]
+      ### Harvester closing options
 
-        ## Name of the outputted measurement name.
-        measurement = "unbound_log"
+      # Close inactive closes the file handler after the predefined period.
+      # The period starts when the last line of the file was, not the file ModTime.
+      # Time strings like 2h (2 hours), 5m (5 minutes) can be used.
+      #close_inactive: 5m
 
-        ## Full path(s) to custom pattern files.
-        custom_pattern_files = []
+      # Close renamed closes a file handler when the file is renamed or rotated.
+      # Note: Potential data loss. Make sure to read and understand the docs for this option.
+      #close_renamed: false
 
-        ## Custom patterns can also be defined here. Put one pattern per line.
-        custom_patterns = '''
-          CATALINA_DATESTAMP %{DATE_EU} %{TIME} (?:AM|PM)
-          SYSLOG_PID (?:\\\\[.*\\\\])?
-        '''
+      # When enabling this option, a file handler is closed immediately in case a file can't be found
+      # any more. In case the file shows up again later, harvesting will continue at the last known position
+      # after scan_frequency.
+      #close_removed: true
 
-        ## Timezone allows you to provide an override for timestamps that
-        ## don't already include an offset
-        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-        ##
-        ## Default: "" which renders UTC
-        ## Options are as follows:
-        ##   1. Local             -- interpret based on machine localtime
-        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-        timezone = "UTC"
+      # Closes the file handler as soon as the harvesters reaches the end of the file.
+      # By default this option is disabled.
+      # Note: Potential data loss. Make sure to read and understand the docs for this option.
+      #close_eof: false
 
-    [[inputs.logparser]]
-      ## Log files to parse.
-      ## These accept standard unix glob matching rules, but with the addition of
-      ## ** as a "super asterisk". ie:
-      ##   /var/log/**.log     -> recursively find all .log files in /var/log
-      ##   /var/log/*/*.log    -> find all .log files with a parent dir in /var/log
-      ##   /var/log/apache.log -> only tail the apache log file
-      files = [
-        "#{firewall_logs_path}/domain.log",
-        "#{firewall_logs_path}/private.log",
-        "#{firewall_logs_path}/public.log"
-      ]
+      ### State options
 
-      ## Read files that currently exist from the beginning. Files that are created
-      ## while telegraf is running (and that match the "files" globs) will always
-      ## be read from the beginning.
-      from_beginning = false
+      # Files for the modification data is older then clean_inactive the state from the registry is removed
+      # By default this is disabled.
+      #clean_inactive: 0
 
-      ## Method used to watch for file updates.  Can be either "inotify" or "poll".
-      # watch_method = "inotify"
+      # Removes the state for file which cannot be found on disk anymore immediately
+      #clean_removed: true
 
-      [inputs.logparser.tags]
-        rabbitmq_exchange = "logs.file"
+      # Close timeout closes the harvester after the predefined time.
+      # This is independent if the harvester did finish reading the file or not.
+      # By default this option is disabled.
+      # Note: Potential data loss. Make sure to read and understand the docs for this option.
+      #close_timeout: 0
 
-      ## Parse logstash-style "grok" patterns:
-      ##   Telegraf built-in parsing patterns: https://goo.gl/dkay10
-      [inputs.logparser.grok]
-        ## This is a list of patterns to check the given log file(s) for.
-        ## Note that adding patterns here increases processing time. The most
-        ## efficient configuration is to have one pattern per logparser.
-        ## Other common built-in patterns are:
-        ##   %{COMMON_LOG_FORMAT}   (plain apache & nginx access logs)
-        ##   %{COMBINED_LOG_FORMAT} (access logs + referrer & agent)
-        patterns = ["%{DATESTAMP:timestamp} %{WORD:action} %{WORD:protocol} %{IP:sourceip} %{IP:destinationip} %{POSINT:sourceport} %{POSINT:destinationport} %{GREEDYDATA:message}"]
+      # Defines if inputs is enabled
+      #enabled: true
 
-        ## Name of the outputted measurement name.
-        measurement = "firewall_log"
 
-        ## Full path(s) to custom pattern files.
-        custom_pattern_files = []
+    #========================= Filebeat global options ============================
 
-        ## Custom patterns can also be defined here. Put one pattern per line.
-        custom_patterns = '''
-        '''
+    # Enable filebeat config reloading
+    filebeat.config:
+      inputs:
+        enabled: true
+        path: #{filebeat_config_path}/*.yml
+        reload.enabled: true
+        reload.period: 10s
 
-        ## Timezone allows you to provide an override for timestamps that
-        ## don't already include an offset
-        ## e.g. 04/06/2016 12:41:45 data one two 5.43µs
-        ##
-        ## Default: "" which renders UTC
-        ## Options are as follows:
-        ##   1. Local             -- interpret based on machine localtime
-        ##   2. "Canada/Eastern"  -- Unix TZ values like those found in https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-        ##   3. UTC               -- or blank/unspecified, will return timestamp in UTC
-        timezone = "UTC"
+    #================================ General ======================================
 
-    ###############################################################################
-    #                            OUTPUT PLUGINS                                   #
-    ###############################################################################
+    # The name of the shipper that publishes the network data. It can be used to group
+    # all the transactions sent by a single shipper in the web interface.
+    # If this options is not defined, the hostname is used.
+    #name:
 
-    {{ if keyExists "config/services/queue/protocols/amqp/host" }}
-    # Configuration for rabbitmq server to send logs to
-    # Publishes metrics to an AMQP broker
-    [[outputs.amqp]]
-      ## Brokers to publish to.  If multiple brokers are specified a random broker
-      ## will be selected anytime a connection is established.  This can be
-      ## helpful for load balancing when not using a dedicated load balancer.
-      brokers = [
-        "amqp://{{ keyOrDefault "config/services/queue/protocols/amqp/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}:{{ keyOrDefault "config/services/queue/protocols/amqp/port" "5672" }}/{{ keyOrDefault "config/services/queue/logs/file/vhost" "unknown" }}"
-      ]
+    # The tags of the shipper are included in their own field with each
+    # transaction published. Tags make it easy to group servers by different
+    # logical properties.
+    #tags: ["service-X", "web-tier"]
 
-      ## Maximum messages to send over a connection. Once this is reached, the
-      ## connection is closed and a new connection is made. This can be helpful for
-      ## load balancing when not using a dedicated load balancer.
-      # max_messages = 0
+    # Optional fields that you can specify to add additional information to the
+    # output. Fields can be scalar values, arrays, dictionaries, or any nested
+    # combination of these.
+    fields:
+      environment: {{ keyOrDefault "config/services/consul/datacenter" "unknown" }}
+      category = "{{ env "RESOURCE_SHORT_NAME" | toLower }}"
 
-      ## Exchange to declare and publish to.
-      exchange = "telegraf"
+    # If this option is set to true, the custom fields are stored as top-level
+    # fields in the output document instead of being grouped under a fields
+    # sub-dictionary. Default is false.
+    #fields_under_root: false
 
-      ## Exchange type; common types are "direct", "fanout", "topic", "header", "x-consistent-hash".
-      exchange_type = "direct"
 
-      ## If true, exchange will be passively declared.
-      # exchange_declare_passive = true
+    #================================ Outputs ======================================
 
-      ## If true, exchange will be created as a durable exchange.
-      # exchange_durable = true
+    # Configure what output to use when sending the data collected by the beat.
 
-      ## Additional exchange arguments.
-      # exchange_arguments = { }
-      # exchange_arguments = {"hash_propery" = "timestamp"}
-
-      ## Authentication credentials for the PLAIN auth_method.
+    #------------------------------ MQTT output -----------------------------------
+    output.mqtt:
+      host: "{{ keyOrDefault "config/services/queue/protocols/mqtt/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}"
+      port: {{ keyOrDefault "config/services/queue/protocols/mqtt/port" "1883" }}
+      topic: "mytopic"
       {{ with secret "rabbitmq/creds/write.vhost.logs.file" }}
         {{ if .Data.password }}
-      username = "{{ .Data.username }}"
-      password = "{{ .Data.password }}"
+      user: "{{ keyOrDefault "config/services/queue/logs/file/vhost" "unknown" }}:{{ .Data.username }}"
+      password: "{{ .Data.password }}"
         {{ end }}
       {{ end }}
 
-      ## Auth method. PLAIN and EXTERNAL are supported
-      ## Using EXTERNAL requires enabling the rabbitmq_auth_mechanism_ssl plugin as
-      ## described here: https://www.rabbitmq.com/plugins.html
-      auth_method = "PLAIN"
+    #================================ Logging ======================================
+    # There are four options for the log output: file, stderr, syslog, eventlog
+    # The file output is the default.
 
-      ## Metric tag to use as a routing key.
-      ##   ie, if this tag exists, its value will be used as the routing key
-      # routing_tag = "host"
+    # Sets log level. The default log level is info.
+    # Available log levels are: error, warning, info, debug
+    #logging.level: info
 
-      ## Static routing key.  Used when no routing_tag is set or as a fallback
-      ## when the tag specified in routing tag is not found.
-      # routing_key = ""
-      routing_key = "file"
+    # Enable debug output for selected components. To enable all selectors use ["*"]
+    # Other available selectors are "beat", "publish", "service"
+    # Multiple selectors can be chained.
+    #logging.selectors: [ ]
 
-      ## Delivery Mode controls if a published message is persistent.
-      ##   One of "transient" or "persistent".
-      # delivery_mode = "persistent"
+    # Send all logging output to syslog. The default is false.
+    #logging.to_syslog: false
 
-      ## Static headers added to each published message.
-      # headers = { }
-      # headers = {"database" = "telegraf", "retention_policy" = "default"}
+    # Send all logging output to Windows Event Logs. The default is false.
+    #logging.to_eventlog: false
 
-      ## Connection timeout.  If not provided, will default to 5s.  0s means no
-      ## timeout (not recommended).
-      timeout = "5s"
+    # If enabled, filebeat periodically logs its internal metrics that have changed
+    # in the last period. For each metric that changed, the delta from the value at
+    # the beginning of the period is logged. Also, the total values for
+    # all non-zero internal metrics are logged on shutdown. The default is true.
+    #logging.metrics.enabled: true
 
-      ## Optional TLS Config
-      # tls_ca = "/etc/telegraf/ca.pem"
-      # tls_cert = "/etc/telegraf/cert.pem"
-      # tls_key = "/etc/telegraf/key.pem"
-      ## Use TLS but skip chain & host verification
-      # insecure_skip_verify = false
+    # The period after which to log the internal metrics. The default is 30s.
+    #logging.metrics.period: 30s
 
-      ## If true use batch serialization format instead of line based delimiting.
-      ## Only applies to data formats which are not line based such as JSON.
-      ## Recommended to set to true.
-      use_batch_format = true
+    # Logging to rotating files. Set logging.to_files to false to disable logging to
+    # files.
+    logging.to_files: true
+    logging.files:
+      # Configure the path where the logs are written. The default is the logs directory
+      # under the home path (the binary location).
+      #path: /var/log/filebeat
 
-      ## Data format to output.
-      ## Each data format has its own unique set of configuration options, read
-      ## more about them here:
-      ## https://github.com/influxdata/telegraf/blob/master/docs/DATA_FORMATS_OUTPUT.md
-      data_format = "json"
+      # The name of the files where the logs are written to.
+      #name: filebeat
 
-      [outputs.amqp.tagpass]
-        rabbitmq_exchange = ["logs.file"]
-    {{ else }}
-    # Send logs to nowhere at all
-    [[outputs.discard]]
-      # no configuration
-    {{ end }}
+      # Configure log file size limit. If limit is reached, log file will be
+      # automatically rotated
+      #rotateeverybytes: 10485760 # = 10MB
+
+      # Number of rotated log files to keep. Oldest files will be deleted first.
+      #keepfiles: 7
+
+      # The permissions mask to apply when rotating log files. The default value is 0600.
+      # Must be a valid Unix-style file permissions mask expressed in octal notation.
+      #permissions: 0600
+
+    # Set to true to log messages in json format.
+    #logging.json: false
+
+    #================================ HTTP Endpoint ======================================
+    # Each beat can expose internal metrics through a HTTP endpoint. For security
+    # reasons the endpoint is disabled by default. This feature is currently experimental.
+    # Stats can be access through http://localhost:5066/stats . For pretty JSON output
+    # append ?pretty to the URL.
+
+    # Defines if the HTTP endpoint is enabled.
+    #http.enabled: false
+
+    # The HTTP endpoint will bind to this hostname or IP address. It is recommended to use only localhost.
+    #http.host: localhost
+
+    # Port on which the HTTP endpoint will bind. Default is 5066.
+    #http.port: 5066
   CONF
   mode '755'
 end
-# rubocop:enable Style/FormatStringToken
 
 # Create the consul-template configuration file
-file "#{consul_template_config_path}/telegraf_logs.hcl" do
+file "#{consul_template_config_path}/filebeat.hcl" do
   action :create
   content <<~HCL
     # This block defines the configuration for a template. Unlike other blocks,
@@ -456,12 +520,12 @@ file "#{consul_template_config_path}/telegraf_logs.hcl" do
       # This is the source file on disk to use as the input template. This is often
       # called the "Consul Template template". This option is required if not using
       # the `contents` option.
-      source = "#{consul_template_template_path}/#{telegraf_logs_template_file}"
+      source = "#{consul_template_template_path}/#{filebeat_template_file}"
 
       # This is the destination path on disk where the source template will render.
       # If the parent directories do not exist, Consul Template will attempt to
       # create them, unless create_dest_dirs is false.
-      destination = "#{telegraf_config_directory}/system_logs.conf"
+      destination = "#{filebeat_config_directory}/filebeat.yml"
 
       # This options tells Consul Template to create the parent directories of the
       # destination path if they do not exist. The default value is true.
@@ -471,7 +535,7 @@ file "#{consul_template_config_path}/telegraf_logs.hcl" do
       # command will only run if the resulting template changes. The command must
       # return within 30s (configurable), and it must have a successful exit code.
       # Consul Template is not a replacement for a process monitor or init system.
-      command = "powershell.exe -noprofile -nologo -noninteractive -command \\"Restart-Service #{service_name}\\" "
+      command = "powershell.exe -noprofile -nologo -noninteractive -command \\"if ((Get-Service -Name #{service_name}).Status -ne 'Running'){ Start-Service #{service_name} }\\" "
 
       # This is the maximum amount of time to wait for the optional command to
       # return. Default is 30s.

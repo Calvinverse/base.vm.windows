@@ -39,6 +39,22 @@ default['consul_template']['config_path'] = "#{config_path}/#{node['consul_templ
 default['consul_template']['template_path'] = "#{config_path}/#{node['consul_template']['service']['name']}/templates"
 
 #
+# FILEBEAT (WITH MQTT OUTPUT)
+#
+
+default['filebeat']['service']['exe'] = 'filebeat_service'
+default['filebeat']['service']['name'] = 'filebeat'
+default['filebeat']['service']['user_name'] = 'filebeat_user'
+default['filebeat']['service']['user_password'] = SecureRandom.uuid
+
+default['filebeat']['version'] = '0.1.0'
+default['filebeat']['url'] = "https://github.com/pvandervelde/filebeat.mqtt/releases/download/#{node['filebeat']['version']}/filebeat.mqtt.exe"
+
+default['filebeat']['config_file_path'] = "#{ops_path}/#{node['filebeat']['service']['name']}/filebeat.yml"
+default['filebeat']['config_directory'] = "#{config_path}/#{node['filebeat']['service']['name']}"
+default['filebeat']['consul_template_file'] = 'filebeat.ctmpl'
+
+#
 # FILESYSTEM
 #
 

@@ -298,12 +298,9 @@ end
 # WINDOWS SERVICE
 #
 
-telegraf_service_username = node['telegraf']['service']['user_name']
-
 directory consul_template_logs_path do
   action :create
   rights :modify, service_username, applies_to_children: true, applies_to_self: false
-  rights :read, telegraf_service_username, applies_to_children: true, applies_to_self: true
 end
 
 service_exe_name = node['consul_template']['service']['exe']
