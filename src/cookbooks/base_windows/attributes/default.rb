@@ -50,7 +50,7 @@ default['filebeat']['service']['user_password'] = SecureRandom.uuid
 default['filebeat']['version'] = '0.1.0'
 default['filebeat']['url'] = "https://github.com/pvandervelde/filebeat.mqtt/releases/download/#{node['filebeat']['version']}/filebeat.mqtt.exe"
 
-default['filebeat']['config_file_path'] = "#{ops_path}/#{node['filebeat']['service']['name']}/filebeat.yml"
+default['filebeat']['config_file_path'] = "#{config_path}/#{node['filebeat']['service']['name']}/filebeat.yml"
 default['filebeat']['config_directory'] = "#{config_path}/#{node['filebeat']['service']['name']}"
 default['filebeat']['consul_template_file'] = 'filebeat.ctmpl'
 

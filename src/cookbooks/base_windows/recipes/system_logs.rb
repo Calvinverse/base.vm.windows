@@ -138,7 +138,6 @@ end
 
 service_name = node['filebeat']['service']['name']
 filebeat_config_file = node['filebeat']['config_file_path']
-filebeat_config_directory = node['filebeat']['config_directory']
 powershell_script 'filebeat_as_service' do
   code <<~POWERSHELL
     $ErrorActionPreference = 'Stop'
@@ -154,7 +153,7 @@ powershell_script 'filebeat_as_service' do
     {
         New-Service `
             -Name '#{service_name}' `
-            -BinaryPathName '#{filebeat_exe_path} -c "#{filebeat_config_file}" -path.home "#{filebeat_bin_path}" -path.data "C:/ProgramData/filebeat" -path.logs "#{filebeat_logs_path}" ' `
+            -BinaryPathName '#{filebeat_exe_path} --c "#{filebeat_config_file}" --path.home "#{filebeat_bin_path}" --path.data "C:/ProgramData/filebeat" --path.logs "#{filebeat_logs_path}" ' `
             -Credential $credential `
             -DisplayName '#{service_name}' `
             -StartupType Automatic
@@ -199,7 +198,7 @@ file "#{consul_template_template_path}/#{filebeat_template_file}" do
     - type: log
 
       # Change to true to enable this input configuration.
-      enabled: false
+      enabled: true
 
       # Paths that should be crawled and fetched. Glob based paths.
       # To fetch all ".log" files from a specific level of subdirectories
@@ -207,7 +206,8 @@ file "#{consul_template_template_path}/#{filebeat_template_file}" do
       # For each file found under this path, a harvester is started.
       # Make sure not file is defined twice as this can lead to unexpected behaviour.
       paths:
-        - #{node['paths']['logs']}/**/*.*
+        - #{node['paths']['logs']}/*/*.log
+        - #{filebeat_logs_path}/filebeat
 
       # Configure the file encoding for reading files with international characters
       # following the W3C recommendation for HTML5 (http://www.w3.org/TR/encoding).
@@ -383,9 +383,6 @@ file "#{consul_template_template_path}/#{filebeat_template_file}" do
       # Note: Potential data loss. Make sure to read and understand the docs for this option.
       #close_timeout: 0
 
-      # Defines if inputs is enabled
-      #enabled: true
-
 
     #========================= Filebeat global options ============================
 
@@ -413,8 +410,8 @@ file "#{consul_template_template_path}/#{filebeat_template_file}" do
     # output. Fields can be scalar values, arrays, dictionaries, or any nested
     # combination of these.
     fields:
-      environment: {{ keyOrDefault "config/services/consul/datacenter" "unknown" }}
-      category = "{{ env "RESOURCE_SHORT_NAME" | toLower }}"
+      environment: "{{ keyOrDefault "config/services/consul/datacenter" "unknown" }}"
+      category: "{{ env "RESOURCE_SHORT_NAME" | toLower }}"
 
     # If this option is set to true, the custom fields are stored as top-level
     # fields in the output document instead of being grouped under a fields
@@ -430,7 +427,7 @@ file "#{consul_template_template_path}/#{filebeat_template_file}" do
     output.mqtt:
       host: "{{ keyOrDefault "config/services/queue/protocols/mqtt/host" "unknown" }}.service.{{ keyOrDefault "config/services/consul/domain" "unknown" }}"
       port: {{ keyOrDefault "config/services/queue/protocols/mqtt/port" "1883" }}
-      topic: "mytopic"
+      topic: "file"
       {{ with secret "rabbitmq/creds/write.vhost.logs.file" }}
         {{ if .Data.password }}
       user: "{{ keyOrDefault "config/services/queue/logs/file/vhost" "unknown" }}:{{ .Data.username }}"
@@ -525,7 +522,7 @@ file "#{consul_template_config_path}/filebeat.hcl" do
       # This is the destination path on disk where the source template will render.
       # If the parent directories do not exist, Consul Template will attempt to
       # create them, unless create_dest_dirs is false.
-      destination = "#{filebeat_config_directory}/filebeat.yml"
+      destination = "#{filebeat_config_file}"
 
       # This options tells Consul Template to create the parent directories of the
       # destination path if they do not exist. The default value is true.

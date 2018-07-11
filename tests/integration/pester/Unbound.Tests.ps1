@@ -38,10 +38,12 @@ Describe 'The unbound application' {
             $result.IP4Address | Should Be $localIpAddress.IPAddress
         }
 
+        <#
         It 'for host names' {
             $result = Resolve-DnsName -Name $env:COMPUTERNAME -DnsOnly -NoHostsFile -Type A
             $result | Should Not Be $null
             $result.IP4Address | Should Be $localIpAddress.IPAddress
         }
+        #>
     }
 }
