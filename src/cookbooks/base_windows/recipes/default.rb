@@ -17,14 +17,13 @@ include_recipe 'base_windows::firewall'
 include_recipe 'base_windows::meta'
 
 include_recipe 'base_windows::seven_zip'
-include_recipe 'base_windows::winsw'
 
 include_recipe 'base_windows::consul'
 include_recipe 'base_windows::consul_template'
 
 include_recipe 'base_windows::system'
-include_recipe 'base_windows::system_logs'
 include_recipe 'base_windows::system_metrics'
+include_recipe 'base_windows::system_logs'
 
 include_recipe 'base_windows::network'
 include_recipe 'base_windows::provisioning'

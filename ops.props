@@ -401,7 +401,7 @@
             <ReplacementValue>$(IsoFile.Replace('\', '/'))</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="IsoFileHash">
-            <ReplacementValue>8A3B22700CB6F59B54742D2AF1222DFF47E0D0E345FBA8F8571BF030D3018C61</ReplacementValue>
+            <ReplacementValue>6A8BBA7D2087C892DA97C44AAA7971CB9F46F10095D13D38CEADA29307A063CC</ReplacementValue>
         </TemplateTokens>
 
         <TemplateTokens Include="NameCookbook">

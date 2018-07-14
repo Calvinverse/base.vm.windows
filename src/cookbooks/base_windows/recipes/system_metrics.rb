@@ -7,11 +7,11 @@
 # Copyright 2018, P. van der Velde
 #
 
-# Configure the service user under which consul will be run
+# Configure the service user under which telegraf will be run
 service_username = node['telegraf']['service']['user_name']
 service_password = node['telegraf']['service']['user_password']
 
-# Configure the service user under which consul-template will be run
+# Configure the service user under which telegraf will be run
 # Make sure that the user password doesn't expire. The password is a random GUID, so it is unlikely that
 # it will ever be guessed. And the user is a normal user who can't do anything so we don't really care about it
 powershell_script 'telegraf_user_with_password_that_does_not_expire' do
@@ -111,7 +111,7 @@ end
 service_name = node['telegraf']['service']['name']
 
 telegraf_bin_path = "#{node['paths']['ops']}/#{service_name}"
-telegraf_config_path = "#{node['paths']['config']}/#{service_name}"
+telegraf_config_path = node['telegraf']['config_directory']
 %W[#{telegraf_bin_path} #{telegraf_config_path}].each do |path|
   directory path do
     action :create
@@ -191,8 +191,6 @@ end
 consul_template_template_path = node['consul_template']['template_path']
 consul_template_config_path = node['consul_template']['config_path']
 
-unbound_bin_path = node['unbound']['path']['bin']
-
 # The configuration file for telegraf is dropped in the configuration path
 # when the resource is provisioned because it contains environment specific information
 telegraf_template_file = node['telegraf']['consul_template_file']
@@ -253,7 +251,7 @@ file "#{consul_template_template_path}/#{telegraf_template_file}" do
 
       ## Logging configuration:
       ## Run telegraf with debug log messages.
-      debug = false
+      debug = true
       ## Run telegraf in quiet mode (error log messages only).
       quiet = false
       ## Specify the log file name. The empty string means to log to stderr.
@@ -263,6 +261,87 @@ file "#{consul_template_template_path}/#{telegraf_template_file}" do
       hostname = ""
       ## If set to true, do no set the "host" tag in the telegraf agent.
       omit_hostname = false
+  CONF
+  mode '755'
+end
+
+# Create the consul-template configuration file
+file "#{consul_template_config_path}/telegraf.hcl" do
+  action :create
+  content <<~HCL
+    # This block defines the configuration for a template. Unlike other blocks,
+    # this block may be specified multiple times to configure multiple templates.
+    # It is also possible to configure templates via the CLI directly.
+    template {
+      # This is the source file on disk to use as the input template. This is often
+      # called the "Consul Template template". This option is required if not using
+      # the `contents` option.
+      source = "#{consul_template_template_path}/#{telegraf_template_file}"
+
+      # This is the destination path on disk where the source template will render.
+      # If the parent directories do not exist, Consul Template will attempt to
+      # create them, unless create_dest_dirs is false.
+      destination = "#{telegraf_config_file}"
+
+      # This options tells Consul Template to create the parent directories of the
+      # destination path if they do not exist. The default value is true.
+      create_dest_dirs = false
+
+      # This is the optional command to run when the template is rendered. The
+      # command will only run if the resulting template changes. The command must
+      # return within 30s (configurable), and it must have a successful exit code.
+      # Consul Template is not a replacement for a process monitor or init system.
+      command = "powershell.exe -noprofile -nologo -noninteractive -command \\"Restart-Service #{service_name}\\" "
+
+      # This is the maximum amount of time to wait for the optional command to
+      # return. Default is 30s.
+      command_timeout = "15s"
+
+      # Exit with an error when accessing a struct or map field/key that does not
+      # exist. The default behavior will print "<no value>" when accessing a field
+      # that does not exist. It is highly recommended you set this to "true" when
+      # retrieving secrets from Vault.
+      error_on_missing_key = false
+
+      # This is the permission to render the file. If this option is left
+      # unspecified, Consul Template will attempt to match the permissions of the
+      # file that already exists at the destination path. If no file exists at that
+      # path, the permissions are 0644.
+      perms = 0755
+
+      # This option backs up the previously rendered template at the destination
+      # path before writing a new one. It keeps exactly one backup. This option is
+      # useful for preventing accidental changes to the data without having a
+      # rollback strategy.
+      backup = true
+
+      # These are the delimiters to use in the template. The default is "{{" and
+      # "}}", but for some templates, it may be easier to use a different delimiter
+      # that does not conflict with the output file itself.
+      left_delimiter  = "{{"
+      right_delimiter = "}}"
+
+      # This is the `minimum(:maximum)` to wait before rendering a new template to
+      # disk and triggering a command, separated by a colon (`:`). If the optional
+      # maximum value is omitted, it is assumed to be 4x the required minimum value.
+      # This is a numeric time with a unit suffix ("5s"). There is no default value.
+      # The wait value for a template takes precedence over any globally-configured
+      # wait.
+      wait {
+        min = "2s"
+        max = "10s"
+      }
+    }
+  HCL
+  mode '755'
+end
+
+unbound_bin_path = node['unbound']['path']['bin']
+telegraf_metrics_template_file = node['telegraf']['consul_template_metrics_file']
+file "#{consul_template_template_path}/#{telegraf_metrics_template_file}" do
+  action :create
+  content <<~CONF
+    # Telegraf Configuration
 
     ###############################################################################
     #                            INPUT PLUGINS                                    #
@@ -616,7 +695,7 @@ file "#{consul_template_template_path}/#{telegraf_template_file}" do
 end
 
 # Create the consul-template configuration file
-file "#{consul_template_config_path}/telegraf.hcl" do
+file "#{consul_template_config_path}/telegraf_metrics.hcl" do
   action :create
   content <<~HCL
     # This block defines the configuration for a template. Unlike other blocks,
@@ -626,12 +705,12 @@ file "#{consul_template_config_path}/telegraf.hcl" do
       # This is the source file on disk to use as the input template. This is often
       # called the "Consul Template template". This option is required if not using
       # the `contents` option.
-      source = "#{consul_template_template_path}/#{telegraf_template_file}"
+      source = "#{consul_template_template_path}/#{telegraf_metrics_template_file}"
 
       # This is the destination path on disk where the source template will render.
       # If the parent directories do not exist, Consul Template will attempt to
       # create them, unless create_dest_dirs is false.
-      destination = "#{telegraf_config_file}"
+      destination = "#{telegraf_config_directory}/system_metrics.conf"
 
       # This options tells Consul Template to create the parent directories of the
       # destination path if they do not exist. The default value is true.

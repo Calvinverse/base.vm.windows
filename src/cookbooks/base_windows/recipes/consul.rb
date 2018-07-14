@@ -197,8 +197,8 @@ end
 
 consul_logs_path = "#{node['paths']['logs']}/#{service_name}"
 directory consul_logs_path do
-  rights :modify, service_username, applies_to_children: true, applies_to_self: false
   action :create
+  rights :modify, service_username, applies_to_children: true, applies_to_self: false
 end
 
 service_exe_name = node['consul']['service']['exe']
@@ -235,7 +235,7 @@ file "#{consul_bin_path}/#{service_exe_name}.xml" do
         <logpath>#{consul_logs_path}</logpath>
         <log mode="roll-by-size">
             <sizeThreshold>10240</sizeThreshold>
-            <keepFiles>8</keepFiles>
+            <keepFiles>1</keepFiles>
         </log>
         <onfailure action="restart"/>
     </service>

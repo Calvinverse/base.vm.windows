@@ -33,9 +33,17 @@ Describe 'The unbound application' {
 
         $localIpAddress = (Get-NetIPConfiguration).IPv4Address
         It 'for consul addresses' {
-            $result = Resolve-DnsName -Name 'consul.service.integrationtest' -DnsOnly -NoHostsFile  -Type A
+            $result = Resolve-DnsName -Name 'consul.service.integrationtest' -DnsOnly -NoHostsFile -Type A
             $result | Should Not Be $null
             $result.IP4Address | Should Be $localIpAddress.IPAddress
         }
+
+        <#
+        It 'for host names' {
+            $result = Resolve-DnsName -Name $env:COMPUTERNAME -DnsOnly -NoHostsFile -Type A
+            $result | Should Not Be $null
+            $result.IP4Address | Should Be $localIpAddress.IPAddress
+        }
+        #>
     }
 }

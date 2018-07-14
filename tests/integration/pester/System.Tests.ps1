@@ -24,9 +24,10 @@ Describe 'On the system' {
         }
 
         It 'should only have the default Administrator' {
-            $userNames.Length | Should Be 2
+            $userNames.Length | Should Be 3
             $userNames[0] | Should Be "$($env:COMPUTERNAME)\Administrator"
             $userNames[1] | Should Be "$($env:COMPUTERNAME)\consul-template"
+            $userNames[2] | Should Be "$($env:COMPUTERNAME)\filebeat_user"
         }
     }
 

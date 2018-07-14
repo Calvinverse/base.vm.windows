@@ -152,7 +152,9 @@ function Initialize-Unbound
 
     Copy-Item -Path (Join-Path $dvdDriveLetter 'unbound\unbound_zones.conf') -Destination 'c:\config\unbound\unbound_zones.conf' -Force @commonParameterSwitches
 
-    Set-DnsIpAddresses @commonParameterSwitches
+    $consulRegion = ConvertFrom-Json (Get-Content -Path (Join-Path $dvdDriveLetter 'consul\consul_region.json') | Out-String)
+
+    Set-DnsIpAddresses -domain $consulRegion.domain @commonParameterSwitches
     EnableAndStartService -serviceName 'unbound' @commonParameterSwitches
 }
 
@@ -160,6 +162,7 @@ function Set-DnsIpAddresses
 {
     [CmdletBinding()]
     param(
+        [string] $domain
     )
 
     $ErrorActionPreference = 'Stop'
@@ -179,7 +182,8 @@ function Set-DnsIpAddresses
     # resolving all the DNS queries.
     $localhost = '127.0.0.1'
     $serverDnsAddresses = @( $localhost )
-    Set-DnsClientServerAddress -InterfaceIndex $adapter.InterfaceIndex -ServerAddresses $serverDnsAddresses -Verbose
+    Set-DnsClientServerAddress -InterfaceIndex $adapter.InterfaceIndex -ServerAddresses $serverDnsAddresses @commonParameterSwitches
+    Set-DnsClient -InterfaceIndex $adapter.InterfaceIndex -ConnectionSpecificSuffix "node.$($domain)" @commonParameterSwitches
 }
 
 function Set-HostName

@@ -39,6 +39,22 @@ default['consul_template']['config_path'] = "#{config_path}/#{node['consul_templ
 default['consul_template']['template_path'] = "#{config_path}/#{node['consul_template']['service']['name']}/templates"
 
 #
+# FILEBEAT (WITH MQTT OUTPUT)
+#
+
+default['filebeat']['service']['exe'] = 'filebeat_service'
+default['filebeat']['service']['name'] = 'filebeat'
+default['filebeat']['service']['user_name'] = 'filebeat_user'
+default['filebeat']['service']['user_password'] = SecureRandom.uuid
+
+default['filebeat']['version'] = '0.1.0'
+default['filebeat']['url'] = "https://github.com/pvandervelde/filebeat.mqtt/releases/download/#{node['filebeat']['version']}/filebeat.mqtt.exe"
+
+default['filebeat']['config_file_path'] = "#{config_path}/#{node['filebeat']['service']['name']}/filebeat.yml"
+default['filebeat']['config_directory'] = "#{config_path}/#{node['filebeat']['service']['name']}"
+default['filebeat']['consul_template_file'] = 'filebeat.ctmpl'
+
+#
 # FILESYSTEM
 #
 
@@ -66,6 +82,8 @@ default['firewall']['allow_ssh'] = false
 # No communication via IPv6 at all
 default['firewall']['ipv6_enabled'] = false
 
+default['firewall']['paths']['logs'] = "#{logs_path}/firewall"
+
 #
 # PROVISIONING
 #
@@ -82,11 +100,13 @@ default['telegraf']['service']['name'] = 'telegraf'
 default['telegraf']['service']['user_name'] = 'telegraf_user'
 default['telegraf']['service']['user_password'] = SecureRandom.uuid
 
-default['telegraf']['version'] = '1.6.3'
-default['telegraf']['shasums'] = 'ee9a163e17fe3a58f22d29ca789a62965f75aaa277f26ad2f98514dbdba15ec0'
+default['telegraf']['version'] = '1.7.0'
+default['telegraf']['shasums'] = '4407084b54d42446a1b5c937cf901570410e26cac241e7b7c3d7cff0e578ae58'
 default['telegraf']['download_urls'] = "https://dl.influxdata.com/telegraf/releases/telegraf-#{node['telegraf']['version']}_windows_amd64.zip"
 
 default['telegraf']['consul_template_file'] = 'telegraf.ctmpl'
+default['telegraf']['consul_template_metrics_file'] = 'telegraf_metrics.ctmpl'
+default['telegraf']['consul_template_logs_file'] = 'telegraf_logs.ctmpl'
 default['telegraf']['config_file_path'] = "#{ops_path}/#{node['telegraf']['service']['name']}/telegraf.conf"
 default['telegraf']['config_directory'] = "#{config_path}/#{node['telegraf']['service']['name']}"
 

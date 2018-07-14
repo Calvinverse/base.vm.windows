@@ -71,14 +71,15 @@ Describe 'The users list' {
         Write-Output $users
 
         It 'should not contain any unexpected users' {
-            $users.Length | Should Be 7
+            $users.Length | Should Be 8
             $users[0].UserName | Should Be 'Administrator'
             $users[1].UserName | Should Be 'consul'
             $users[2].UserName | Should Be 'consul-template'
             $users[3].UserName | Should Be 'DefaultAccount'
-            $users[4].UserName | Should Be 'Guest'
-            $users[5].UserName | Should Be 'telegraf_user'
-            $users[6].UserName | Should Be 'unbound_user'
+            $users[4].UserName | Should Be 'filebeat_user'
+            $users[5].UserName | Should Be 'Guest'
+            $users[6].UserName | Should Be 'telegraf_user'
+            $users[7].UserName | Should Be 'unbound_user'
         }
 
         It 'should have the default account disabled' {
@@ -86,7 +87,7 @@ Describe 'The users list' {
         }
 
         It 'should have the guest account disabled' {
-            $users[4].UserFlags | Should Match '(ACCOUNTDISABLE)'
+            $users[5].UserFlags | Should Match '(ACCOUNTDISABLE)'
         }
     }
 }
