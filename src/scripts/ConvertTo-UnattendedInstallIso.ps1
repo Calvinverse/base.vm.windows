@@ -77,6 +77,7 @@ try
 {
     try
     {
+        # Make sure to use the full path of the ISO because Mount-DiskImage doesn't like relative paths
         Mount-DiskImage -ImagePath $sourceIsoFullPath @commonParameterSwitches
         $isMounted = $true
     }
@@ -153,6 +154,25 @@ try
         Remove-Item -Path $targetPath -Force -Recurse -Confirm:$false @commonParameterSwitches
         Write-Output "The temp folder has been removed."
     }
+}
+catch
+{
+    $currentErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+
+    try
+    {
+        $errorRecord = $Error[0]
+        Write-Error $errorRecord.Exception
+        Write-Error $errorRecord.ScriptStackTrace
+        Write-Error $errorRecord.InvocationInfo.PositionMessage
+    }
+    finally
+    {
+        $ErrorActionPreference = $currentErrorActionPreference
+    }
+
+    throw
 }
 finally
 {

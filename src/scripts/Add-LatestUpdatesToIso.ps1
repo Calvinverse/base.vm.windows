@@ -33,6 +33,10 @@ if (-not (Test-Path $adkPath))
     throw "Failed to find the ADK install path. Cannot continue"
 }
 
+Write-Output "Found the windows ADK at: $adkPath"
+
+Write-Output "Getting 'LastestUpdate' powershell module ..."
+
 # Install the module if it is not installed for the current user
 $latestUpdateModule = 'LatestUpdate'
 
@@ -66,6 +70,12 @@ try
         -Architecture x64 `
         @commonParameterSwitches
     Write-Output "Found $($updates.Length) updates."
+
+    for ($i = 0; $i -lt $updates.Length; $i++)
+    {
+        Write-Output "Update $($i):"
+        Write-Output $updates[$i]
+    }
 
     Write-Output 'Downloading update files ...'
     Save-LatestUpdate `
@@ -161,6 +171,25 @@ try
     {
         dism.exe /Cleanup-Wim
     }
+}
+catch
+{
+    $currentErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+
+    try
+    {
+        $errorRecord = $Error[0]
+        Write-Error $errorRecord.Exception
+        Write-Error $errorRecord.ScriptStackTrace
+        Write-Error $errorRecord.InvocationInfo.PositionMessage
+    }
+    finally
+    {
+        $ErrorActionPreference = $currentErrorActionPreference
+    }
+
+    throw
 }
 finally
 {
