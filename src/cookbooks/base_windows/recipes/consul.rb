@@ -105,13 +105,23 @@ service_name = node['consul']['service']['name']
 consul_bin_path = node['consul']['path']['bin']
 directory consul_bin_path do
   action :create
-  rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
+  inherits false
+  rights :read_execute, service_username, applies_to_children: true, applies_to_self: true
+  rights :full_control, 'Administrators', applies_to_children: true
+end
+
+consul_data_path = "#{consul_bin_path}/data"
+directory consul_data_path do
+  action :create
+  rights :full_control, service_username, applies_to_children: true, applies_to_self: true
 end
 
 consul_config_path = "#{node['paths']['config']}/#{service_name}"
 directory consul_config_path do
   action :create
-  rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
+  inherits false
+  rights :read_execute, service_username, applies_to_children: true, applies_to_self: true
+  rights :full_control, 'Administrators', applies_to_children: true
 end
 
 consul_zip_path = "#{node['paths']['temp']}/consul.zip"
@@ -137,7 +147,7 @@ file "#{consul_bin_path}/#{consul_config_file}" do
       },
       "client_addr": "127.0.0.1",
 
-      "data_dir": "#{consul_bin_path}/data",
+      "data_dir": "#{consul_data_path}",
 
       "disable_host_node_id": true,
       "disable_remote_exec": true,

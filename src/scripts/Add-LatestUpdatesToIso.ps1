@@ -46,6 +46,30 @@ Install-Module -Name $latestUpdateModule -Force -Scope CurrentUser @commonParame
 # Import the module in the current scope
 Import-Module -Name $latestUpdateModule @commonParameterSwitches
 
+# Make sure the input path is an absolute path
+if (-not ([System.IO.Path]::IsPathRooted($isoFilePath)))
+{
+    $isoFilePath = [System.IO.Path]::GetFullPath((Join-Path $pwd $isoFilePath))
+}
+
+# Make sure the output path is an absolute path
+if (-not ([System.IO.Path]::IsPathRooted($outputIsoPath)))
+{
+    $outputIsoPath = [System.IO.Path]::GetFullPath((Join-Path $pwd $outputIsoPath))
+}
+
+# Make sure the temp folder path is an absolute path
+if (-not ([System.IO.Path]::IsPathRooted($tempPath)))
+{
+    $tempPath = [System.IO.Path]::GetFullPath((Join-Path $pwd $tempPath))
+}
+
+if (-not (Test-Path -Path $tempPath))
+{
+    $newLocation = New-Item -Path $tempPath -ItemType Directory -Force
+    Write-Output "The temp folder, $($newLocation.FullName) has been created."
+}
+
 $workingPath = Join-Path $tempPath 'isoupdates'
 try
 {

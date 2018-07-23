@@ -115,7 +115,9 @@ filebeat_config_path = node['filebeat']['config_directory']
 %W[#{filebeat_bin_path} #{filebeat_config_path}].each do |path|
   directory path do
     action :create
-    rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
+    inherits false
+    rights :read_execute, service_username, applies_to_children: true, applies_to_self: true
+    rights :full_control, 'Administrators', applies_to_children: true
   end
 end
 
@@ -503,7 +505,6 @@ file "#{consul_template_template_path}/#{filebeat_template_file}" do
     # Port on which the HTTP endpoint will bind. Default is 5066.
     #http.port: 5066
   CONF
-  mode '755'
 end
 
 # Create the consul-template configuration file
@@ -574,5 +575,4 @@ file "#{consul_template_config_path}/filebeat.hcl" do
       }
     }
   HCL
-  mode '755'
 end

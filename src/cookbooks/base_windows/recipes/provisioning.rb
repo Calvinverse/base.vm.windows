@@ -15,7 +15,8 @@ service_name = node['provisioning']['service']['name']
 provisioning_bin_path = "#{node['paths']['ops']}/#{service_name}"
 directory provisioning_bin_path do
   action :create
-  rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
+  inherits false
+  rights :full_control, 'Administrators', applies_to_children: true
 end
 
 provisioning_helper_script = 'Initialize.ps1'
@@ -37,7 +38,7 @@ end
 provisioning_logs_path = "#{node['paths']['logs']}/#{service_name}"
 directory provisioning_logs_path do
   action :create
-  rights :modify, 'Administrators', applies_to_children: true, applies_to_self: false
+  rights :full_control, 'Administrators', applies_to_children: true, applies_to_self: false
 end
 
 service_exe_name = node['provisioning']['service']['exe']
