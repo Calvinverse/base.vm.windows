@@ -4,7 +4,11 @@ param(
 
     [string] $outputIsoPath,
 
-    [string] $tempPath = $env:TEMP
+    [string] $tempPath = $env:TEMP,
+
+    # Figure out what the current updates are
+    # https://docs.microsoft.com/en-us/windows-server/get-started/windows-server-release-info
+    [int] $buildNumber = 17134
 )
 
 $ErrorActionPreference = 'Stop'
@@ -84,13 +88,10 @@ try
         New-Item -Path $updatesPath -ItemType Directory | Out-Null
     }
 
-    # Figure out what the current updates are
-    # https://docs.microsoft.com/en-us/windows-server/get-started/windows-server-release-info
-    # Currently we use Windows 2016 1709 (october 2017 release) which is build number 16299
     Write-Output 'Searching for update files ...'
     $updates = Get-LatestUpdate `
         -WindowsVersion Windows10 `
-        -Build 14393 `
+        -Build $buildNumber `
         -Architecture x64 `
         @commonParameterSwitches
     Write-Output "Found $($updates.Length) updates."
