@@ -45,7 +45,7 @@
             "secondary_iso_images": [
                 "{{ user `dir_deploy` }}/windows.iso"
             ],
-            "shutdown_command": "IF EXIST a:\\run-sysprep.cmd (CALL a:\\run-sysprep.cmd) ELSE (IF EXIST e:\\run-sysprep.cmd (CALL e:\\run-sysprep.cmd) ELSE (CALL f:\\run-sysprep.cmd)) &IF \"%ERRORLEVEL%\" == \"0\" (ECHO \"Shutdown script succeeded with exit code = %ERRORLEVEL%\" &EXIT 0) ELSE (ECHO \"Shutdown script failed with exit code = %ERRORLEVEL%\" &EXIT %ERRORLEVEL%)",
+            "shutdown_command": "IF EXIST e:\\run-sysprep.cmd (CALL e:\\run-sysprep.cmd) ELSE (CALL f:\\run-sysprep.cmd) &IF \"%ERRORLEVEL%\" == \"0\" (ECHO \"Shutdown script succeeded with exit code = %ERRORLEVEL%\" &EXIT 0) ELSE (ECHO \"Shutdown script failed with exit code = %ERRORLEVEL%\" &EXIT %ERRORLEVEL%)",
             "shutdown_timeout": "20m",
             "skip_compaction": false,
             "switch_name": "{{ user `vm_switch_name` }}",
