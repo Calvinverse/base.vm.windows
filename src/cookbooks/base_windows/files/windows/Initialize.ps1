@@ -209,7 +209,12 @@ function Set-HostName
     $resourceShortName = $env:RESOURCE_SHORT_NAME
     if (($resourceShortName -ne $null) -and ($resourceShortName -ne ''))
     {
-        $resourceShortName = $resourceShortName.ToString().Substring(4)
+        $length = 4
+        if ($resourceShortName.Length -lt $length)
+        {
+            $length = $resourceShortName.Length
+        }
+        $resourceShortName = $resourceShortName.ToString().Substring(0, $length)
     }
     else
     {
