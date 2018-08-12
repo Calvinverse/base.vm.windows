@@ -120,19 +120,7 @@
         {
             "elevated_password": "{{user `admin_password`}}",
             "elevated_user": "{{user `admin_username`}}",
-            "inline": "dir c:/; dir c:/temp_dvd; dir c:/temp_dvd/scripts",
-            "type": "powershell"
-        },
-        {
-            "elevated_password": "{{user `admin_password`}}",
-            "elevated_user": "{{user `admin_username`}}",
             "inline": "c:/temp_dvd/scripts/Get-InstalledUpdates.ps1",
-            "type": "powershell"
-        },
-        {
-            "elevated_password": "{{ user `admin_password` }}",
-            "elevated_user": "{{ user `admin_username` }}",
-            "inline": "Remove-Item -Path c:/temp_dvd -Recurse -Force",
             "type": "powershell"
         },
         {
@@ -141,6 +129,18 @@
             "inline": ["{{ user `dir_scripts_user` }}/Copy-LogFilesFromVm.ps1 -vmName {{ user `vm_name` }} -userName {{ user `admin_username` }} -userPassword {{ user `admin_password` }} -targetDirectory {{ user `dir_log` }}/packer.beforesysprep"],
             "tempfile_extension": ".ps1",
             "type": "shell-local"
+        },
+
+        {
+            "elevated_password": "{{ user `admin_password` }}",
+            "elevated_user": "{{ user `admin_username` }}",
+            "inline": [
+                "Stop-Service Provisioning",
+                "Get-Childitem -Path c:/logs -File -Recurse | Foreach-Object { Remove-Item $_.FullName }",
+                "Remove-Item -Path c:/temp_dvd -Recurse -Force",
+                "Remove-Item -Path c:/temp -Recurse -Force"
+            ],
+            "type": "powershell"
         },
         {
             "elevated_password": "{{user `admin_password`}}",
