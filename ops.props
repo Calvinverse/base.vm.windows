@@ -451,7 +451,7 @@
 
         <!-- Tool versions -->
         <TemplateTokens Include="VersionChef">
-            <ReplacementValue>13.9.1</ReplacementValue>
+            <ReplacementValue>13.10.0</ReplacementValue>
         </TemplateTokens>
     </ItemGroup>
 
