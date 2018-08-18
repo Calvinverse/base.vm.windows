@@ -24,8 +24,10 @@ Describe 'On the system' {
         }
 
         It 'should only have the default Administrator' {
-            $userNames.Length | Should Be 1
+            $userNames.Length | Should Be 3
             $userNames[0] | Should Be "$($env:COMPUTERNAME)\Administrator"
+            $userNames[1] | Should Be "$($env:COMPUTERNAME)\consul-template"
+            $userNames[2] | Should Be "$($env:COMPUTERNAME)\filebeat_user"
         }
     }
 
@@ -35,8 +37,9 @@ Describe 'On the system' {
         $searcher = (New-Object -COM Microsoft.Update.Session).CreateUpdateSearcher()
         $updates  = $searcher.Search($criteria).Updates
 
+        $updatesThatAreNotWindowsDefender = @($updates | Where-Object { -not $_.Title.StartsWith('Definition Update for Windows Defender') })
         It 'should all be installed' {
-            $updates.Count | Should Be 0
+            $updatesThatAreNotWindowsDefender.Length | Should Be 0
         }
     }
 

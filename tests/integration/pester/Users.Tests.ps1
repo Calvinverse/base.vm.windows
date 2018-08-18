@@ -68,19 +68,27 @@ Describe 'The users list' {
     Context 'on the machine' {
         $users = Get-LocalUser
 
+        Write-Output $users
+
         It 'should not contain any unexpected users' {
-            $users.Length | Should Be 3
+            $users.Length | Should Be 9
             $users[0].UserName | Should Be 'Administrator'
-            $users[1].UserName | Should Be 'DefaultAccount'
-            $users[2].UserName | Should Be 'Guest'
+            $users[1].UserName | Should Be 'consul'
+            $users[2].UserName | Should Be 'consul-template'
+            $users[3].UserName | Should Be 'DefaultAccount'
+            $users[4].UserName | Should Be 'filebeat_user'
+            $users[5].UserName | Should Be 'Guest'
+            $users[6].UserName | Should Be 'telegraf_user'
+            $users[7].UserName | Should Be 'unbound_user'
+            $users[8].UserName | Should Be 'WDAGUtilityAccount'
         }
 
         It 'should have the default account disabled' {
-            $users[1].UserFlags | Should Match '(ACCOUNTDISABLE)'
+            $users[3].UserFlags | Should Match '(ACCOUNTDISABLE)'
         }
 
         It 'should have the guest account disabled' {
-            $users[2].UserFlags | Should Match '(ACCOUNTDISABLE)'
+            $users[5].UserFlags | Should Match '(ACCOUNTDISABLE)'
         }
     }
 }

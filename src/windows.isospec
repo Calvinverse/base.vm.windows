@@ -2,6 +2,14 @@
 <iso>
     <name>windows</name>
     <files>
+        <file src="${DirSrc}\packer\client.rb" target="" />
+        <file src="${DirSrc}\scripts\*.ps1" target="scripts" />
         <file src="${DirBuildTempIso}\*.*" target="" />
+        <file src="${DirBuildTemp}\chef.msi" target="" />
+        <file src="${DirBuildTemp}\chefservice.exe" target="" />
+        <file src="${DirBuildTemp}\chefservice.exe.config" target="" />
+        <file src="${DirBuildTemp}\eis-chef.exe" target="" />
+        <file src="${DirBuildTemp}\eis-chef.exe.config" target="" />
+        <file src="${DirVendorCookbooks}\**\*.*" target="cookbooks" />
     </files>
 </iso>
