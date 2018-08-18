@@ -63,11 +63,29 @@ if (-not (Test-Path $adkPath))
     throw "Failed to find the ADK install path. Cannot continue"
 }
 
-# Then we create the parent folder of the output file, if it does not exist
-if (!(Test-Path -Path (Split-Path -Path $unattendedIsoPath -Parent)))
+# Create the output folder
+if (-not ([System.IO.Path]::IsPathRooted($unattendedIsoPath)))
+{
+    $unattendedIsoPath = [System.IO.Path]::GetFullPath((Join-Path $pwd $unattendedIsoPath))
+}
+
+$unattendDirectory = Split-Path -Path $unattendedIsoPath -Parent
+if (-not (Test-Path -Path $unattendDirectory))
 {
     $newLocation = New-Item -Path (Split-Path -Path $unattendedIsoPath -Parent) -ItemType Directory -Force
     Write-Output "The parent folder of the output ISO file, $($newLocation.FullName) has been created."
+}
+
+# Create the temp folder, if it does not exist
+if (-not ([System.IO.Path]::IsPathRooted($tempPath)))
+{
+    $tempPath = [System.IO.Path]::GetFullPath((Join-Path $pwd $tempPath))
+}
+
+if (-not (Test-Path -Path $tempPath))
+{
+    $newLocation = New-Item -Path $tempPath -ItemType Directory -Force
+    Write-Output "The temp folder, $($newLocation.FullName) has been created."
 }
 
 # Then we start processing the source ISO file
@@ -77,6 +95,7 @@ try
 {
     try
     {
+        # Make sure to use the full path of the ISO because Mount-DiskImage doesn't like relative paths
         Mount-DiskImage -ImagePath $sourceIsoFullPath @commonParameterSwitches
         $isMounted = $true
     }
@@ -153,6 +172,25 @@ try
         Remove-Item -Path $targetPath -Force -Recurse -Confirm:$false @commonParameterSwitches
         Write-Output "The temp folder has been removed."
     }
+}
+catch
+{
+    $currentErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+
+    try
+    {
+        $errorRecord = $Error[0]
+        Write-Error $errorRecord.Exception
+        Write-Error $errorRecord.ScriptStackTrace
+        Write-Error $errorRecord.InvocationInfo.PositionMessage
+    }
+    finally
+    {
+        $ErrorActionPreference = $currentErrorActionPreference
+    }
+
+    throw
 }
 finally
 {

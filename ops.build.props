@@ -72,9 +72,9 @@
         **** PREPARE - COPY FILES ****
     -->
     <ItemGroup Condition=" '$(ShouldLoadHttpFilesToCopy)' == 'true' ">
-        <HttpFilesToCopy Include="https://packages.chef.io/files/stable/chef/${VersionChef}/windows/2012/chef-client-${VersionChef}-1-x64.msi">
+        <HttpFilesToCopy Include="https://packages.chef.io/files/stable/chef/${VersionChef}/windows/2016/chef-client-${VersionChef}-1-x64.msi">
             <Destination>$(DirBuildTemp)</Destination>
-            <Hash>10B56FFAA0263AAFF7F7E8A6556DAE1794D75863D17D37E6D5EA09FC3C5A9742</Hash>
+            <Hash>9EACD64BA4EA370F3EBA6020A9DA41CA3F292B795D1087722F6BA1B1E829E149</Hash>
             <HashAlgorithm>SHA256</HashAlgorithm>
             <Name>chef.msi</Name>
             <Unzip>false</Unzip>
@@ -185,11 +185,11 @@
             <Encoding></Encoding>
         </BuildFilesToGenerate>
         <BuildFilesToGenerate Include="$(DirBuildTempIso)\autounattend.xml">
-            <Template>$(DirBuildTempUnattend)\unattend\prepare_image_autounattend.xml</Template>
+            <Template>$(DirBuildTempUnattend)\unattend\win2016\$(WindowsBuildNumber)\prepare_image_autounattend.xml</Template>
             <Encoding></Encoding>
         </BuildFilesToGenerate>
         <BuildFilesToGenerate Include="$(DirBuildTempIso)\sysprep-unattend.xml">
-            <Template>$(DirBuildTempUnattend)\unattend\sysprep_image_autounattend.xml</Template>
+            <Template>$(DirBuildTempUnattend)\unattend\win2016\$(WindowsBuildNumber)\sysprep_image_autounattend.xml</Template>
             <Encoding></Encoding>
         </BuildFilesToGenerate>
     </ItemGroup>

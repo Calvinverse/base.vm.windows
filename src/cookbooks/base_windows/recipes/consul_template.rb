@@ -109,17 +109,24 @@ end
 #
 service_name = node['consul_template']['service']['name']
 
-consul_template_config_path = node['consul_template']['config_path']
-consul_template_template_path = node['consul_template']['template_path']
-
+consul_template_config_path = "#{node['paths']['config']}/#{node['consul_template']['service']['name']}"
 consul_template_bin_path = "#{node['paths']['ops']}/#{service_name}"
 consul_template_logs_path = "#{node['paths']['logs']}/#{service_name}"
 
-%W[#{consul_template_bin_path} #{consul_template_config_path} #{consul_template_template_path}].each do |path|
+%W[#{consul_template_bin_path} #{consul_template_config_path}].each do |path|
   directory path do
     action :create
-    recursive true
-    rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
+    inherits false
+    rights :read_execute, service_username, applies_to_children: true, applies_to_self: true
+    rights :full_control, 'Administrators', applies_to_children: true
+  end
+end
+
+consul_template_config_file_path = node['consul_template']['config_path']
+consul_template_template_path = node['consul_template']['template_path']
+%W[#{consul_template_config_file_path} #{consul_template_template_path}].each do |path|
+  directory path do
+    action :create
   end
 end
 
@@ -138,7 +145,7 @@ seven_zip_archive consul_template_bin_path do
 end
 
 # We need to multiple-escape the escape character because of ruby string and regex etc. etc. See here: http://stackoverflow.com/a/6209532/539846
-file "#{consul_template_config_path}/base.hcl" do
+file "#{consul_template_config_file_path}/base.hcl" do
   action :create
   content <<~HCL
     # This denotes the start of the configuration section for Consul. All values
@@ -397,7 +404,7 @@ file run_consul_template_script do
         $vaultOptions = "-vault-addr=http://$($serviceName).service.$($domain):$($port) -vault-unwrap-token -vault-renew-token -vault-retry"
       }
 
-      $startInfo.Arguments = "-config=""#{consul_template_config_path}"" $($vaultOptions)"
+      $startInfo.Arguments = "-config=""#{consul_template_config_file_path}"" $($vaultOptions)"
 
       Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Starting Consul-Template ... "
       Write-Output "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff') - Using arguments: $($startInfo.Arguments)"
@@ -461,7 +468,6 @@ file run_consul_template_script do
     # Exit with a non-zero exit code so that the service never stops(?)
     exit(1)
   POWERSHELL
-  mode '755'
 end
 
 file "#{consul_template_bin_path}/#{service_exe_name}.xml" do
@@ -532,7 +538,7 @@ end
 # VAULT CONFIGURATION
 #
 
-file "#{consul_template_config_path}/consul_template_vault.hcl" do
+file "#{consul_template_config_file_path}/consul_template_vault.hcl" do
   action :create
   content <<~HCL
     # This block defines the configuration for a template. Unlike other blocks,
@@ -600,5 +606,4 @@ file "#{consul_template_config_path}/consul_template_vault.hcl" do
       }
     }
   HCL
-  mode '755'
 end

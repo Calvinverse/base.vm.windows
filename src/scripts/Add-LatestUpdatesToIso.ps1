@@ -4,7 +4,11 @@ param(
 
     [string] $outputIsoPath,
 
-    [string] $tempPath = $env:TEMP
+    [string] $tempPath = $env:TEMP,
+
+    # Figure out what the current updates are
+    # https://docs.microsoft.com/en-us/windows-server/get-started/windows-server-release-info
+    [int] $buildNumber = 17134
 )
 
 $ErrorActionPreference = 'Stop'
@@ -33,6 +37,10 @@ if (-not (Test-Path $adkPath))
     throw "Failed to find the ADK install path. Cannot continue"
 }
 
+Write-Output "Found the windows ADK at: $adkPath"
+
+Write-Output "Getting 'LastestUpdate' powershell module ..."
+
 # Install the module if it is not installed for the current user
 $latestUpdateModule = 'LatestUpdate'
 
@@ -41,6 +49,30 @@ Install-Module -Name $latestUpdateModule -Force -Scope CurrentUser @commonParame
 
 # Import the module in the current scope
 Import-Module -Name $latestUpdateModule @commonParameterSwitches
+
+# Make sure the input path is an absolute path
+if (-not ([System.IO.Path]::IsPathRooted($isoFilePath)))
+{
+    $isoFilePath = [System.IO.Path]::GetFullPath((Join-Path $pwd $isoFilePath))
+}
+
+# Make sure the output path is an absolute path
+if (-not ([System.IO.Path]::IsPathRooted($outputIsoPath)))
+{
+    $outputIsoPath = [System.IO.Path]::GetFullPath((Join-Path $pwd $outputIsoPath))
+}
+
+# Make sure the temp folder path is an absolute path
+if (-not ([System.IO.Path]::IsPathRooted($tempPath)))
+{
+    $tempPath = [System.IO.Path]::GetFullPath((Join-Path $pwd $tempPath))
+}
+
+if (-not (Test-Path -Path $tempPath))
+{
+    $newLocation = New-Item -Path $tempPath -ItemType Directory -Force
+    Write-Output "The temp folder, $($newLocation.FullName) has been created."
+}
 
 $workingPath = Join-Path $tempPath 'isoupdates'
 try
@@ -56,16 +88,19 @@ try
         New-Item -Path $updatesPath -ItemType Directory | Out-Null
     }
 
-    # Figure out what the current updates are
-    # https://docs.microsoft.com/en-us/windows-server/get-started/windows-server-release-info
-    # Currently we use Windows 2016 1709 (october 2017 release) which is build number 16299
     Write-Output 'Searching for update files ...'
     $updates = Get-LatestUpdate `
         -WindowsVersion Windows10 `
-        -Build 14393 `
+        -Build $buildNumber `
         -Architecture x64 `
         @commonParameterSwitches
     Write-Output "Found $($updates.Length) updates."
+
+    for ($i = 0; $i -lt $updates.Length; $i++)
+    {
+        Write-Output "Update $($i):"
+        Write-Output $updates[$i]
+    }
 
     Write-Output 'Downloading update files ...'
     Save-LatestUpdate `
@@ -161,6 +196,25 @@ try
     {
         dism.exe /Cleanup-Wim
     }
+}
+catch
+{
+    $currentErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+
+    try
+    {
+        $errorRecord = $Error[0]
+        Write-Error $errorRecord.Exception
+        Write-Error $errorRecord.ScriptStackTrace
+        Write-Error $errorRecord.InvocationInfo.PositionMessage
+    }
+    finally
+    {
+        $ErrorActionPreference = $currentErrorActionPreference
+    }
+
+    throw
 }
 finally
 {

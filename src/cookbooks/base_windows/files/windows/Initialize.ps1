@@ -209,7 +209,12 @@ function Set-HostName
     $resourceShortName = $env:RESOURCE_SHORT_NAME
     if (($resourceShortName -ne $null) -and ($resourceShortName -ne ''))
     {
-        $resourceShortName = $resourceShortName.ToString().Substring(4)
+        $length = 4
+        if ($resourceShortName.Length -lt $length)
+        {
+            $length = $resourceShortName.Length
+        }
+        $resourceShortName = $resourceShortName.ToString().Substring(0, $length).ToLowerInvariant()
     }
     else
     {
@@ -217,7 +222,7 @@ function Set-HostName
     }
 
     $postfix = -join ((65..90) + (97..122) | Get-Random -Count 3 | Foreach-Object { [char]$_ })
-    $name = "cv$($resourceShortName)-$($env:RESOURCE_VERSION_MAJOR)$($env:RESOURCE_VERSION_MINOR)$($env:RESOURCE_VERSION_PATCH)-$($postfix)"
+    $name = "cv$($resourceShortName)-$($env:RESOURCE_VERSION_MAJOR)$($env:RESOURCE_VERSION_MINOR)$($env:RESOURCE_VERSION_PATCH)-$($postfix.ToLowerInvariant())"
 
     Rename-Computer -NewName $name @commonParameterSwitches
 }

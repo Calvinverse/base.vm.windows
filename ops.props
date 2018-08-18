@@ -353,8 +353,13 @@
         <!-- <TemplateTokenGenerators>UNDEFINED</TemplateTokenGenerators> -->
     </PropertyGroup>
     <PropertyGroup>
-        <WindowsImage Condition=" '$(WindowsImage)' == '' AND '$(ServerSku)' == 'Core' ">SERVERDATACENTERCORE</WindowsImage>
-        <WindowsImage Condition=" '$(WindowsImage)' == '' ">SERVERDATACENTER</WindowsImage>
+        <WindowsBuildNumber>1803</WindowsBuildNumber>
+        <WindowsProductKey>2HXDN-KRXHB-GPYC7-YCKFJ-7FVDG</WindowsProductKey>
+
+        <IsoFile>$(IsoDirectory)\windows_server_$(WindowsBuildNumber)_updates.iso</IsoFile>
+        <IsoHash>724E2CC5B85B6DAAE753E1EC67DF6A9D9B4E10134169D0159426675ACEBB3A6B</IsoHash>
+
+        <WindowsImage Condition=" '$(WindowsImage)' == '' ">Datacenter</WindowsImage>
     </PropertyGroup>
 
     <!--
@@ -384,10 +389,10 @@
 
         <!-- For the unattend file -->
         <TemplateTokens Include="ProductKey">
-            <ReplacementValue>CB7KF-BWN84-R7R2Y-793K2-8XDDG</ReplacementValue>
+            <ReplacementValue>$(WindowsProductKey)</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="WindowsImage">
-            <ReplacementValue>Windows Server 2016 $(WindowsImage)</ReplacementValue>
+            <ReplacementValue>Windows Server 2016 SERVERDATACENTERACORE</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="DnsIPAddresses">
             <ReplacementValue>$(DnsIpAddress)</ReplacementValue>
@@ -401,7 +406,7 @@
             <ReplacementValue>$(IsoFile.Replace('\', '/'))</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="IsoFileHash">
-            <ReplacementValue>6A8BBA7D2087C892DA97C44AAA7971CB9F46F10095D13D38CEADA29307A063CC</ReplacementValue>
+            <ReplacementValue>$(IsoHash)</ReplacementValue>
         </TemplateTokens>
 
         <TemplateTokens Include="NameCookbook">
@@ -446,7 +451,7 @@
 
         <!-- Tool versions -->
         <TemplateTokens Include="VersionChef">
-            <ReplacementValue>13.9.1</ReplacementValue>
+            <ReplacementValue>13.10.0</ReplacementValue>
         </TemplateTokens>
     </ItemGroup>
 

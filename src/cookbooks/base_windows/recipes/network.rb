@@ -111,7 +111,9 @@ unbound_config_path = "#{node['paths']['config']}/#{service_name}"
 %W[#{unbound_bin_path} #{unbound_config_path}].each do |path|
   directory path do
     action :create
-    rights :read_execute, 'Everyone', applies_to_children: true, applies_to_self: false
+    inherits false
+    rights :read_execute, service_username, applies_to_children: true, applies_to_self: true
+    rights :full_control, 'Administrators', applies_to_children: true
   end
 end
 
