@@ -206,7 +206,7 @@ function Set-HostName
     # - The major and minor version to be a single character
     # - The patch version up to 2 characters
     # - The post-fix to be 3 characters
-    $resourceShortName = $env:RESOURCE_SHORT_NAME
+    $resourceShortName = $env:RESOURCE_ACRONYM_NAME
     if (($resourceShortName -ne $null) -and ($resourceShortName -ne ''))
     {
         $length = 4
