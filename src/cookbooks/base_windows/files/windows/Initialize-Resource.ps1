@@ -53,6 +53,13 @@ try
     Initialize-Unbound -dvdDriveLetter $dvdDriveLetter @commonParameterSwitches
     Initialize-ConsulTemplate -dvdDriveLetter $dvdDriveLetter @commonParameterSwitches
 
+    $customProvisioningScript = Join-Path $PSScriptRoot 'Initialize-CustomResource.ps1'
+    if (Test-Path $customProvisioningScript)
+    {
+        . $customProvisioningScript
+        Initialize-CustomResource
+    }
+
     Disable-ProvisioningService @commonParameterSwitches
 
     Restart-Computer -ComputerName . -Force
