@@ -185,11 +185,11 @@
             <Encoding></Encoding>
         </BuildFilesToGenerate>
         <BuildFilesToGenerate Include="$(DirBuildTempIso)\autounattend.xml">
-            <Template>$(DirBuildTempUnattend)\unattend\win2016\$(WindowsBuildNumber)\prepare_image_autounattend.xml</Template>
+            <Template>$(DirBuildTempUnattend)\unattend\win2016\$(WindowsUnattendBuildNumber)\prepare_image_autounattend.xml</Template>
             <Encoding></Encoding>
         </BuildFilesToGenerate>
         <BuildFilesToGenerate Include="$(DirBuildTempIso)\sysprep-unattend.xml">
-            <Template>$(DirBuildTempUnattend)\unattend\win2016\$(WindowsBuildNumber)\sysprep_image_autounattend.xml</Template>
+            <Template>$(DirBuildTempUnattend)\unattend\win2016\$(WindowsUnattendBuildNumber)\sysprep_image_autounattend.xml</Template>
             <Encoding></Encoding>
         </BuildFilesToGenerate>
     </ItemGroup>

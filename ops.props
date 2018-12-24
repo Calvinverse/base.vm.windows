@@ -353,11 +353,12 @@
         <!-- <TemplateTokenGenerators>UNDEFINED</TemplateTokenGenerators> -->
     </PropertyGroup>
     <PropertyGroup>
-        <WindowsBuildNumber>1803</WindowsBuildNumber>
-        <WindowsProductKey>2HXDN-KRXHB-GPYC7-YCKFJ-7FVDG</WindowsProductKey>
+        <WindowsUnattendBuildNumber>1803</WindowsUnattendBuildNumber>
+        <WindowsBuildNumber>1809</WindowsBuildNumber>
+        <WindowsProductKey>6NMRW-2C8FM-D24W7-TQWMY-CWH2D</WindowsProductKey>
 
         <IsoFile>$(IsoDirectory)\windows_server_$(WindowsBuildNumber)_updates.iso</IsoFile>
-        <IsoHash>D5F2BC0ADCAB82A36329B210D9820B7AD834D0995D7ED79777249D070728830E</IsoHash>
+        <IsoHash>C4E8E3E4AB37A7E856C39A9BFF4800DB5E1884C7F5BDE9F6A84A41CB7246F988</IsoHash>
 
         <WindowsImage Condition=" '$(WindowsImage)' == '' ">Datacenter</WindowsImage>
     </PropertyGroup>
@@ -392,7 +393,7 @@
             <ReplacementValue>$(WindowsProductKey)</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="WindowsImage">
-            <ReplacementValue>Windows Server 2016 SERVERDATACENTERACORE</ReplacementValue>
+            <ReplacementValue>Windows Server SERVERDATACENTERACORE</ReplacementValue>
         </TemplateTokens>
         <TemplateTokens Include="DnsIPAddresses">
             <ReplacementValue>$(DnsIpAddress)</ReplacementValue>
@@ -483,7 +484,7 @@
             The full path and version to the packer command line executable. If not defined the packages directory is searched.
         -->
         <ToolsExternalPackerPath>UNDEFINED</ToolsExternalPackerPath>
-        <ToolsExternalPackerVersion>1.2.4</ToolsExternalPackerVersion>
+        <ToolsExternalPackerVersion>1.3.4</ToolsExternalPackerVersion>
     </PropertyGroup>
 
 
