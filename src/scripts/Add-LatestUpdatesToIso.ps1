@@ -8,7 +8,7 @@ param(
 
     # Figure out what the current updates are
     # https://docs.microsoft.com/en-us/windows-server/get-started/windows-server-release-info
-    [int] $buildNumber = 17134
+    [int] $buildNumber = 17763
 )
 
 $ErrorActionPreference = 'Stop'
