@@ -378,6 +378,9 @@
         <TemplateTokens Include="LocalAdministratorName">
             <ReplacementValue>Administrator</ReplacementValue>
         </TemplateTokens>
+        <TemplateTokens Include="LocalAdministratorNameForPacker">
+            <ReplacementValue>Administrator</ReplacementValue>
+        </TemplateTokens>
         <TemplateTokens Include="LocalAdministratorPassword">
             <ReplacementValue>TheB1gK@huna</ReplacementValue>
         </TemplateTokens>

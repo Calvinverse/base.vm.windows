@@ -1,5 +1,5 @@
 {
-    "admin_username": "${LocalAdministratorName}",
+    "admin_username": "${LocalAdministratorNameForPacker}",
     "admin_password": "${LocalAdministratorPassword}",
 
     "dir_deploy": "${DirDeployJsonEscaped}",
