@@ -357,7 +357,7 @@
         <WindowsProductKey>2HXDN-KRXHB-GPYC7-YCKFJ-7FVDG</WindowsProductKey>
 
         <IsoFile>$(IsoDirectory)\windows_server_$(WindowsBuildNumber)_updates.iso</IsoFile>
-        <IsoHash>724E2CC5B85B6DAAE753E1EC67DF6A9D9B4E10134169D0159426675ACEBB3A6B</IsoHash>
+        <IsoHash>D5F2BC0ADCAB82A36329B210D9820B7AD834D0995D7ED79777249D070728830E</IsoHash>
 
         <WindowsImage Condition=" '$(WindowsImage)' == '' ">Datacenter</WindowsImage>
     </PropertyGroup>
