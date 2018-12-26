@@ -116,7 +116,7 @@ default['telegraf']['statsd']['port'] = 8125
 # UNBOUND
 #
 
-default['unbound']['version'] = '1.7.1'
+default['unbound']['version'] = '1.8.3'
 default['unbound']['url'] = "http://www.unbound.net/downloads/unbound-#{node['unbound']['version']}.zip"
 
 default['unbound']['service']['exe'] = 'unbound_service'
