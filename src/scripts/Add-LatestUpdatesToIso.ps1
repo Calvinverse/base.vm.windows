@@ -45,7 +45,7 @@ Write-Output "Getting 'LastestUpdate' powershell module ..."
 $latestUpdateModule = 'LatestUpdate'
 
 # Install the module if it doesn't exist and otherwise make sure it is up to date
-Install-Module -Name $latestUpdateModule -Force -Scope CurrentUser @commonParameterSwitches
+Install-Module -Name $latestUpdateModule -Scope CurrentUser -Force @commonParameterSwitches
 
 # Import the module in the current scope
 Import-Module -Name $latestUpdateModule @commonParameterSwitches
@@ -111,14 +111,19 @@ try
     # Now load the ISO and then patch it
     # From here: https://gist.github.com/PatrickLang/f8f3486cbbb49e0bb3f9c97e491c3981
 
+    $volumesPriorToMapping = @( $(get-volume | Where-Object FileSystem -eq UDF | Select-Object -ExpandProperty DriveLetter ) )
+    Write-Output "DVD volumes in use: $( $volumesPriorToMapping -join ',' )"
+
     # Mount the installer ISO
     Write-Output 'Mounting ISO file ...'
     Mount-DiskImage $isoFilePath @commonParameterSwitches
 
     # Figure out which drive the ISO got mounted to
-    $volume = get-volume | Where-Object FileSystem -eq UDF
+    $volumesAfterMapping = @( $(get-volume | Where-Object FileSystem -eq UDF | Select-Object -ExpandProperty DriveLetter ) )
+    Write-Output "DVD volumes in use: $( $volumesAfterMapping -join ',' )"
 
-    Write-Output "ISO file mounted at $($volume)"
+    $volume = $volumesAfterMapping | Where-Object { $volumesPriorToMapping -notcontains $_ } | Select-Object -First 1
+    Write-Output "ISO file mounted at $($volume):"
 
     # Make directories to put the original files and the new files in
     $originalIsoFilePath = Join-Path $workingPath 'iso_contents'
@@ -134,7 +139,7 @@ try
     }
 
     # Copy the contents of the ISO to the original directory
-    robocopy /s /e "$($volume.DriveLetter):" $originalIsoFilePath
+    robocopy "$($volume):" $originalIsoFilePath /s /e
 
     # Dismount the original image. We don't need it anymore
     Write-Output 'Dismouting ISO file ...'
