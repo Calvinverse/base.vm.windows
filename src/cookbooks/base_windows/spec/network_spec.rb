@@ -48,7 +48,7 @@ describe 'base_windows::network' do
 
     unbound_default_config_content = <<~CONF
       #
-      # See unbound.conf(5) man page, version 1.7.1.
+      # See unbound.conf(5) man page, version 1.8.3.
       #
 
       # Use this to include other text into the file.
