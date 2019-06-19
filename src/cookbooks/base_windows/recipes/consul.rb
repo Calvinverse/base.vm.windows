@@ -162,8 +162,6 @@ file "#{consul_bin_path}/#{consul_config_file}" do
         }
       },
 
-      "leave_on_terminate" : false,
-
       "log_level" : "INFO",
 
       "ports": {
