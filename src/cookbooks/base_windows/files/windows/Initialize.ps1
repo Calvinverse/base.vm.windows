@@ -71,7 +71,7 @@ function Find-DvdDriveLetter
 
     try
     {
-        $cd = Get-WMIObject -Class Win32_CDROMDrive -ErrorAction Stop
+        $cd = @( Get-WMIObject -Class Win32_CDROMDrive @commonParameterSwitches )
     }
     catch
     {
@@ -79,11 +79,26 @@ function Find-DvdDriveLetter
         return $null
     }
 
-    if ($cd -ne $null)
+    if ($null -ne $cd)
     {
-        return $cd.Drive
+        if ($cd.Length -eq 0)
+        {
+            Write-Verbose "Failed to find DVD. Found zero devices."
+            return $null
+        }
+
+        if ($cd.Length -eq 1)
+        {
+            return $cd[0].Drive
+        }
+        else
+        {
+            Write-Verbose "More than one DVD device found. Found $($cd.Length) devices"
+            return $null
+        }
     }
 
+    Write-Verbose "Failed to find DVD. Found zero devices."
     return $null
 }
 
@@ -207,7 +222,7 @@ function Set-HostName
     # - The patch version up to 2 characters
     # - The post-fix to be 3 characters
     $resourceShortName = $env:RESOURCE_ACRONYM_NAME
-    if (($resourceShortName -ne $null) -and ($resourceShortName -ne ''))
+    if (($null -ne $resourceShortName) -and ($resourceShortName -ne ''))
     {
         $length = 4
         if ($resourceShortName.Length -lt $length)

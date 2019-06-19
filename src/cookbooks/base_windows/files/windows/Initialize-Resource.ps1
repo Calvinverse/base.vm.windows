@@ -25,7 +25,7 @@ try
 {
     # Find the CD
     $dvdDriveLetter = Find-DvdDriveLetter @commonParameterSwitches
-    if (($dvdDriveLetter -eq $null) -or ($dvdDriveLetter -eq ''))
+    if (($null -eq $dvdDriveLetter) -or ($dvdDriveLetter -eq ''))
     {
         Start-Sleep -Seconds 15
         Write-Output 'No DVD drive found'
