@@ -11,7 +11,7 @@ temp_path = 'c:/temp'
 # CONSUL
 #
 
-default['consul']['version'] = '1.4.0'
+default['consul']['version'] = '1.4.4'
 default['consul']['url'] = "https://releases.hashicorp.com/consul/#{node['consul']['version']}/consul_#{node['consul']['version']}_windows_amd64.zip"
 default['consul']['config']['domain'] = 'consulverse'
 
@@ -27,7 +27,7 @@ default['consul']['path']['exe'] = "#{node['consul']['path']['bin']}/#{node['con
 # CONSULTEMPLATE
 #
 
-default['consul-template']['version'] = '0.19.5'
+default['consul-template']['version'] = '0.20.0'
 default['consul-template']['url'] = "https://releases.hashicorp.com/consul-template/#{node['consul-template']['version']}/consul-template_#{node['consul-template']['version']}_windows_amd64.zip"
 
 default['consul_template']['service']['exe'] = 'consul-template_service'
@@ -100,8 +100,8 @@ default['telegraf']['service']['name'] = 'telegraf'
 default['telegraf']['service']['user_name'] = 'telegraf_user'
 default['telegraf']['service']['user_password'] = SecureRandom.uuid
 
-default['telegraf']['version'] = '1.9.1'
-default['telegraf']['shasums'] = '2be4ab7ed6baa07aed81b445d42ef0d45d56b2a4b0dd593e61acbf3db4a461de'
+default['telegraf']['version'] = '1.10.3'
+default['telegraf']['shasums'] = 'e0dcc28dd2e55dcf3ca57424486d822928445e433f18420c297c0997a9db7777'
 default['telegraf']['download_urls'] = "https://dl.influxdata.com/telegraf/releases/telegraf-#{node['telegraf']['version']}_windows_amd64.zip"
 
 default['telegraf']['consul_template_file'] = 'telegraf.ctmpl'
@@ -116,7 +116,7 @@ default['telegraf']['statsd']['port'] = 8125
 # UNBOUND
 #
 
-default['unbound']['version'] = '1.8.3'
+default['unbound']['version'] = '1.9.1'
 default['unbound']['url'] = "http://www.unbound.net/downloads/unbound-#{node['unbound']['version']}.zip"
 
 default['unbound']['service']['exe'] = 'unbound_service'
@@ -131,7 +131,7 @@ default['unbound']['control']['port'] = 8953
 # WINSW
 #
 
-default['winsw']['version'] = '2.1.2'
+default['winsw']['version'] = '2.2.0'
 default['winsw']['url'] = "https://github.com/kohsuke/winsw/releases/download/winsw-v#{node['winsw']['version']}/WinSW.NET4.exe"
 
 default['winsw']['path']['bin'] = "#{ops_path}/winsw"
