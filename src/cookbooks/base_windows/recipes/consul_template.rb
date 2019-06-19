@@ -564,7 +564,7 @@ file "#{consul_template_config_file_path}/consul_template_vault.hcl" do
       # command will only run if the resulting template changes. The command must
       # return within 30s (configurable), and it must have a successful exit code.
       # Consul Template is not a replacement for a process monitor or init system.
-      command = "powershell.exe -noprofile -nologo -noninteractive -command \\"$pid = Get-Content -Path '#{consul_template_logs_path}/pid.txt'; Stop-Process -Force -Id $pid\\" "
+      command = "powershell.exe -noprofile -nologo -noninteractive -command 'Stop-Process -Force -Id $(Get-Content -Path #{consul_template_logs_path}/pid.txt)' "
 
       # This is the maximum amount of time to wait for the optional command to
       # return. Default is 30s.
