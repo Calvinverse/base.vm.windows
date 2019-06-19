@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-chef_version '>= 12.5' if respond_to?(:chef_version)
+chef_version '>= 14.0' if respond_to?(:chef_version)
 description 'Environment cookbook that configures a base windows server with all the shared tools and applications.'
 issues_url '${ProductUrl}/issues' if respond_to?(:issues_url)
 license 'Apache-2.0'
@@ -13,6 +13,6 @@ version '${VersionSemantic}'
 
 supports 'windows', '>= 2016'
 
-depends 'firewall', '= 2.6.1'
+depends 'firewall', '= 2.7.0'
 depends 'seven_zip', '= 3.0.0'
-depends 'windows', '= 3.1.0'
+depends 'windows', '= 5.3.1'
