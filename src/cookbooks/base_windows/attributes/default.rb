@@ -47,7 +47,7 @@ default['filebeat']['service']['name'] = 'filebeat'
 default['filebeat']['service']['user_name'] = 'filebeat_user'
 default['filebeat']['service']['user_password'] = SecureRandom.uuid
 
-default['filebeat']['version'] = '0.1.0'
+default['filebeat']['version'] = '1.0.1'
 default['filebeat']['url'] = "https://github.com/pvandervelde/filebeat.mqtt/releases/download/#{node['filebeat']['version']}/filebeat.mqtt.exe"
 
 default['filebeat']['config_file_path'] = "#{config_path}/#{node['filebeat']['service']['name']}/filebeat.yml"
@@ -126,6 +126,22 @@ default['unbound']['service']['user_password'] = SecureRandom.uuid
 
 default['unbound']['path']['bin'] = 'c:/Program Files/Unbound'
 default['unbound']['control']['port'] = 8953
+
+#
+# WINLOGBEAT (WITH MQTT OUTPUT)
+#
+
+default['winlogbeat']['service']['exe'] = 'winlogbeat_service'
+default['winlogbeat']['service']['name'] = 'winlogbeat'
+default['winlogbeat']['service']['user_name'] = 'winlogbeat_user'
+default['winlogbeat']['service']['user_password'] = SecureRandom.uuid
+
+default['winlogbeat']['version'] = '1.0.0'
+default['winlogbeat']['url'] = "https://github.com/pvandervelde/winlogbeat.mqtt/releases/download/#{node['winlogbeat']['version']}/winlogbeat.mqtt.exe"
+
+default['winlogbeat']['config_file_path'] = "#{config_path}/#{node['winlogbeat']['service']['name']}/winlogbeat.yml"
+default['winlogbeat']['config_directory'] = "#{config_path}/#{node['winlogbeat']['service']['name']}"
+default['winlogbeat']['consul_template_file'] = 'winlogbeat.ctmpl'
 
 #
 # WINSW

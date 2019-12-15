@@ -71,7 +71,7 @@ Describe 'The users list' {
         Write-Output $users
 
         It 'should not contain any unexpected users' {
-            $users.Length | Should Be 9
+            $users.Length | Should Be 10
             $users[0].UserName | Should Be 'Administrator'
             $users[1].UserName | Should Be 'consul'
             $users[2].UserName | Should Be 'consul-template'
@@ -81,6 +81,7 @@ Describe 'The users list' {
             $users[6].UserName | Should Be 'telegraf_user'
             $users[7].UserName | Should Be 'unbound_user'
             $users[8].UserName | Should Be 'WDAGUtilityAccount'
+            $users[9].UserName | Should Be 'winlogbeat_user'
         }
 
         It 'should have the default account disabled' {
