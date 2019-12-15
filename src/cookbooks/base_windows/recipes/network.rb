@@ -29,7 +29,7 @@ powershell_script 'unbound_user_with_password_that_does_not_expire' do
   POWERSHELL
 end
 
-# Grant the user the LogOnAsService permission. Following this anwer on SO: http://stackoverflow.com/a/21235462/539846
+# Grant the user the LogOnAsService permission. Following this answer on SO: http://stackoverflow.com/a/21235462/539846
 # With some additional bug fixes to get the correct line from the export file and to put the correct text in the import file
 powershell_script 'unbound_user_grant_service_logon_rights' do
   code <<~POWERSHELL
