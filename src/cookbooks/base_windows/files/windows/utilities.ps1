@@ -258,7 +258,7 @@ function Set-HostName
     }
 
     $postfix = -join ((65..90) + (97..122) | Get-Random -Count 3 | Foreach-Object { [char]$_ })
-    $name = "di$($resourceShortName)-$($env:RESOURCE_VERSION_MAJOR)$($env:RESOURCE_VERSION_MINOR)$($env:RESOURCE_VERSION_PATCH)-$($postfix.ToLowerInvariant())"
+    $name = "cv$($resourceShortName)-$($env:RESOURCE_VERSION_MAJOR)$($env:RESOURCE_VERSION_MINOR)$($env:RESOURCE_VERSION_PATCH)-$($postfix.ToLowerInvariant())"
 
     Rename-Computer -NewName $name @commonParameterSwitches
 }
