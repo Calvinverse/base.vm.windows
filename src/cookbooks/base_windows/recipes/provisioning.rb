@@ -19,7 +19,7 @@ directory provisioning_bin_path do
   rights :full_control, 'Administrators', applies_to_children: true
 end
 
-provisioning_helper_script = 'Initialize.ps1'
+provisioning_helper_script = 'utilities.ps1'
 cookbook_file "#{provisioning_bin_path}/#{provisioning_helper_script}" do
   action :create
   source provisioning_helper_script
@@ -91,7 +91,7 @@ registry_key "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\services\\eventlog\
   }]
 end
 
-powershell_script 'provisioning_as_service' do
+powershell_script 'provisioning_as_service' do # ~FC005
   code <<~POWERSHELL
     $ErrorActionPreference = 'Stop'
 
@@ -112,5 +112,40 @@ powershell_script 'provisioning_as_service' do
 
     # Set the service to restart if it fails
     sc.exe failure #{service_name} reset=86400 actions=restart/5000
+  POWERSHELL
+end
+
+#
+# PENDINGREBOOT MODULE
+#
+
+powershell_script 'set_psgallery_as_trusted_powershell_repository' do
+  code <<~POWERSHELL
+    $ErrorActionPreference = 'Stop'
+
+    # apparently we need to install the package provider first, otherwise powershell complains
+    # about non-interactive installs?
+    # https://github.com/PowerShell/PowerShellGet/issues/101
+    Get-PackageProvider NuGet -ForceBootstrap
+    Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
+  POWERSHELL
+end
+
+powershell_script 'install_powershellget' do
+  code <<~POWERSHELL
+    $ErrorActionPreference = 'Stop'
+
+    Install-Module -Name PackageManagement -Repository PSGallery -Force
+    Install-Module -Name PowerShellGet -Repository PSGallery -Force
+  POWERSHELL
+end
+
+# Install the PendingReboot module (see: https://github.com/bcwilhite/PendingReboot) so that during
+# provisioning time we can figure out if there are reboots pending
+powershell_script 'install_pendingreboot_module' do
+  code <<~POWERSHELL
+    $ErrorActionPreference = 'Stop'
+
+    Install-Module -Name PendingReboot -Scope AllUsers -AllowClobber -AcceptLicense
   POWERSHELL
 end

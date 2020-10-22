@@ -11,7 +11,7 @@ temp_path = 'c:/temp'
 # CONSUL
 #
 
-default['consul']['version'] = '1.4.0'
+default['consul']['version'] = '1.6.2'
 default['consul']['url'] = "https://releases.hashicorp.com/consul/#{node['consul']['version']}/consul_#{node['consul']['version']}_windows_amd64.zip"
 default['consul']['config']['domain'] = 'consulverse'
 
@@ -27,7 +27,7 @@ default['consul']['path']['exe'] = "#{node['consul']['path']['bin']}/#{node['con
 # CONSULTEMPLATE
 #
 
-default['consul-template']['version'] = '0.19.5'
+default['consul-template']['version'] = '0.23.0'
 default['consul-template']['url'] = "https://releases.hashicorp.com/consul-template/#{node['consul-template']['version']}/consul-template_#{node['consul-template']['version']}_windows_amd64.zip"
 
 default['consul_template']['service']['exe'] = 'consul-template_service'
@@ -47,7 +47,7 @@ default['filebeat']['service']['name'] = 'filebeat'
 default['filebeat']['service']['user_name'] = 'filebeat_user'
 default['filebeat']['service']['user_password'] = SecureRandom.uuid
 
-default['filebeat']['version'] = '0.1.0'
+default['filebeat']['version'] = '1.0.1'
 default['filebeat']['url'] = "https://github.com/pvandervelde/filebeat.mqtt/releases/download/#{node['filebeat']['version']}/filebeat.mqtt.exe"
 
 default['filebeat']['config_file_path'] = "#{config_path}/#{node['filebeat']['service']['name']}/filebeat.yml"
@@ -100,8 +100,8 @@ default['telegraf']['service']['name'] = 'telegraf'
 default['telegraf']['service']['user_name'] = 'telegraf_user'
 default['telegraf']['service']['user_password'] = SecureRandom.uuid
 
-default['telegraf']['version'] = '1.9.1'
-default['telegraf']['shasums'] = '2be4ab7ed6baa07aed81b445d42ef0d45d56b2a4b0dd593e61acbf3db4a461de'
+default['telegraf']['version'] = '1.12.6'
+default['telegraf']['shasums'] = '5d025d85070e8c180c443580afa8a27421a7bbcf14b5044894e9f3298d0ce97a'
 default['telegraf']['download_urls'] = "https://dl.influxdata.com/telegraf/releases/telegraf-#{node['telegraf']['version']}_windows_amd64.zip"
 
 default['telegraf']['consul_template_file'] = 'telegraf.ctmpl'
@@ -116,7 +116,7 @@ default['telegraf']['statsd']['port'] = 8125
 # UNBOUND
 #
 
-default['unbound']['version'] = '1.8.3'
+default['unbound']['version'] = '1.9.2'
 default['unbound']['url'] = "http://www.unbound.net/downloads/unbound-#{node['unbound']['version']}.zip"
 
 default['unbound']['service']['exe'] = 'unbound_service'
@@ -128,10 +128,26 @@ default['unbound']['path']['bin'] = 'c:/Program Files/Unbound'
 default['unbound']['control']['port'] = 8953
 
 #
+# WINLOGBEAT (WITH MQTT OUTPUT)
+#
+
+default['winlogbeat']['service']['exe'] = 'winlogbeat_service'
+default['winlogbeat']['service']['name'] = 'winlogbeat'
+default['winlogbeat']['service']['user_name'] = 'winlogbeat_user'
+default['winlogbeat']['service']['user_password'] = SecureRandom.uuid
+
+default['winlogbeat']['version'] = '1.0.0'
+default['winlogbeat']['url'] = "https://github.com/pvandervelde/winlogbeat.mqtt/releases/download/#{node['winlogbeat']['version']}/winlogbeat.mqtt.exe"
+
+default['winlogbeat']['config_file_path'] = "#{config_path}/#{node['winlogbeat']['service']['name']}/winlogbeat.yml"
+default['winlogbeat']['config_directory'] = "#{config_path}/#{node['winlogbeat']['service']['name']}"
+default['winlogbeat']['consul_template_file'] = 'winlogbeat.ctmpl'
+
+#
 # WINSW
 #
 
-default['winsw']['version'] = '2.1.2'
+default['winsw']['version'] = '2.2.0'
 default['winsw']['url'] = "https://github.com/kohsuke/winsw/releases/download/winsw-v#{node['winsw']['version']}/WinSW.NET4.exe"
 
 default['winsw']['path']['bin'] = "#{ops_path}/winsw"

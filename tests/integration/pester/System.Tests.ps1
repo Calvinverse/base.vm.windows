@@ -24,10 +24,12 @@ Describe 'On the system' {
         }
 
         It 'should only have the default Administrator' {
-            $userNames.Length | Should Be 3
+            $userNames.Length | Should Be 5
             $userNames[0] | Should Be "$($env:COMPUTERNAME)\Administrator"
             $userNames[1] | Should Be "$($env:COMPUTERNAME)\consul-template"
-            $userNames[2] | Should Be "$($env:COMPUTERNAME)\filebeat_user"
+            $userNames[2] | Should Be "$($env:COMPUTERNAME)\telegraf_user"
+            $userNames[3] | Should Be "$($env:COMPUTERNAME)\filebeat_user"
+            $userNames[4] | Should Be "$($env:COMPUTERNAME)\winlogbeat_user"
         }
     }
 

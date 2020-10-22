@@ -42,16 +42,35 @@ function EnableAndStartService
             ErrorAction = "Stop"
         }
 
-    Set-Service `
-        -Name $serviceName `
-        -StartupType Automatic `
-        @commonParameterSwitches
+    EnableService -serviceName $serviceName
 
     $service = Get-Service -Name $serviceName @commonParameterSwitches
     if ($service.Status -ne 'Running')
     {
         Start-Service -Name $serviceName @commonParameterSwitches
     }
+}
+
+function EnableService
+{
+    [CmdletBinding()]
+    param(
+        [string] $serviceName
+    )
+
+    $ErrorActionPreference = 'Stop'
+
+    $commonParameterSwitches =
+        @{
+            Verbose = $PSBoundParameters.ContainsKey('Verbose');
+            Debug = $false;
+            ErrorAction = "Stop"
+        }
+
+    Set-Service `
+        -Name $serviceName `
+        -StartupType Automatic `
+        @commonParameterSwitches
 }
 
 function Find-DvdDriveLetter
@@ -127,7 +146,7 @@ function Initialize-Consul
         Copy-Item -Path $dvdFilePath -Destination 'c:\config\consul\location.json' -Force @commonParameterSwitches
     }
 
-    EnableAndStartService -serviceName 'consul' @commonParameterSwitches
+    EnableService -serviceName 'consul' @commonParameterSwitches
 }
 
 function Initialize-ConsulTemplate
@@ -146,7 +165,7 @@ function Initialize-ConsulTemplate
             ErrorAction = "Stop"
         }
 
-    EnableAndStartService -serviceName 'consul-template' @commonParameterSwitches
+    EnableService -serviceName 'consul-template' @commonParameterSwitches
 }
 
 function Initialize-Unbound
@@ -218,8 +237,10 @@ function Set-HostName
 
     # Because windows host names can only be 15 characters we have a problem, so we're expecting:
     # - RESOURCE_SHORT_NAME to be 4 characters
-    # - The major and minor version to be a single character
-    # - The patch version up to 2 characters
+    # - The version number to be no more than 4 numbers. In general we're expecting something like
+    #   - The major to be a single character
+    #   - Theminor version to either be 1 or 2 characters
+    #   - The patch version to be either 1 or 2 characters
     # - The post-fix to be 3 characters
     $resourceShortName = $env:RESOURCE_ACRONYM_NAME
     if (($null -ne $resourceShortName) -and ($resourceShortName -ne ''))
