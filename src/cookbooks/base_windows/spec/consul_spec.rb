@@ -51,8 +51,6 @@ describe 'base_windows::consul' do
           }
         },
 
-        "leave_on_terminate" : false,
-
         "log_level" : "INFO",
 
         "ports": {

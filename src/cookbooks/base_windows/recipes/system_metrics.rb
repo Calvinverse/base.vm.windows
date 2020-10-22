@@ -13,7 +13,9 @@ service_password = node['telegraf']['service']['user_password']
 
 # Configure the service user under which telegraf will be run
 # Make sure that the user password doesn't expire. The password is a random GUID, so it is unlikely that
-# it will ever be guessed. And the user is a normal user who can't do anything so we don't really care about it
+# it will ever be guessed. Which is good because Telegraf needs to be executed as an admin so that
+# it can get the metrics from unbound because for some reason unbound-control.exe needs to be
+# run as an admin in order for it to actually work
 powershell_script 'telegraf_user_with_password_that_does_not_expire' do
   code <<~POWERSHELL
     $userName = '#{service_username}'
@@ -27,13 +29,13 @@ powershell_script 'telegraf_user_with_password_that_does_not_expire' do
       -Verbose
 
     Add-LocalGroupMember `
-      -Group 'Performance Monitor Users' `
+      -Group 'Administrators' `
       -Member $localUser.Name `
       -Verbose
   POWERSHELL
 end
 
-# Grant the user the LogOnAsService permission. Following this anwer on SO: http://stackoverflow.com/a/21235462/539846
+# Grant the user the LogOnAsService permission. Following this answer on SO: http://stackoverflow.com/a/21235462/539846
 # With some additional bug fixes to get the correct line from the export file and to put the correct text in the import file
 powershell_script 'telegraf_user_grant_service_logon_rights' do
   code <<~POWERSHELL

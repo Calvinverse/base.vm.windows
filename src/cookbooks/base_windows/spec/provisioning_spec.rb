@@ -8,7 +8,7 @@ describe 'base_windows::provisioning' do
 
   service_name = 'provisioning'
   provisioning_script = 'Initialize-Resource.ps1'
-  provisioning_helper_script = 'Initialize.ps1'
+  provisioning_helper_script = 'utilities.ps1'
 
   context 'create the log locations' do
     let(:chef_run) { ChefSpec::SoloRunner.converge(described_recipe) }
@@ -25,7 +25,7 @@ describe 'base_windows::provisioning' do
       expect(chef_run).to create_directory(provisioning_bin_path)
     end
 
-    it 'creates Initialize.ps1 in the provisioning ops directory' do
+    it 'creates utilities.ps1 in the provisioning ops directory' do
       expect(chef_run).to create_cookbook_file("#{provisioning_bin_path}/#{provisioning_helper_script}").with_source(provisioning_helper_script)
     end
 
@@ -87,6 +87,20 @@ describe 'base_windows::provisioning' do
           data: 'c:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\EventLogMessages.dll'
         }]
       )
+    end
+  end
+
+  context 'install the PendingReboot powershell module' do
+    it 'sets the PSGallery to be a trusted powershell repository' do
+      expect(chef_run).to run_powershell_script('set_psgallery_as_trusted_powershell_repository')
+    end
+
+    it 'installs the powershellget module' do
+      expect(chef_run).to run_powershell_script('install_powershellget')
+    end
+
+    it 'installs the PendingReboot powershell module' do
+      expect(chef_run).to run_powershell_script('install_pendingreboot_module')
     end
   end
 end
